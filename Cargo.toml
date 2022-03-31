@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 cursive = "0.17"
+git2 = "0.14"
