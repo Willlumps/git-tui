@@ -1,85 +1,160 @@
 //#![allow(unused_imports)]
 use crossterm::{
-    cursor,
-    event::{read, Event, KeyCode},
-    terminal,
-    terminal::ClearType,
-    ExecutableCommand,
+    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
 use git2::{Branch, BranchType, Error, Repository};
-use std::io;
-use std::io::stdout;
+use std::sync::mpsc;
+use std::{
+    io, thread,
+    time::{Duration, Instant},
+};
+use tui::{
+    backend::CrosstermBackend,
+    layout::{Alignment, Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    Terminal,
+};
 
-struct Cleanup;
-
-impl Drop for Cleanup {
-    fn drop(&mut self) {
-        terminal::disable_raw_mode().expect("Failed to disable Raw Mode.");
-    }
+enum Event<I> {
+    Input(I),
+    Tick,
 }
 
-fn main() -> Result<(), io::Error> {
-    let _clean_up = Cleanup;
-
+fn main() -> crossterm::Result<()> {
     let repo = match Repository::open("/Users/reina/school/groupwork/capstone/") {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-
     let branches = get_local_branches(&repo);
-    let branch_names = get_branch_name(&branches).unwrap();
 
-    terminal::enable_raw_mode()?;
-    let mut stdout = stdout();
-    stdout
-        .execute(terminal::Clear(ClearType::All))?
-        .execute(cursor::MoveTo(0, 0))?;
-    print_branches(&branch_names);
-    if let Some(pos) = print_events(&stdout)? {
-        let branch = branch_names.get(pos as usize).unwrap();
-        checkout_branch(&repo, branch);
-        stdout
-            .execute(terminal::Clear(ClearType::All))?
-            .execute(cursor::MoveTo(0, 0))?;
-        println!("Switched to branch: {branch}\r");
-    };
-    terminal::disable_raw_mode().expect("Failed to disable Raw Mode.");
+    let (tx, rx) = mpsc::channel();
+    let tick_rate = Duration::from_millis(500);
 
-    Ok(())
-}
+    thread::spawn(move || {
+        let mut last_tick = Instant::now();
+        loop {
+            let timeout = tick_rate
+                .checked_sub(last_tick.elapsed())
+                .unwrap_or_else(|| Duration::from_secs(0));
 
-fn print_branches(branches: &[&str]) {
-    for branch in branches {
-        println!("{branch}\r");
-    }
-}
+            if poll(timeout).is_ok() {
+                if let CEvent::Key(key) = read().expect("Should read event") {
+                    tx.send(Event::Input(key)).expect("Should send event");
+                }
+            }
 
-fn print_events(mut stdout: &std::io::Stdout) -> crossterm::Result<Option<u16>> {
+            if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
+                last_tick = Instant::now();
+            }
+        }
+    });
+
+    // setup terminal
+    enable_raw_mode()?;
+    let stdout = io::stdout();
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
+
+    let mut branch_state = ListState::default();
+    branch_state.select(Some(0));
+
     loop {
-        match read()? {
-            Event::Key(event) => {
-                match event.code {
+        terminal.draw(|f| {
+            let size = f.size();
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .margin(2)
+                .constraints(
+                    [
+                        Constraint::Length(3),
+                        Constraint::Min(2),
+                        //Constraint::Length(3),
+                    ]
+                    .as_ref(),
+                )
+                .split(size);
+
+            let header = Paragraph::new("Git Buddy")
+                .style(Style::default().fg(Color::Yellow))
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::ALL));
+
+            let branches = render_branches(&repo);
+            f.render_widget(header, chunks[0]);
+            f.render_stateful_widget(branches, chunks[1], &mut branch_state);
+        })?;
+
+        match rx.recv() {
+            Ok(event) => match event {
+                Event::Input(input) => match input.code {
                     KeyCode::Char('q') => {
                         break;
                     }
                     KeyCode::Char('j') => {
-                        stdout.execute(cursor::MoveDown(1))?;
+                        if let Some(selected) = branch_state.selected() {
+                            if selected < branches.len() - 1 {
+                                branch_state.select(Some(selected + 1));
+                            }
+                        }
                     }
                     KeyCode::Char('k') => {
-                        stdout.execute(cursor::MoveUp(1))?;
+                        if let Some(selected) = branch_state.selected() {
+                            if selected > 0 {
+                                branch_state.select(Some(selected - 1));
+                            }
+                        }
                     }
                     KeyCode::Enter => {
-                        let pos = cursor::position().unwrap();
-                        return Ok(Some(pos.1));
+                        if let Some(selected) = branch_state.selected() {
+                            let branch_names = get_branch_name(&branches).expect("Be branches");
+                            checkout_branch(&repo, branch_names.get(selected).expect("Be there"));
+                        }
                     }
                     _ => {}
-                };
+                },
+                Event::Tick => {}
+            },
+            Err(e) => {
+                eprintln!("FIX ME {e}")
             }
-            Event::Mouse(event) => println!("{:?}", event),
-            Event::Resize(width, height) => println!("New Size {}x{}", width, height),
         }
     }
-    Ok(None)
+
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    Ok(())
+}
+
+fn render_branches<'a>(repo: &Repository) -> List<'a> {
+    let branches = get_local_branches(repo);
+    let branch_list = get_branch_name(&branches).unwrap();
+
+    let items: Vec<ListItem> = branch_list
+        .iter()
+        .map(|branch| ListItem::new(branch.to_string()))
+        .collect();
+
+    let branches = List::new(items)
+        .block(Block::default().title("Branches").borders(Borders::ALL))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightBlue)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        );
+
+    branches
 }
 
 fn get_local_branches(repo: &Repository) -> Vec<Branch> {
