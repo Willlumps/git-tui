@@ -1,6 +1,6 @@
 //#![allow(unused_imports)]
 use crossterm::{
-    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode},
+    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
@@ -23,12 +23,45 @@ enum Event<I> {
     Tick,
 }
 
+enum BranchTypeState {
+    Local,
+    Remote,
+}
+
+impl BranchTypeState {
+    fn next(current_state: BranchTypeState) -> BranchTypeState {
+        match current_state {
+            BranchTypeState::Local => {
+                BranchTypeState::Remote
+            },
+            BranchTypeState::Remote => {
+                BranchTypeState::Local
+            }
+        }
+    }
+}
+
+struct BranchState {
+    local: ListState,
+    remote: ListState,
+    widget: BranchTypeState,
+}
+
+impl BranchState {
+    fn new() -> Self {
+        Self {
+            local: ListState::default(),
+            remote: ListState::default(),
+            widget: BranchTypeState::Local,
+        }
+    }
+}
+
 fn main() -> crossterm::Result<()> {
     let repo = match Repository::open("/Users/reina/school/groupwork/capstone/") {
         Ok(repo) => repo,
         Err(e) => panic!("failed to open: {}", e),
     };
-    let branches = get_local_branches(&repo);
 
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(500);
@@ -59,8 +92,10 @@ fn main() -> crossterm::Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let mut branch_state = ListState::default();
-    branch_state.select(Some(0));
+
+    let mut branch_state = BranchState::new();
+    branch_state.local.select(Some(0));
+    branch_state.remote.select(Some(0));
 
     loop {
         terminal.draw(|f| {
@@ -72,7 +107,6 @@ fn main() -> crossterm::Result<()> {
                     [
                         Constraint::Length(3),
                         Constraint::Min(2),
-                        //Constraint::Length(3),
                     ]
                     .as_ref(),
                 )
@@ -82,10 +116,27 @@ fn main() -> crossterm::Result<()> {
                 .style(Style::default().fg(Color::Yellow))
                 .alignment(Alignment::Center)
                 .block(Block::default().borders(Borders::ALL));
-
-            let branches = render_branches(&repo);
             f.render_widget(header, chunks[0]);
-            f.render_stateful_widget(branches, chunks[1], &mut branch_state);
+
+            let (local, remote) = render_branches(&repo);
+            let branch_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .margin(1)
+                .constraints(
+                    [Constraint::Percentage(50), Constraint::Percentage(50)].as_ref(),
+                )
+                .split(chunks[1]);
+
+            match branch_state.widget {
+                BranchTypeState::Local => {
+                    f.render_stateful_widget(local, branch_chunks[0], &mut branch_state.local);
+                    f.render_widget(remote, branch_chunks[1]);
+                },
+                BranchTypeState::Remote => {
+                    f.render_widget(local, branch_chunks[0]);
+                    f.render_stateful_widget(remote, branch_chunks[1], &mut branch_state.remote);
+                }
+            }
         })?;
 
         match rx.recv() {
@@ -95,24 +146,18 @@ fn main() -> crossterm::Result<()> {
                         break;
                     }
                     KeyCode::Char('j') => {
-                        if let Some(selected) = branch_state.selected() {
-                            if selected < branches.len() - 1 {
-                                branch_state.select(Some(selected + 1));
-                            }
-                        }
+                        move_down(&mut branch_state, &repo);
                     }
                     KeyCode::Char('k') => {
-                        if let Some(selected) = branch_state.selected() {
-                            if selected > 0 {
-                                branch_state.select(Some(selected - 1));
-                            }
+                        move_up(&mut branch_state);
+                    }
+                    KeyCode::Char('n') => {
+                        if input.modifiers == KeyModifiers::CONTROL {
+                            branch_state.widget = BranchTypeState::next(branch_state.widget);
                         }
                     }
                     KeyCode::Enter => {
-                        if let Some(selected) = branch_state.selected() {
-                            let branch_name = get_branch_name(&branches, selected as usize);
-                            checkout_branch(&repo, branch_name);
-                        }
+                        select_branch(&branch_state, &repo);
                     }
                     _ => {}
                 },
@@ -136,23 +181,76 @@ fn main() -> crossterm::Result<()> {
     Ok(())
 }
 
-fn render_branches<'a>(repo: &Repository) -> List<'a> {
-    let branches = get_local_branches(repo);
+fn select_branch(state: &BranchState, repo: &Repository) {
+    let branch_list: Vec<Branch>;
+    let index: usize;
+    let mut branch_name;
 
-    let items: Vec<ListItem> = branches
-        .iter()
-        .map(|branch| {
-            let b = branch.name().expect("Branch should exist");
-            if branch.is_head() {
-                return ListItem::new(format!("* {}", b.expect("Branch should have a name")))
-                    .style(Style::default().fg(Color::Red));
+    match state.widget {
+        BranchTypeState::Local => {
+            branch_list = get_branches(repo, BranchType::Local);
+            index = state.local.selected().expect("Should have state");
+            branch_name = get_branch_name_by_index(&branch_list, index);
+
+        },
+        BranchTypeState::Remote => {
+            branch_list = get_branches(repo, BranchType::Remote);
+            index = state.remote.selected().expect("Should have state");
+            branch_name = get_branch_name_by_index(&branch_list, index);
+            let branch = new_branch(repo, &branch_name);
+            branch_name = get_branch_name(&branch);
+        },
+    }
+    checkout_branch(repo, &branch_name);
+}
+
+fn move_down(state: &mut BranchState, repo: &Repository) {
+    let branch_list: Vec<Branch>;
+    match state.widget {
+        BranchTypeState::Local => {
+            branch_list = get_branches(repo, BranchType::Local);
+            if let Some(selected) = state.local.selected() {
+                if selected < branch_list.len() - 1 {
+                    state.local.select(Some(selected + 1));
+                }
             }
-            ListItem::new(b.expect("Branch should have a name").to_string())
-        })
-        .collect();
+        },
+        BranchTypeState::Remote => {
+            branch_list = get_branches(repo, BranchType::Remote);
+            if let Some(selected) = state.remote.selected() {
+                if selected < branch_list.len() - 1 {
+                    state.remote.select(Some(selected + 1));
+                }
+            }
+        },
+    }
+}
 
-    let branches = List::new(items)
-        .block(Block::default().title("Branches").borders(Borders::ALL))
+fn move_up(state: &mut BranchState) {
+    match state.widget {
+        BranchTypeState::Local => {
+            if let Some(selected) = state.local.selected() {
+                if selected > 0 {
+                    state.local.select(Some(selected - 1));
+                }
+            }
+        },
+        BranchTypeState::Remote => {
+            if let Some(selected) = state.remote.selected() {
+                if selected > 0 {
+                    state.remote.select(Some(selected - 1));
+                }
+            }
+        },
+    }
+}
+
+fn render_branches(repo: &Repository) -> (List, List) {
+    let local_branches = render_local_branches(get_branches(repo, BranchType::Local));
+    let remote_branches = render_remote_branches(get_branches(repo, BranchType::Remote));
+
+    let local_branch_list = List::new(local_branches)
+        .block(Block::default().title("Local").borders(Borders::ALL))
         .highlight_style(
             Style::default()
                 .bg(Color::LightBlue)
@@ -160,33 +258,84 @@ fn render_branches<'a>(repo: &Repository) -> List<'a> {
                 .add_modifier(Modifier::BOLD),
         );
 
-    branches
+    let remote_branch_list = List::new(remote_branches)
+        .block(Block::default().title("Remote").borders(Borders::ALL))
+        .highlight_style(
+            Style::default()
+                .bg(Color::LightBlue)
+                .fg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        );
+
+    (local_branch_list, remote_branch_list)
 }
 
-fn get_local_branches(repo: &Repository) -> Vec<Branch> {
-    let mut local_branches: Vec<Branch> = Vec::new();
+fn render_local_branches(branches: Vec<Branch>) -> Vec<ListItem> {
+    branches
+        .iter()
+        .map(|branch| {
+            let b = branch.name()
+                .expect("Branch should exist")
+                .expect("Branch should have a name");
+            if branch.is_head() {
+                return ListItem::new(format!("* {}", b))
+                    .style(Style::default().fg(Color::Green));
+            }
+            ListItem::new(format!("  {}", b))
+        })
+        .collect()
+}
 
-    let branches = repo.branches(Some(BranchType::Local)).unwrap();
+fn render_remote_branches(branches: Vec<Branch>) -> Vec<ListItem> {
+    branches
+        .iter()
+        .map(|branch| {
+            let b = branch.name()
+                .expect("Branch should exist")
+                .expect("Branch should have a name");
+                return ListItem::new(format!("  {}", b))
+                    .style(Style::default().fg(Color::Red));
+        })
+        .collect()
+}
+
+fn get_branches(repo: &Repository, branch_type: BranchType) -> Vec<Branch> {
+    let mut branch_list: Vec<Branch> = Vec::new();
+
+    let branches = repo.branches(Some(branch_type)).unwrap();
     let branches: Vec<Result<(Branch, BranchType), Error>> =
         branches.collect::<Vec<Result<_, _>>>();
 
     for branch in branches {
         match branch {
-            Ok(b) => local_branches.push(b.0),
+            Ok(b) => branch_list.push(b.0),
             Err(e) => eprintln!("{}", e),
         }
     }
 
-    local_branches
+    branch_list
 }
 
-fn get_branch_name<'a>(branches: &'a [Branch], index: usize) -> &'a str {
+
+fn get_branch_name_by_index(branches: &[Branch], index: usize) -> String {
     let branch = branches.get(index).expect("Branch should exist");
+    get_branch_name(branch)
+}
+
+fn get_branch_name(branch: &Branch) -> String {
     let name = branch
         .name()
         .expect("Branch should exist")
         .expect("Branch should have a nanme");
-    name
+    name.to_string()
+}
+
+fn new_branch<'a>(repo: &'a Repository, refname: &str)  -> Branch<'a> {
+    // TODO: Check if reference already exists
+    let (object, _reference) = repo.revparse_ext(refname).expect("Object not found");
+    let commit = object.as_commit().unwrap();
+    repo.branch(&refname[7..], commit, false).unwrap()
+
 }
 
 fn checkout_branch(repo: &Repository, refname: &str) {
