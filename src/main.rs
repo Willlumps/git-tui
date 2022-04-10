@@ -110,8 +110,8 @@ fn main() -> crossterm::Result<()> {
                     }
                     KeyCode::Enter => {
                         if let Some(selected) = branch_state.selected() {
-                            let branch_names = get_branch_name(&branches).expect("Be branches");
-                            checkout_branch(&repo, branch_names.get(selected).expect("Be there"));
+                            let branch_name = get_branch_name(&branches, selected as usize);
+                            checkout_branch(&repo, branch_name);
                         }
                     }
                     _ => {}
@@ -138,11 +138,17 @@ fn main() -> crossterm::Result<()> {
 
 fn render_branches<'a>(repo: &Repository) -> List<'a> {
     let branches = get_local_branches(repo);
-    let branch_list = get_branch_name(&branches).unwrap();
 
-    let items: Vec<ListItem> = branch_list
+    let items: Vec<ListItem> = branches
         .iter()
-        .map(|branch| ListItem::new(branch.to_string()))
+        .map(|branch| {
+            let b = branch.name().expect("Branch should exist");
+            if branch.is_head() {
+                return ListItem::new(format!("* {}", b.expect("Branch should have a name")))
+                    .style(Style::default().fg(Color::Red));
+            }
+            ListItem::new(b.expect("Branch should have a name").to_string())
+        })
         .collect();
 
     let branches = List::new(items)
@@ -169,27 +175,18 @@ fn get_local_branches(repo: &Repository) -> Vec<Branch> {
             Ok(b) => local_branches.push(b.0),
             Err(e) => eprintln!("{}", e),
         }
-        // TODO: Possibly only return the name of the branch, though that limits what I'll be able
-        //       to do in the future.
-        // match branch?.0.name()? {
-        //     Some(b) => local_branches.push(b),
-        //     None => (),
-        // }
     }
 
     local_branches
 }
 
-fn get_branch_name<'a>(branches: &'a [Branch]) -> Result<Vec<&'a str>, Error> {
-    let mut branch_names: Vec<&str> = Vec::new();
-
-    for branch in branches {
-        if let Some(b) = branch.name()? {
-            branch_names.push(b);
-        }
-    }
-
-    Ok(branch_names)
+fn get_branch_name<'a>(branches: &'a [Branch], index: usize) -> &'a str {
+    let branch = branches.get(index).expect("Branch should exist");
+    let name = branch
+        .name()
+        .expect("Branch should exist")
+        .expect("Branch should have a nanme");
+    name
 }
 
 fn checkout_branch(repo: &Repository, refname: &str) {
