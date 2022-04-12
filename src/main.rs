@@ -6,12 +6,13 @@ use crossterm::{
 };
 use git2::{Branch, BranchType, Error, Repository};
 use std::sync::mpsc;
+use std::sync::mpsc::Receiver;
 use std::{
     io, thread,
     time::{Duration, Instant},
 };
 use tui::{
-    backend::CrosstermBackend,
+    backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
@@ -57,6 +58,20 @@ impl BranchState {
     }
 }
 
+struct App<'a> {
+    show_delete_branch: bool,
+    repo: &'a Repository,
+}
+
+impl<'a> App<'a> {
+    fn new(repo: &'a Repository) -> Self {
+        Self {
+            show_delete_branch: false,
+            repo,
+        }
+    }
+}
+
 fn main() -> crossterm::Result<()> {
     let repo = match Repository::open("/Users/reina/school/groupwork/capstone/") {
         Ok(repo) => repo,
@@ -92,7 +107,26 @@ fn main() -> crossterm::Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
+    let app = App::new(&repo);
+    let res = run_app(&mut terminal, app, rx);
 
+    // restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = res {
+        println!("{:?}", err)
+    }
+
+    Ok(())
+}
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App, rx: Receiver<Event<crossterm::event::KeyEvent>>) -> io::Result<()> {
     let mut branch_state = BranchState::new();
     branch_state.local.select(Some(0));
     branch_state.remote.select(Some(0));
@@ -118,7 +152,7 @@ fn main() -> crossterm::Result<()> {
                 .block(Block::default().borders(Borders::ALL));
             f.render_widget(header, chunks[0]);
 
-            let (local, remote) = render_branches(&repo);
+            let (local, remote) = render_branches(app.repo);
             let branch_chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .margin(1)
@@ -143,10 +177,10 @@ fn main() -> crossterm::Result<()> {
             Ok(event) => match event {
                 Event::Input(input) => match input.code {
                     KeyCode::Char('q') => {
-                        break;
+                        return Ok(());
                     }
                     KeyCode::Char('j') => {
-                        move_down(&mut branch_state, &repo);
+                        move_down(&mut branch_state, app.repo);
                     }
                     KeyCode::Char('k') => {
                         move_up(&mut branch_state);
@@ -157,7 +191,7 @@ fn main() -> crossterm::Result<()> {
                         }
                     }
                     KeyCode::Enter => {
-                        select_branch(&branch_state, &repo);
+                        select_branch(&branch_state, app.repo);
                     }
                     _ => {}
                 },
@@ -168,17 +202,6 @@ fn main() -> crossterm::Result<()> {
             }
         }
     }
-
-    // restore terminal
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    terminal.show_cursor()?;
-
-    Ok(())
 }
 
 fn select_branch(state: &BranchState, repo: &Repository) {
