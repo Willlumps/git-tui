@@ -12,10 +12,11 @@ use std::{
     time::{Duration, Instant},
 };
 use tui::{
+    Frame,
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    widgets::{Clear, Block, Borders, List, ListItem, ListState, Paragraph},
     Terminal,
 };
 
@@ -61,6 +62,7 @@ impl BranchState {
 struct App<'a> {
     show_delete_branch: bool,
     repo: &'a Repository,
+    branch_state: BranchState,
 }
 
 impl<'a> App<'a> {
@@ -68,6 +70,7 @@ impl<'a> App<'a> {
         Self {
             show_delete_branch: false,
             repo,
+            branch_state: BranchState::new(),
         }
     }
 }
@@ -127,71 +130,34 @@ fn main() -> crossterm::Result<()> {
 }
 
 fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App, rx: Receiver<Event<crossterm::event::KeyEvent>>) -> io::Result<()> {
-    let mut branch_state = BranchState::new();
-    branch_state.local.select(Some(0));
-    branch_state.remote.select(Some(0));
+    app.branch_state.local.select(Some(0));
+    app.branch_state.remote.select(Some(0));
 
     loop {
-        terminal.draw(|f| {
-            let size = f.size();
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(2)
-                .constraints(
-                    [
-                        Constraint::Length(3),
-                        Constraint::Min(2),
-                    ]
-                    .as_ref(),
-                )
-                .split(size);
-
-            let header = Paragraph::new("Git Buddy")
-                .style(Style::default().fg(Color::Yellow))
-                .alignment(Alignment::Center)
-                .block(Block::default().borders(Borders::ALL));
-            f.render_widget(header, chunks[0]);
-
-            let (local, remote) = render_branches(app.repo);
-            let branch_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .margin(1)
-                .constraints(
-                    [Constraint::Percentage(50), Constraint::Percentage(50)].as_ref(),
-                )
-                .split(chunks[1]);
-
-            match branch_state.widget {
-                BranchTypeState::Local => {
-                    f.render_stateful_widget(local, branch_chunks[0], &mut branch_state.local);
-                    f.render_widget(remote, branch_chunks[1]);
-                },
-                BranchTypeState::Remote => {
-                    f.render_widget(local, branch_chunks[0]);
-                    f.render_stateful_widget(remote, branch_chunks[1], &mut branch_state.remote);
-                }
-            }
-        })?;
+        terminal.draw(|f| ui(f, &mut app))?;
 
         match rx.recv() {
             Ok(event) => match event {
                 Event::Input(input) => match input.code {
+                    KeyCode::Char('d') => {
+                        app.show_delete_branch = !app.show_delete_branch;
+                    }
                     KeyCode::Char('q') => {
                         return Ok(());
                     }
                     KeyCode::Char('j') => {
-                        move_down(&mut branch_state, app.repo);
+                        move_down(&mut app.branch_state, app.repo);
                     }
                     KeyCode::Char('k') => {
-                        move_up(&mut branch_state);
+                        move_up(&mut app.branch_state);
                     }
                     KeyCode::Char('n') => {
                         if input.modifiers == KeyModifiers::CONTROL {
-                            branch_state.widget = BranchTypeState::next(branch_state.widget);
+                            app.branch_state.widget = BranchTypeState::next(app.branch_state.widget);
                         }
                     }
                     KeyCode::Enter => {
-                        select_branch(&branch_state, app.repo);
+                        select_branch(&app.branch_state, app.repo);
                     }
                     _ => {}
                 },
@@ -201,6 +167,53 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App, rx: Receiver<Ev
                 eprintln!("FIX ME {e}")
             }
         }
+    }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+        let size = f.size();
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .margin(2)
+            .constraints(
+                [
+                    Constraint::Length(3),
+                    Constraint::Min(2),
+                ]
+                .as_ref(),
+            )
+            .split(size);
+
+        let header = Paragraph::new("Git Buddy")
+            .style(Style::default().fg(Color::Yellow))
+            .alignment(Alignment::Center)
+            .block(Block::default().borders(Borders::ALL));
+        f.render_widget(header, chunks[0]);
+
+        let (local, remote) = render_branches(app.repo);
+        let branch_chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .margin(1)
+            .constraints(
+                [Constraint::Percentage(50), Constraint::Percentage(50)].as_ref(),
+            )
+            .split(chunks[1]);
+
+        match app.branch_state.widget {
+            BranchTypeState::Local => {
+                f.render_stateful_widget(local, branch_chunks[0], &mut app.branch_state.local);
+                f.render_widget(remote, branch_chunks[1]);
+            },
+            BranchTypeState::Remote => {
+                f.render_widget(local, branch_chunks[0]);
+                f.render_stateful_widget(remote, branch_chunks[1], &mut app.branch_state.remote);
+            }
+        }
+    if app.show_delete_branch {
+        let block = Block::default().title("Popup").borders(Borders::ALL);
+        let area = centered_rect(60, 20, size);
+        f.render_widget(Clear, area); //this clears out the background
+        f.render_widget(block, area);
     }
 }
 
@@ -224,7 +237,10 @@ fn select_branch(state: &BranchState, repo: &Repository) {
             branch_name = get_branch_name(&branch);
         },
     }
-    checkout_branch(repo, &branch_name);
+    match checkout_branch(repo, &branch_name) {
+        Ok(_) => {},
+        Err(e) => { eprintln!("Failed to checkout branch: {e}"); },
+    };
 }
 
 fn move_down(state: &mut BranchState, repo: &Repository) {
@@ -358,20 +374,51 @@ fn new_branch<'a>(repo: &'a Repository, refname: &str)  -> Branch<'a> {
     let (object, _reference) = repo.revparse_ext(refname).expect("Object not found");
     let commit = object.as_commit().unwrap();
     repo.branch(&refname[7..], commit, false).unwrap()
-
 }
 
-fn checkout_branch(repo: &Repository, refname: &str) {
-    // Need to change the files in the working directory as well as set the HEAD
-    let (object, reference) = repo.revparse_ext(refname).expect("Object not found");
-    repo.checkout_tree(&object, None)
-        .expect("Failed to checkout");
+fn checkout_branch(repo: &Repository, refname: &str) -> Result<(), git2::Error> {
+    // TODO: Determine full refname before this point?
+    let full_ref = format!("refs/heads/{refname}");
+    let cur_ref = repo.head()?;
+    let statuses = repo.statuses(Some(git2::StatusOptions::new().include_ignored(false)))?;
 
-    match reference {
-        // gref is an actual reference like branches or tags
-        Some(gref) => repo.set_head(gref.name().unwrap()),
-        // this is a commit, not a reference
-        None => repo.set_head_detached(object.id()),
+    if statuses.is_empty() {
+        repo.set_head(&full_ref)?;
+        repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))?;
+        if let Err(e) = repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force(),)) {
+          repo.set_head(cur_ref.name().unwrap())?;
+          return Err(e);
+       }
+       return Ok(());
+    } else {
+        // Handle uncommitted changes
     }
-    .expect("Failed to set HEAD");
+    Ok(())
+}
+
+/// helper function to create a centered rect using up certain percentage of the available rect `r`
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
