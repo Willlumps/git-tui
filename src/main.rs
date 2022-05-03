@@ -20,10 +20,9 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Clear, List as TuiList, ListItem, ListState, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, List as TuiList, ListItem, ListState, Paragraph},
     Frame, Terminal,
 };
-
 
 enum Event<I> {
     Input(I),
@@ -103,23 +102,87 @@ fn main() -> crossterm::Result<()> {
 
 fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let size = f.size();
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(2)
-        .constraints([Constraint::Length(3), Constraint::Min(2)].as_ref())
+    let container = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(1)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(size);
+
+    // Status, Files, Branches, Logs?
+    let left_container = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(3),
+                Constraint::Length(10),
+                Constraint::Length(20),
+                Constraint::Length(10),
+            ]
+            .as_ref(),
+        )
+        .split(container[0]);
+
+    let status_container = Paragraph::new(" Placeholder ")
+        .style(Style::default())
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .title(" Status "));
+    f.render_widget(status_container, left_container[0]);
+
+    let file_block = Block::default()
+        .title(" Files ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded);
+    f.render_widget(file_block, left_container[1]);
+
+    let branch_border = Block::default()
+        .title(" Branches ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded);
+    f.render_widget(branch_border, left_container[2]);
+
+    let log_block = Block::default()
+        .title(" Log ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded);
+    f.render_widget(log_block, left_container[3]);
+
+    let branch_container = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([Constraint::Length(3), Constraint::Min(2)].as_ref())
+        .split(left_container[2]);
 
     let input = Paragraph::new(app.input.as_ref())
         .style(Style::default())
-        .block(Block::default().borders(Borders::ALL).title("Input"));
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .title(" Search ")
+                .title_alignment(Alignment::Center),
+        );
 
     let list_items: Vec<ListItem> = app
-        .branches.filtered_branches
+        .branches
+        .filtered_branches
         .iter()
         .map(|item| ListItem::new(item.to_string()))
         .collect();
     let list = TuiList::new(list_items)
-        .block(Block::default().title("List").borders(Borders::ALL))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded),
+        )
         .highlight_style(
             Style::default()
                 .bg(Color::LightBlue)
@@ -127,8 +190,16 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .add_modifier(Modifier::BOLD),
         );
 
-    f.render_widget(input, chunks[0]);
-    f.render_stateful_widget(list, chunks[1], &mut app.branches.state);
+    f.render_widget(input, branch_container[0]);
+    f.render_stateful_widget(list, branch_container[1], &mut app.branches.state);
+
+    // Right Diff
+    let diff_block = Block::default()
+        .title(" Diff ")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded);
+    f.render_widget(diff_block, container[1]);
 }
 
 fn run_app<B: Backend>(
@@ -155,12 +226,14 @@ fn run_app<B: Backend>(
                     }
                     KeyCode::Char(c) => {
                         app.input.push(c);
-                        app.branches.filtered_branches = fuzzy_find(&app.branches.branches, &app.input);
+                        app.branches.filtered_branches =
+                            fuzzy_find(&app.branches.branches, &app.input);
                         app.branches.reset_state();
                     }
                     KeyCode::Backspace => {
                         app.input.pop();
-                        app.branches.filtered_branches = fuzzy_find(&app.branches.branches, &app.input);
+                        app.branches.filtered_branches =
+                            fuzzy_find(&app.branches.branches, &app.input);
                         app.branches.reset_state();
                     }
                     _ => {}
