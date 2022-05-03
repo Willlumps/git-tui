@@ -21,33 +21,16 @@ use tui::{
     Frame, Terminal,
 };
 
-enum Event<I> {
-    Input(I),
-    Tick,
+struct BranchList {
+    branches: Vec<String>,
+    filtered_branches: Vec<String>,
+    state: ListState,
+    focused: bool,
+    size: usize,
+    position: usize,
 }
 
-struct BranchState {
-    local: ListState,
-}
-
-impl BranchState {
-    fn new() -> Self {
-        Self {
-            local: ListState::default(),
-        }
-    }
-}
-
-struct App {
-    //repo: &'a Repository,
-    state: BranchState,
-    input: String,
-    list: Vec<String>,
-    filtered_list: Vec<String>,
-}
-
-impl App {
-    //fn new(repo: &'a Repository) -> Self {
+impl BranchList {
     fn new() -> Self {
         let words = vec![
             "main".to_string(),
@@ -66,11 +49,62 @@ impl App {
         ];
 
         Self {
+            branches: words.clone(),
+            filtered_branches: words.clone(),
+            state: ListState::default(),
+            focused: true,
+            size: words.len(),
+            position: 0,
+        }
+    }
+
+    fn set_size(&mut self, size: usize) {
+        self.size = size;
+    }
+
+    fn get_position(&self) -> usize {
+        self.position
+    }
+
+    fn increment_position(&mut self) {
+        if self.get_position() != 0 {
+            self.position -= 1;
+            self.state.select(Some(self.position));
+        }
+    }
+
+    fn decrement_position(&mut self) {
+        if self.position < self.size - 1 {
+            self.position += 1;
+            self.state.select(Some(self.position));
+        }
+    }
+
+    fn reset_state(&mut self) {
+        self.set_size(self.filtered_branches.len());
+        self.position = 0;
+        self.state.select(Some(0));
+    }
+}
+
+enum Event<I> {
+    Input(I),
+    Tick,
+}
+
+struct App {
+    //repo: &'a Repository,
+    input: String,
+    branches: BranchList,
+}
+
+impl App {
+    //fn new(repo: &'a Repository) -> Self {
+    fn new() -> Self {
+        Self {
             //repo,
-            state: BranchState::new(),
             input: String::new(),
-            list: words.clone(),
-            filtered_list: words,
+            branches: BranchList::new(),
         }
     }
 }
@@ -142,7 +176,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .block(Block::default().borders(Borders::ALL).title("Input"));
 
     let list_items: Vec<ListItem> = app
-        .filtered_list
+        .branches.filtered_branches
         .iter()
         .map(|item| ListItem::new(item.to_string()))
         .collect();
@@ -156,7 +190,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         );
 
     f.render_widget(input, chunks[0]);
-    f.render_stateful_widget(list, chunks[1], &mut app.state.local);
+    f.render_stateful_widget(list, chunks[1], &mut app.branches.state);
 }
 
 fn run_app<B: Backend>(
@@ -164,7 +198,7 @@ fn run_app<B: Backend>(
     mut app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
 ) -> io::Result<()> {
-    app.state.local.select(Some(0));
+    app.branches.state.select(Some(0));
 
     loop {
         terminal.draw(|f| ui(f, app))?;
@@ -175,13 +209,21 @@ fn run_app<B: Backend>(
                     KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                         return Ok(());
                     }
+                    KeyCode::Char('j') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.branches.decrement_position();
+                    }
+                    KeyCode::Char('k') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.branches.increment_position();
+                    }
                     KeyCode::Char(c) => {
                         app.input.push(c);
-                        app.filtered_list = fuzzy_find(&app.list, &app.input);
+                        app.branches.filtered_branches = fuzzy_find(&app.branches.branches, &app.input);
+                        app.branches.reset_state();
                     }
                     KeyCode::Backspace => {
                         app.input.pop();
-                        app.filtered_list = fuzzy_find(&app.list, &app.input);
+                        app.branches.filtered_branches = fuzzy_find(&app.branches.branches, &app.input);
+                        app.branches.reset_state();
                     }
                     _ => {}
                 },
