@@ -1,4 +1,7 @@
 #![allow(unused_imports)]
+mod list;
+use list::List;
+
 use crossterm::{
     event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyModifiers},
     execute,
@@ -17,75 +20,10 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph},
+    widgets::{Block, Borders, Clear, List as TuiList, ListItem, ListState, Paragraph},
     Frame, Terminal,
 };
 
-struct BranchList {
-    branches: Vec<String>,
-    filtered_branches: Vec<String>,
-    state: ListState,
-    focused: bool,
-    size: usize,
-    position: usize,
-}
-
-impl BranchList {
-    fn new() -> Self {
-        let words = vec![
-            "main".to_string(),
-            "task/ABK-12-Create-simulated-sensors".to_string(),
-            "task/ABK-19-Setup-Communication-IoT-Hub".to_string(),
-            "task/ABK-20-IoT-Hub-Msg-Handling-Pi".to_string(),
-            "task/ABK-23-Create-Azure-Function-Read-Grow-Chamber".to_string(),
-            "task/ABK-24-Create-Azure-Function-Write-Grow-Chamber".to_string(),
-            "task/ABK-30-Create-graph-components".to_string(),
-            "task/ABK-46-Integrate-backend-with-devices".to_string(),
-            "task/abk-11-create-sensor-and-actuator-routines".to_string(),
-            "task/abk-17-raspberry-pi-interfacing".to_string(),
-            "task/abk-42-create-non-blocking-arduino-routine".to_string(),
-            "task/abk-9-create-motr-and-servo-routine".to_string(),
-            "topic/ABK-47-Integrate-backend-frontend".to_string(),
-        ];
-
-        Self {
-            branches: words.clone(),
-            filtered_branches: words.clone(),
-            state: ListState::default(),
-            focused: true,
-            size: words.len(),
-            position: 0,
-        }
-    }
-
-    fn set_size(&mut self, size: usize) {
-        self.size = size;
-    }
-
-    fn get_position(&self) -> usize {
-        self.position
-    }
-
-    fn increment_position(&mut self) {
-        if self.get_position() != 0 {
-            self.position -= 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
-    fn decrement_position(&mut self) {
-        if self.position < self.size - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
-    fn reset_state(&mut self) {
-        self.set_size(self.filtered_branches.len());
-        self.position = 0;
-        self.state.select(Some(0));
-    }
-}
 
 enum Event<I> {
     Input(I),
@@ -95,7 +33,7 @@ enum Event<I> {
 struct App {
     //repo: &'a Repository,
     input: String,
-    branches: BranchList,
+    branches: List,
 }
 
 impl App {
@@ -104,7 +42,7 @@ impl App {
         Self {
             //repo,
             input: String::new(),
-            branches: BranchList::new(),
+            branches: List::new(),
         }
     }
 }
@@ -180,7 +118,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .iter()
         .map(|item| ListItem::new(item.to_string()))
         .collect();
-    let list = List::new(list_items)
+    let list = TuiList::new(list_items)
         .block(Block::default().title("List").borders(Borders::ALL))
         .highlight_style(
             Style::default()
