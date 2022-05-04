@@ -1,14 +1,14 @@
 #![allow(unused_imports)]
-mod list;
-use list::List;
+mod components;
+mod app;
+use components::branchlist::BranchComponent;
+use crate::app::App;
 
 use crossterm::{
     event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
-use fuzzy_matcher::skim::SkimMatcherV2;
-use fuzzy_matcher::FuzzyMatcher;
 use git2::{Branch, BranchType, Error, Repository};
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
@@ -27,23 +27,6 @@ use tui::{
 enum Event<I> {
     Input(I),
     Tick,
-}
-
-struct App {
-    //repo: &'a Repository,
-    input: String,
-    branches: List,
-}
-
-impl App {
-    //fn new(repo: &'a Repository) -> Self {
-    fn new() -> Self {
-        Self {
-            //repo,
-            input: String::new(),
-            branches: List::new(),
-        }
-    }
 }
 
 fn main() -> crossterm::Result<()> {
@@ -139,12 +122,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .border_type(BorderType::Rounded);
     f.render_widget(file_block, left_container[1]);
 
-    let branch_border = Block::default()
-        .title(" Branches ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
-        .border_type(BorderType::Rounded);
-    f.render_widget(branch_border, left_container[2]);
+    app.branches.draw(f, left_container[2]);
 
     let log_block = Block::default()
         .title(" Log ")
@@ -152,46 +130,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .border_style(Style::default().fg(Color::White))
         .border_type(BorderType::Rounded);
     f.render_widget(log_block, left_container[3]);
-
-    let branch_container = Layout::default()
-        .direction(Direction::Vertical)
-        .margin(1)
-        .constraints([Constraint::Length(3), Constraint::Min(2)].as_ref())
-        .split(left_container[2]);
-
-    let input = Paragraph::new(app.input.as_ref())
-        .style(Style::default())
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::White))
-                .border_type(BorderType::Rounded)
-                .title(" Search ")
-                .title_alignment(Alignment::Center),
-        );
-
-    let list_items: Vec<ListItem> = app
-        .branches
-        .filtered_branches
-        .iter()
-        .map(|item| ListItem::new(item.to_string()))
-        .collect();
-    let list = TuiList::new(list_items)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::White))
-                .border_type(BorderType::Rounded),
-        )
-        .highlight_style(
-            Style::default()
-                .bg(Color::LightBlue)
-                .fg(Color::Black)
-                .add_modifier(Modifier::BOLD),
-        );
-
-    f.render_widget(input, branch_container[0]);
-    f.render_stateful_widget(list, branch_container[1], &mut app.branches.state);
 
     // Right Diff
     let diff_block = Block::default()
@@ -204,7 +142,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
-    mut app: &mut App,
+    app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
 ) -> io::Result<()> {
     app.branches.state.select(Some(0));
@@ -218,40 +156,19 @@ fn run_app<B: Backend>(
                     KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                         return Ok(());
                     }
-                    KeyCode::Char('j') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.branches.decrement_position();
+                    _ => {
+                        // Do the stuff
+                        app.branches.handle_event(input);
+
                     }
-                    KeyCode::Char('k') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.branches.increment_position();
-                    }
-                    KeyCode::Char(c) => {
-                        app.input.push(c);
-                        app.branches.filtered_branches =
-                            fuzzy_find(&app.branches.branches, &app.input);
-                        app.branches.reset_state();
-                    }
-                    KeyCode::Backspace => {
-                        app.input.pop();
-                        app.branches.filtered_branches =
-                            fuzzy_find(&app.branches.branches, &app.input);
-                        app.branches.reset_state();
-                    }
-                    _ => {}
                 },
                 Event::Tick => {}
             },
             Err(e) => {
+                // TODO
                 eprintln!("FIX ME {e}")
             }
         }
     }
 }
 
-fn fuzzy_find(filtered_list: &[String], query: &str) -> Vec<String> {
-    let matcher = SkimMatcherV2::default();
-    filtered_list
-        .iter()
-        .filter(|&item| matcher.fuzzy_match(item, query).is_some())
-        .cloned()
-        .collect::<Vec<_>>()
-}
