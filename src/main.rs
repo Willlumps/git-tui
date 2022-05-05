@@ -123,13 +123,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     f.render_widget(file_block, left_container[1]);
 
     app.branches.draw(f, left_container[2]);
-
-    let log_block = Block::default()
-        .title(" Log ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
-        .border_type(BorderType::Rounded);
-    f.render_widget(log_block, left_container[3]);
+    app.logs.draw(f, left_container[3]);
 
     // Right Diff
     let diff_block = Block::default()
@@ -146,6 +140,8 @@ fn run_app<B: Backend>(
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
 ) -> io::Result<()> {
     app.branches.state.select(Some(0));
+    app.logs.state.select(Some(0));
+    app.branches.focus(true);
 
     loop {
         terminal.draw(|f| ui(f, app))?;
@@ -155,7 +151,15 @@ fn run_app<B: Backend>(
                 Event::Input(input) => match input.code {
                     KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                         return Ok(());
-                    }
+                    },
+                    KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.branches.focus(false);
+                        app.logs.focus(true);
+                    },
+                    KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.branches.focus(true);
+                        app.logs.focus(false);
+                    },
                     _ => {
                         // Do the stuff
                         app.branches.handle_event(input);

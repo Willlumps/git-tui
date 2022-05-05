@@ -1,5 +1,3 @@
-use crate::app::App;
-
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::Frame;
 use tui::backend::Backend;
@@ -49,7 +47,7 @@ impl BranchComponent {
             branches: words.clone(),
             filtered_branches: words.clone(),
             state: ListState::default(),
-            focused: true,
+            focused: false,
             size: words.len(),
             position: 0,
             style: Style::default().fg(Color::White),
@@ -111,11 +109,11 @@ impl BranchComponent {
         match ev.code {
             KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.decrement_position();
-                self.style = Style::default().fg(Color::Blue);
+                // self.style = Style::default().fg(Color::Blue);
             }
             KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.increment_position();
-                self.style = Style::default().fg(Color::Red);
+                // self.style = Style::default().fg(Color::Red);
             }
             KeyCode::Char(c) => {
                 self.input.push(c);
@@ -134,6 +132,12 @@ impl BranchComponent {
     }
 
     pub fn focus(&mut self, focus: bool) {
+        // TODO: ?
+        if focus {
+            self.style = Style::default().fg(Color::Yellow);
+        } else {
+            self.style = Style::default().fg(Color::White);
+        }
         self.focused = focus;
     }
 
