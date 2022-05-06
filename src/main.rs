@@ -2,7 +2,6 @@
 mod components;
 mod app;
 mod git;
-use components::branchlist::BranchComponent;
 use crate::app::App;
 
 use crossterm::{
@@ -116,15 +115,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .title(" Status "));
     f.render_widget(status_container, left_container[0]);
 
-    let file_block = Block::default()
-        .title(" Files ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
-        .border_type(BorderType::Rounded);
-    f.render_widget(file_block, left_container[1]);
-
     app.branches.draw(f, left_container[2]);
     app.logs.draw(f, left_container[3]);
+    app.files.draw(f, left_container[1]);
 
     // Right Diff
     let diff_block = Block::default()

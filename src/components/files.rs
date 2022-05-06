@@ -1,5 +1,3 @@
-use crate::git::gitlog::{Commit, GitLog};
-
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::Frame;
 use tui::backend::Backend;
@@ -8,8 +6,8 @@ use tui::style::{Color, Modifier, Style};
 use tui::layout::{Alignment, Direction, Layout, Constraint};
 use tui::text::{Span, Spans};
 
-pub struct LogComponent {
-    pub logs: Vec<Commit>,
+pub struct FileComponent {
+    pub files: Vec<String>, // TODO
     pub state: ListState,
     pub focused: bool,
     pub size: usize,
@@ -17,16 +15,13 @@ pub struct LogComponent {
     pub style: Style,
 }
 
-impl LogComponent {
+impl FileComponent {
     pub fn new() -> Self {
-        let mut git_log = GitLog::new("/Users/reina/school/groupwork/capstone".to_string());
-        git_log.get_history();
-
         Self {
-            logs: git_log.history.clone(),
+            files: vec!["Placeholder1".to_string(), "Placeholder2".to_string()], // TODO
             state: ListState::default(),
             focused: false,
-            size: git_log.history.len(),
+            size: 0, // TODO
             position: 0,
             style: Style::default().fg(Color::White),
         }
@@ -34,25 +29,14 @@ impl LogComponent {
 
     pub fn draw<B: tui::backend::Backend>(&mut self, f: &mut tui::Frame<B>, rect: tui::layout::Rect,) -> crossterm::Result<()> {
         let list_items: Vec<ListItem> = self
-            .logs
+            .files
             .iter()
-            .map(|item| {
-                let text = vec![
-                    Spans::from(vec![
-                        Span::styled(item.get_id(), Style::default().fg(Color::Green)),
-                        Span::raw(" "),
-                        Span::styled(item.get_author(), Style::default().fg(Color::Yellow)),
-                        Span::raw(" "),
-                        Span::raw(item.get_message()),
-                    ]),
-                ];
-                ListItem::new(text)
-            })
+            .map(|item| ListItem::new(item.to_string()))
             .collect();
         let list = TuiList::new(list_items)
             .block(
                 Block::default()
-                    .title(" Logs ")
+                    .title(" Files ")
                     .borders(Borders::ALL)
                     .border_style(self.style)
                     .border_type(BorderType::Rounded),

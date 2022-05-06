@@ -1,5 +1,6 @@
 use crate::components::branchlist::BranchComponent;
 use crate::components::log::LogComponent;
+use crate::components::files::FileComponent;
 
 use tui::style::{Color, Style};
 
@@ -8,6 +9,7 @@ pub struct App {
     pub input: String,
     pub branches: BranchComponent,
     pub logs: LogComponent,
+    pub files: FileComponent,
 }
 
 impl App {
@@ -18,6 +20,7 @@ impl App {
             input: String::new(),
             branches: BranchComponent::new(),
             logs: LogComponent::new(),
+            files: FileComponent::new(),
         }
     }
 }
