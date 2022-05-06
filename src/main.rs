@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 mod components;
 mod app;
+mod git;
 use components::branchlist::BranchComponent;
 use crate::app::App;
 
@@ -163,6 +164,7 @@ fn run_app<B: Backend>(
                     _ => {
                         // Do the stuff
                         app.branches.handle_event(input);
+                        app.logs.handle_event(input);
 
                     }
                 },

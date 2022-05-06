@@ -94,10 +94,10 @@ impl BranchComponent {
             )
             .highlight_style(
                 Style::default()
-                    .bg(Color::LightBlue)
-                    .fg(Color::Black)
+                    .fg(Color::Blue)
                     .add_modifier(Modifier::BOLD),
-            );
+            )
+            .highlight_symbol("> ");
 
         f.render_widget(input, branch_container[0]);
         f.render_stateful_widget(list, branch_container[1], &mut self.state);
@@ -106,6 +106,9 @@ impl BranchComponent {
     }
 
     pub fn handle_event(&mut self, ev: KeyEvent) {
+        if !self.focused {
+            return;
+        }
         match ev.code {
             KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.decrement_position();
