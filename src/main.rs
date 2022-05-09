@@ -40,14 +40,16 @@ fn main() -> crossterm::Result<()> {
                 .checked_sub(last_tick.elapsed())
                 .unwrap_or_else(|| Duration::from_secs(0));
 
-            if poll(timeout).is_ok() {
-                if let CEvent::Key(key) = read().expect("Should read event") {
-                    tx.send(Event::Input(key)).expect("Should send event");
+            if let Ok(poll) = poll(timeout) {
+                if poll {
+                    if let CEvent::Key(key) = read().expect("Should read event") {
+                        tx.send(Event::Input(key)).expect("Should send event");
+                    }
+                } else if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
+                    last_tick = Instant::now();
                 }
-            }
-
-            if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
-                last_tick = Instant::now();
+            } else {
+                // TODO: Handle Err
             }
         }
     });
