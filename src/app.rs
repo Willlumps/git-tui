@@ -1,7 +1,7 @@
 use crate::components::branchlist::BranchComponent;
-use crate::components::log::LogComponent;
-use crate::components::files::FileComponent;
 use crate::components::diff::DiffComponent;
+use crate::components::files::FileComponent;
+use crate::components::log::LogComponent;
 
 use tui::style::{Color, Style};
 

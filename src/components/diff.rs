@@ -1,13 +1,13 @@
 use crate::git::gitdiff::get_diff;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use tui::Frame;
-use tui::backend::Backend;
-use tui::widgets::{Block, Borders, BorderType, List as TuiList, ListItem, ListState, Paragraph};
-use tui::style::{Color, Modifier, Style};
-use tui::layout::{Alignment, Direction, Layout, Constraint};
-use tui::text::{Span, Spans};
 use git2::DiffLine as Git2DiffLine;
+use tui::backend::Backend;
+use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::Frame;
 
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>, // TODO
@@ -57,7 +57,11 @@ impl DiffComponent {
 }
 
 impl DiffComponent {
-    pub fn draw<B: tui::backend::Backend>(&mut self, f: &mut tui::Frame<B>, rect: tui::layout::Rect,) -> crossterm::Result<()> {
+    pub fn draw<B: tui::backend::Backend>(
+        &mut self,
+        f: &mut tui::Frame<B>,
+        rect: tui::layout::Rect,
+    ) -> crossterm::Result<()> {
         self.update_diff();
         let list_items: Vec<ListItem> = self
             .diffs
@@ -67,7 +71,6 @@ impl DiffComponent {
                     '-' => format!("-{}", item.content()),
                     '+' => format!("+{}", item.content()),
                     _ => item.content().to_string(),
-
                 };
                 let text = Span::styled(content, item.style());
                 ListItem::new(text)
@@ -81,10 +84,7 @@ impl DiffComponent {
                     .border_style(self.style)
                     .border_type(BorderType::Rounded),
             )
-            .highlight_style(
-                Style::default()
-                    .add_modifier(Modifier::BOLD),
-            );
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
         f.render_stateful_widget(list, rect, &mut self.state);
 

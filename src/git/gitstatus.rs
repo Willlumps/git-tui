@@ -1,6 +1,6 @@
+use git2::Oid;
 use git2::Repository;
 use git2::StatusOptions;
-use git2::Oid;
 
 pub fn get_modified_files(repo_path: &str) -> Result<(), git2::Error> {
     let repo = match Repository::init(repo_path.to_string()) {

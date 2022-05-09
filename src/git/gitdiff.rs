@@ -1,8 +1,8 @@
 use crate::components::diff::DiffLine;
 
+use git2::DiffFormat;
 use git2::Repository;
 use git2::StatusOptions;
-use git2::DiffFormat;
 
 use tui::style::{Color, Modifier, Style};
 

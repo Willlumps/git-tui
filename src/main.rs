@@ -1,6 +1,6 @@
 #![allow(unused_imports)]
-mod components;
 mod app;
+mod components;
 mod git;
 use crate::app::App;
 
@@ -107,7 +107,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::White))
                 .border_type(BorderType::Rounded)
-                .title(" Status "));
+                .title(" Status "),
+        );
     f.render_widget(status_container, left_container[0]);
 
     app.branches.draw(f, left_container[2]);
@@ -133,20 +134,19 @@ fn run_app<B: Backend>(
                 Event::Input(input) => match input.code {
                     KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                         return Ok(());
-                    },
+                    }
                     KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
                         app.branches.focus(false);
                         app.logs.focus(true);
-                    },
+                    }
                     KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
                         app.branches.focus(true);
                         app.logs.focus(false);
-                    },
+                    }
                     _ => {
                         // Do the stuff
                         app.branches.handle_event(input);
                         app.logs.handle_event(input);
-
                     }
                 },
                 Event::Tick => {}
@@ -158,4 +158,3 @@ fn run_app<B: Backend>(
         }
     }
 }
-

@@ -1,12 +1,12 @@
 use crate::git::gitlog::{Commit, GitLog};
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use tui::Frame;
 use tui::backend::Backend;
-use tui::widgets::{Block, Borders, BorderType, List as TuiList, ListItem, ListState, Paragraph};
+use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
-use tui::layout::{Alignment, Direction, Layout, Constraint};
 use tui::text::{Span, Spans};
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::Frame;
 
 pub struct LogComponent {
     pub logs: Vec<Commit>,
@@ -32,20 +32,22 @@ impl LogComponent {
         }
     }
 
-    pub fn draw<B: tui::backend::Backend>(&mut self, f: &mut tui::Frame<B>, rect: tui::layout::Rect,) -> crossterm::Result<()> {
+    pub fn draw<B: tui::backend::Backend>(
+        &mut self,
+        f: &mut tui::Frame<B>,
+        rect: tui::layout::Rect,
+    ) -> crossterm::Result<()> {
         let list_items: Vec<ListItem> = self
             .logs
             .iter()
             .map(|item| {
-                let text = vec![
-                    Spans::from(vec![
-                        Span::styled(item.get_id(), Style::default().fg(Color::Green)),
-                        Span::raw(" "),
-                        Span::styled(item.get_author(), Style::default().fg(Color::Yellow)),
-                        Span::raw(" "),
-                        Span::raw(item.get_message()),
-                    ]),
-                ];
+                let text = vec![Spans::from(vec![
+                    Span::styled(item.get_id(), Style::default().fg(Color::Green)),
+                    Span::raw(" "),
+                    Span::styled(item.get_author(), Style::default().fg(Color::Yellow)),
+                    Span::raw(" "),
+                    Span::raw(item.get_message()),
+                ])];
                 ListItem::new(text)
             })
             .collect();
@@ -57,10 +59,7 @@ impl LogComponent {
                     .border_style(self.style)
                     .border_type(BorderType::Rounded),
             )
-            .highlight_style(
-                Style::default()
-                    .add_modifier(Modifier::BOLD),
-            )
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
             .highlight_symbol("> ");
 
         f.render_stateful_widget(list, rect, &mut self.state);

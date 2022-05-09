@@ -1,16 +1,16 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use tui::Frame;
-use tui::backend::Backend;
-use tui::widgets::{Block, Borders, BorderType, List as TuiList, ListItem, ListState, Paragraph};
-use tui::style::{Color, Modifier, Style};
-use tui::layout::{Alignment, Direction, Layout, Constraint};
-use fuzzy_matcher::skim::SkimMatcherV2;
-use fuzzy_matcher::FuzzyMatcher;
 use crossterm::{
     event::{poll, read, DisableMouseCapture, Event as CEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
+use fuzzy_matcher::skim::SkimMatcherV2;
+use fuzzy_matcher::FuzzyMatcher;
+use tui::backend::Backend;
+use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::style::{Color, Modifier, Style};
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::Frame;
 
 pub struct BranchComponent {
     pub branches: Vec<String>,
@@ -55,7 +55,11 @@ impl BranchComponent {
         }
     }
 
-    pub fn draw<B: tui::backend::Backend>(&mut self, f: &mut tui::Frame<B>, rect: tui::layout::Rect,) -> crossterm::Result<()> {
+    pub fn draw<B: tui::backend::Backend>(
+        &mut self,
+        f: &mut tui::Frame<B>,
+        rect: tui::layout::Rect,
+    ) -> crossterm::Result<()> {
         let branch_block = Block::default()
             .title(" Branches ")
             .borders(Borders::ALL)
@@ -120,16 +124,14 @@ impl BranchComponent {
             }
             KeyCode::Char(c) => {
                 self.input.push(c);
-                self.filtered_branches =
-                    fuzzy_find(&self.branches, &self.input);
+                self.filtered_branches = fuzzy_find(&self.branches, &self.input);
                 self.reset_state();
             }
             KeyCode::Backspace => {
                 self.input.pop();
-                self.filtered_branches =
-                    fuzzy_find(&self.branches, &self.input);
+                self.filtered_branches = fuzzy_find(&self.branches, &self.input);
                 self.reset_state();
-            },
+            }
             _ => {}
         }
     }
