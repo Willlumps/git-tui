@@ -94,9 +94,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .constraints(
             [
                 Constraint::Length(3),
-                Constraint::Length(10),
-                Constraint::Length(20),
-                Constraint::Length(10),
+                Constraint::Length(8),
+                Constraint::Length(15),
+                Constraint::Length(8),
             ]
             .as_ref(),
         )
@@ -140,15 +140,23 @@ fn run_app<B: Backend>(
                     KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
                         app.branches.focus(false);
                         app.logs.focus(true);
+                        app.diff.focus(false);
                     }
                     KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
                         app.branches.focus(true);
                         app.logs.focus(false);
+                        app.diff.focus(false);
+                    }
+                    KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.diff.focus(true);
+                        app.logs.focus(false);
+                        app.branches.focus(false);
                     }
                     _ => {
-                        // Do the stuff
+                        // Do the stuff...poorly
                         app.branches.handle_event(input);
                         app.logs.handle_event(input);
+                        app.diff.handle_event(input);
                     }
                 },
                 Event::Tick => {}

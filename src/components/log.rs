@@ -12,7 +12,6 @@ pub struct LogComponent {
     pub logs: Vec<Commit>,
     pub state: ListState,
     pub focused: bool,
-    pub size: usize,
     pub position: usize,
     pub style: Style,
 }
@@ -23,10 +22,9 @@ impl LogComponent {
         git_log.get_history();
 
         Self {
-            logs: git_log.history.clone(),
+            logs: git_log.history,
             state: ListState::default(),
             focused: false,
-            size: git_log.history.len(),
             position: 0,
             style: Style::default().fg(Color::White),
         }
@@ -82,19 +80,13 @@ impl LogComponent {
         }
     }
 
-    fn get_position(&self) -> usize {
-        self.position
-    }
-
     fn increment_position(&mut self) {
-        if self.get_position() != 0 {
-            self.position -= 1;
-            self.state.select(Some(self.position));
-        }
+        self.position = self.position.saturating_sub(1);
+        self.state.select(Some(self.position));
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.size - 1 {
+        if self.position < self.logs.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }

@@ -10,13 +10,17 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 pub struct DiffComponent {
-    pub diffs: Vec<DiffLine>, // TODO
+    pub diffs: Vec<DiffLine>,
     pub state: ListState,
     pub focused: bool,
-    pub size: usize,
     pub position: usize,
     pub style: Style,
     pub path: String,
+    size: usize,
+    window_min: usize,
+    window_max: usize,
+    height: usize,
+    first_render: bool,
 }
 
 pub struct DiffLine {
@@ -48,10 +52,14 @@ impl DiffComponent {
             diffs,
             state: ListState::default(),
             focused: false,
-            size: len,
             position: 0,
             style: Style::default().fg(Color::White),
             path: repo_path.to_string(),
+            size: len,
+            window_min: 0,
+            window_max: 0,
+            height: 0,
+            first_render: true,
         }
     }
 }
@@ -63,6 +71,11 @@ impl DiffComponent {
         rect: tui::layout::Rect,
     ) -> crossterm::Result<()> {
         self.update_diff();
+        self.height = (f.size().height as usize) - 4;
+        if self.first_render {
+            self.render_diff();
+        }
+
         let list_items: Vec<ListItem> = self
             .diffs
             .iter()
@@ -84,15 +97,75 @@ impl DiffComponent {
                     .border_style(self.style)
                     .border_type(BorderType::Rounded),
             )
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+            .highlight_style(
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+            );
 
         f.render_stateful_widget(list, rect, &mut self.state);
 
         Ok(())
     }
 
+    pub fn handle_event(&mut self, ev: KeyEvent) {
+        if !self.focused {
+            return;
+        }
+        match ev.code {
+            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.decrement_position();
+            },
+            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.increment_position();
+            },
+            _ => {}
+        }
+    }
+
     pub fn update_diff(&mut self) {
         let path = &self.path;
-        self.diffs = get_diff(path.as_ref()).unwrap();
+        let diff = get_diff(path.as_ref()).unwrap();
+        if diff.len() != self.diffs.len() {
+            self.render_diff();
+        }
+        self.diffs = diff;
+        self.size = self.diffs.len();
+    }
+
+    pub fn focus(&mut self, focus: bool) {
+        if focus {
+            self.style = Style::default().fg(Color::Yellow);
+        } else {
+            self.style = Style::default().fg(Color::White);
+        }
+        self.focused = focus;
+    }
+
+    fn render_diff(&mut self) {
+        self.first_render = false;
+        self.window_min = 0;
+        self.window_max = self.height - 1;
+        self.state.select(Some(self.window_max));
+    }
+
+    fn increment_position(&mut self) {
+        self.position = self.window_min;
+        self.window_min = self.window_min.saturating_sub(1);
+        self.position = self.position.saturating_sub(1);
+
+        if self.position != 0 {
+            self.window_max -= 1;
+        }
+        self.state.select(Some(self.position));
+    }
+
+    fn decrement_position(&mut self) {
+        self.position = self.window_max;
+        if self.position < self.size - 1 {
+            self.position += 1;
+            self.window_max += 1;
+            self.window_min += 1;
+            self.state.select(Some(self.position));
+        }
     }
 }

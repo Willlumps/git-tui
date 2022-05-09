@@ -17,7 +17,6 @@ pub struct BranchComponent {
     pub filtered_branches: Vec<String>,
     pub state: ListState,
     pub focused: bool,
-    pub size: usize,
     pub position: usize,
     // TODO: Make reusable theme?
     pub style: Style,
@@ -45,10 +44,9 @@ impl BranchComponent {
 
         Self {
             branches: words.clone(),
-            filtered_branches: words.clone(),
+            filtered_branches: words,
             state: ListState::default(),
             focused: false,
-            size: words.len(),
             position: 0,
             style: Style::default().fg(Color::White),
             input: String::new(),
@@ -116,11 +114,9 @@ impl BranchComponent {
         match ev.code {
             KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.decrement_position();
-                // self.style = Style::default().fg(Color::Blue);
             }
             KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.increment_position();
-                // self.style = Style::default().fg(Color::Red);
             }
             KeyCode::Char(c) => {
                 self.input.push(c);
@@ -137,7 +133,6 @@ impl BranchComponent {
     }
 
     pub fn focus(&mut self, focus: bool) {
-        // TODO: ?
         if focus {
             self.style = Style::default().fg(Color::Yellow);
         } else {
@@ -146,30 +141,19 @@ impl BranchComponent {
         self.focused = focus;
     }
 
-    fn set_size(&mut self, size: usize) {
-        self.size = size;
-    }
-
-    fn get_position(&self) -> usize {
-        self.position
-    }
-
     fn increment_position(&mut self) {
-        if self.get_position() != 0 {
-            self.position -= 1;
-            self.state.select(Some(self.position));
-        }
+        self.position = self.position.saturating_sub(1);
+        self.state.select(Some(self.position));
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.size - 1 {
+        if self.position < self.filtered_branches.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }
     }
 
     fn reset_state(&mut self) {
-        self.set_size(self.filtered_branches.len());
         self.position = 0;
         self.state.select(Some(0));
     }
