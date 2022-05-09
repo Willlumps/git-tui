@@ -147,7 +147,7 @@ fn run_app<B: Backend>(
                         app.logs.focus(false);
                         app.diff.focus(false);
                     }
-                    KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
+                    KeyCode::Char('g') if input.modifiers == KeyModifiers::CONTROL => {
                         app.diff.focus(true);
                         app.logs.focus(false);
                         app.branches.focus(false);

@@ -112,11 +112,17 @@ impl DiffComponent {
             return;
         }
         match ev.code {
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.decrement_position();
+            KeyCode::Char('j') => {
+                self.decrement_position(1);
             },
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.increment_position();
+            KeyCode::Char('k') => {
+                self.increment_position(1);
+            },
+            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.decrement_position(self.height / 2);
+            },
+            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.increment_position(self.height / 2);
             },
             _ => {}
         }
@@ -148,24 +154,34 @@ impl DiffComponent {
         self.state.select(Some(self.window_max));
     }
 
-    fn increment_position(&mut self) {
+    fn increment_position(&mut self, i: usize) {
         self.position = self.window_min;
-        self.window_min = self.window_min.saturating_sub(1);
-        self.position = self.position.saturating_sub(1);
+        self.window_min = self.window_min.saturating_sub(i);
+        self.position = self.position.saturating_sub(i);
 
         if self.position != 0 {
-            self.window_max -= 1;
+            self.window_max -= i;
+            if self.window_max < self.height - 4 {
+                self.window_max = self.height - 4;
+            }
         }
         self.state.select(Some(self.position));
     }
 
-    fn decrement_position(&mut self) {
+    fn decrement_position(&mut self, i: usize) {
         self.position = self.window_max;
         if self.position < self.size - 1 {
-            self.position += 1;
-            self.window_max += 1;
-            self.window_min += 1;
-            self.state.select(Some(self.position));
+            self.position += i;
+            self.window_max += i;
+            self.window_min += i;
+
+            if self.position > self.size - 1 {
+                self.position = self.size - 1;
+                self.window_max = self.size - 1;
+                self.window_min = self.size - self.height;
+
+            }
         }
+        self.state.select(Some(self.position));
     }
 }
