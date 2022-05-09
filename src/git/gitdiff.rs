@@ -1,0 +1,39 @@
+use crate::components::diff::DiffLine;
+
+use git2::Repository;
+use git2::StatusOptions;
+use git2::DiffFormat;
+
+use tui::style::{Color, Modifier, Style};
+
+pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>, git2::Error> {
+    let repo = match Repository::init(repo_path.to_string()) {
+        Ok(repo) => repo,
+        Err(e) => panic!("failed to init: {}", e),
+    };
+
+    let mut diff_lines: Vec<DiffLine> = Vec::new();
+
+    let mut opt = git2::DiffOptions::new();
+    let diff = repo.diff_index_to_workdir(None, Some(&mut opt))?;
+
+    diff.print(DiffFormat::Patch, |_d, _h, l| {
+        if let Ok(diff_line) = std::str::from_utf8(l.content()) {
+            let line_style = match l.origin() {
+                '-' => Style::default().fg(Color::Red),
+                '+' => Style::default().fg(Color::Green),
+                'H' => Style::default().fg(Color::Cyan),
+                _ => Style::default(),
+            };
+
+            diff_lines.push(DiffLine {
+                content: diff_line.to_string(),
+                origin: l.origin(),
+                style: line_style,
+            });
+        };
+        true
+    })?;
+
+    Ok(diff_lines)
+}

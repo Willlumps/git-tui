@@ -18,8 +18,8 @@ pub struct LogComponent {
 }
 
 impl LogComponent {
-    pub fn new() -> Self {
-        let mut git_log = GitLog::new("/Users/reina/school/groupwork/capstone".to_string());
+    pub fn new(repo_path: &str) -> Self {
+        let mut git_log = GitLog::new(repo_path.to_string());
         git_log.get_history();
 
         Self {

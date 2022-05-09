@@ -30,11 +30,6 @@ enum Event<I> {
 }
 
 fn main() -> crossterm::Result<()> {
-    // let repo = match Repository::open("/Users/reina/school/groupwork/capstone/") {
-    //     Ok(repo) => repo,
-    //     Err(e) => panic!("failed to open: {}", e),
-    // };
-
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(500);
 
@@ -64,7 +59,7 @@ fn main() -> crossterm::Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let mut app = App::new();
+    let mut app = App::new("/Users/reina/school/groupwork/capstone".to_string());
     let res = run_app(&mut terminal, &mut app, rx);
 
     // restore terminal
@@ -118,14 +113,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     app.branches.draw(f, left_container[2]);
     app.logs.draw(f, left_container[3]);
     app.files.draw(f, left_container[1]);
-
-    // Right Diff
-    let diff_block = Block::default()
-        .title(" Diff ")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::White))
-        .border_type(BorderType::Rounded);
-    f.render_widget(diff_block, container[1]);
+    app.diff.draw(f, container[1]);
 }
 
 fn run_app<B: Backend>(
