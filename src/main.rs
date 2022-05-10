@@ -1,5 +1,6 @@
 #![allow(unused_imports)]
 mod app;
+mod list_window;
 mod components;
 mod git;
 use crate::app::App;
