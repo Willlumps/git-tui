@@ -62,7 +62,8 @@ fn main() -> crossterm::Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let mut app = App::new("/Users/reina/school/groupwork/capstone".to_string());
+    //let mut app = App::new("/Users/reina/school/groupwork/capstone".to_string());
+    let mut app = App::new("/Users/reina/projects/rust/git-buddy".to_string());
     let res = run_app(&mut terminal, &mut app, rx);
 
     // restore terminal

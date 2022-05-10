@@ -67,7 +67,7 @@ impl ListWindow {
         if self.position > self.size - 1 {
             self.position = self.size - 1;
             self.max = self.size - 1;
-            self.min = self.size - self.height;
+            self.min = self.size.saturating_sub(self.height);
         } else {
             self.max += distance;
             self.min += distance;

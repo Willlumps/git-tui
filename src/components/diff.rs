@@ -89,10 +89,6 @@ impl DiffComponent {
                     .borders(Borders::ALL)
                     .border_style(self.style)
                     .border_type(BorderType::Rounded),
-            )
-            .highlight_style(
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
             );
 
         f.render_stateful_widget(list, rect, &mut self.state);
