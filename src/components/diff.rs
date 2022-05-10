@@ -1,5 +1,6 @@
 use crate::git::gitdiff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
+use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use git2::DiffLine as Git2DiffLine;
@@ -14,7 +15,7 @@ pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,
     pub state: ListState,
     pub focused: bool,
-    style: Style,
+    style: ComponentTheme,
     path: String,
     window: ListWindow,
     first_render: bool,
@@ -49,7 +50,7 @@ impl DiffComponent {
             diffs,
             state: ListState::default(),
             focused: false,
-            style: Style::default().fg(Color::White),
+            style: ComponentTheme::default(),
             path: repo_path.to_string(),
             window: ListWindow::new(0, 0, 0, len, 0),
             first_render: true,
@@ -86,8 +87,9 @@ impl DiffComponent {
             .block(
                 Block::default()
                     .title(" Diff ")
+                    .style(self.style.style())
                     .borders(Borders::ALL)
-                    .border_style(self.style)
+                    .border_style(self.style.border_style())
                     .border_type(BorderType::Rounded),
             );
 
@@ -131,9 +133,9 @@ impl DiffComponent {
 
     pub fn focus(&mut self, focus: bool) {
         if focus {
-            self.style = Style::default().fg(Color::Yellow);
+            self.style = ComponentTheme::focused();
         } else {
-            self.style = Style::default().fg(Color::White);
+            self.style = ComponentTheme::default();
         }
         self.focused = focus;
     }

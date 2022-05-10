@@ -1,4 +1,5 @@
 use crate::git::gitlog::{Commit, GitLog};
+use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
@@ -13,7 +14,7 @@ pub struct LogComponent {
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
-    pub style: Style,
+    style: ComponentTheme,
 }
 
 impl LogComponent {
@@ -26,7 +27,7 @@ impl LogComponent {
             state: ListState::default(),
             focused: false,
             position: 0,
-            style: Style::default().fg(Color::White),
+            style: ComponentTheme::default(),
         }
     }
 
@@ -52,9 +53,10 @@ impl LogComponent {
         let list = TuiList::new(list_items)
             .block(
                 Block::default()
-                    .title(" Logs ")
+                    .title(" Log ")
                     .borders(Borders::ALL)
-                    .border_style(self.style)
+                    .style(self.style.style())
+                    .border_style(self.style.border_style())
                     .border_type(BorderType::Rounded),
             )
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
@@ -93,11 +95,10 @@ impl LogComponent {
     }
 
     pub fn focus(&mut self, focus: bool) {
-        // TODO: ?
         if focus {
-            self.style = Style::default().fg(Color::Yellow);
+            self.style = ComponentTheme::focused();
         } else {
-            self.style = Style::default().fg(Color::White);
+            self.style = ComponentTheme::default();
         }
         self.focused = focus;
     }

@@ -3,6 +3,7 @@ mod app;
 mod list_window;
 mod components;
 mod git;
+mod component_style;
 use crate::app::App;
 
 use crossterm::{

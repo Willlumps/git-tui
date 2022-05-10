@@ -1,3 +1,5 @@
+use crate::component_style::ComponentTheme;
+
 use crossterm::event::{KeyCode, KeyEvent};
 use crossterm::{
     event::{poll, read, DisableMouseCapture, Event as CEvent, KeyModifiers},
@@ -18,8 +20,7 @@ pub struct BranchComponent {
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
-    // TODO: Make reusable theme?
-    pub style: Style,
+    pub style: ComponentTheme,
     pub input: String,
 }
 
@@ -48,7 +49,7 @@ impl BranchComponent {
             state: ListState::default(),
             focused: false,
             position: 0,
-            style: Style::default().fg(Color::White),
+            style: ComponentTheme::default(),
             input: String::new(),
         }
     }
@@ -61,7 +62,7 @@ impl BranchComponent {
         let branch_block = Block::default()
             .title(" Branches ")
             .borders(Borders::ALL)
-            .border_style(self.style)
+            .border_style(self.style.border_style())
             .border_type(BorderType::Rounded);
         f.render_widget(branch_block, rect);
 
@@ -134,9 +135,9 @@ impl BranchComponent {
 
     pub fn focus(&mut self, focus: bool) {
         if focus {
-            self.style = Style::default().fg(Color::Yellow);
+            self.style = ComponentTheme::focused();
         } else {
-            self.style = Style::default().fg(Color::White);
+            self.style = ComponentTheme::default();
         }
         self.focused = focus;
     }

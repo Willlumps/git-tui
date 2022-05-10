@@ -1,3 +1,5 @@
+use crate::component_style::ComponentTheme;
+
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
@@ -12,7 +14,7 @@ pub struct FileComponent {
     pub focused: bool,
     pub size: usize,
     pub position: usize,
-    pub style: Style,
+    pub style: ComponentTheme,
 }
 
 impl FileComponent {
@@ -21,9 +23,9 @@ impl FileComponent {
             files: vec!["Placeholder1".to_string(), "Placeholder2".to_string()], // TODO
             state: ListState::default(),
             focused: false,
-            size: 0, // TODO
+            size: 0,
             position: 0,
-            style: Style::default().fg(Color::White),
+            style: ComponentTheme::default(),
         }
     }
 
@@ -41,8 +43,9 @@ impl FileComponent {
             .block(
                 Block::default()
                     .title(" Files ")
+                    .style(self.style.style())
                     .borders(Borders::ALL)
-                    .border_style(self.style)
+                    .border_style(self.style.border_style())
                     .border_type(BorderType::Rounded),
             )
             .highlight_style(Style::default().add_modifier(Modifier::BOLD))
@@ -87,11 +90,10 @@ impl FileComponent {
     }
 
     pub fn focus(&mut self, focus: bool) {
-        // TODO: ?
         if focus {
-            self.style = Style::default().fg(Color::Yellow);
+            self.style = ComponentTheme::focused();
         } else {
-            self.style = Style::default().fg(Color::White);
+            self.style = ComponentTheme::default();
         }
         self.focused = focus;
     }
