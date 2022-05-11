@@ -6,7 +6,9 @@ use git2::StatusOptions;
 
 use tui::style::{Color, Modifier, Style};
 
-pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>, git2::Error> {
+use std::error::Error;
+
+pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>, Box<dyn Error>> {
     let repo = match Repository::init(repo_path.to_string()) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),

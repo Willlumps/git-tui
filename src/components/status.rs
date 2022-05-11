@@ -8,6 +8,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
+use std::error::Error;
+
 pub struct StatusComponent {
     branch_name: String,
     files_changed: String,
@@ -29,7 +31,7 @@ impl StatusComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> crossterm::Result<()> {
+    ) -> Result<(), Box<dyn Error>> {
         let text = Spans::from(vec![
             Span::styled("  2 ", Style::default().fg(Color::Blue)),
             Span::styled("  22 ", Style::default().fg(Color::Green)),

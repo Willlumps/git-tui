@@ -11,10 +11,11 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
-use git2::{Branch, BranchType, Error, Repository};
+use git2::{Branch, BranchType, Error as Git2Error, Repository};
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::{
+    error::Error,
     io, thread,
     time::{Duration, Instant},
 };
@@ -83,7 +84,7 @@ fn main() -> crossterm::Result<()> {
     Ok(())
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
     let size = f.size();
     let container = Layout::default()
         .direction(Direction::Horizontal)
@@ -105,12 +106,13 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(container[0]);
 
-    // TODO
-    app.status.draw(f, left_container[0]);
-    app.branches.draw(f, left_container[2]);
-    app.logs.draw(f, left_container[3]);
-    app.files.draw(f, left_container[1]);
-    app.diff.draw(f, container[1]);
+    app.status.draw(f, left_container[0])?;
+    app.branches.draw(f, left_container[2])?;
+    app.logs.draw(f, left_container[3])?;
+    app.files.draw(f, left_container[1])?;
+    app.diff.draw(f, container[1])?;
+
+    Ok(())
 }
 
 fn run_app<B: Backend>(
@@ -123,7 +125,11 @@ fn run_app<B: Backend>(
     app.branches.focus(true);
 
     loop {
-        terminal.draw(|f| ui(f, app))?;
+        terminal.draw(|f| {
+            if let Err(e) = ui(f, app) {
+                eprintln!("Draw error: {}", e);
+            }
+        })?;
 
         match rx.recv() {
             Ok(event) => match event {

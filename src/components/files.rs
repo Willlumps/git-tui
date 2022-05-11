@@ -8,6 +8,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
+use std::error::Error;
+
 pub struct FileComponent {
     pub files: Vec<String>, // TODO
     pub state: ListState,
@@ -33,7 +35,7 @@ impl FileComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> crossterm::Result<()> {
+    ) -> Result<(), Box<dyn Error>> {
         let list_items: Vec<ListItem> = self
             .files
             .iter()

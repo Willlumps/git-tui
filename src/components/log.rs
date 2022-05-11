@@ -9,6 +9,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
+use std::error::Error;
+
 pub struct LogComponent {
     pub logs: Vec<Commit>,
     pub state: ListState,
@@ -35,7 +37,7 @@ impl LogComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> crossterm::Result<()> {
+    ) -> Result<(), Box<dyn Error>> {
         let list_items: Vec<ListItem> = self
             .logs
             .iter()

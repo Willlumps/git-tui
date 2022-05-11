@@ -11,6 +11,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
+use std::error::Error;
+
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,
     pub state: ListState,
@@ -63,7 +65,7 @@ impl DiffComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> crossterm::Result<()> {
+    ) -> Result<(), Box<dyn Error>> {
         self.update_diff();
         self.window.set_height((f.size().height as usize) - 4);
         if self.first_render {
