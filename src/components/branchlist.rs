@@ -9,7 +9,7 @@ use crossterm::{
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
@@ -54,13 +54,14 @@ impl BranchComponent {
         }
     }
 
-    pub fn draw<B: tui::backend::Backend>(
+    pub fn draw<B: Backend>(
         &mut self,
-        f: &mut tui::Frame<B>,
-        rect: tui::layout::Rect,
+        f: &mut Frame<B>,
+        rect: Rect,
     ) -> crossterm::Result<()> {
         let branch_block = Block::default()
             .title(" Branches ")
+            .style(self.style.style())
             .borders(Borders::ALL)
             .border_style(self.style.border_style())
             .border_type(BorderType::Rounded);

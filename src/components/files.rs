@@ -2,7 +2,7 @@ use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
@@ -29,10 +29,10 @@ impl FileComponent {
         }
     }
 
-    pub fn draw<B: tui::backend::Backend>(
+    pub fn draw<B: Backend>(
         &mut self,
-        f: &mut tui::Frame<B>,
-        rect: tui::layout::Rect,
+        f: &mut Frame<B>,
+        rect: Rect,
     ) -> crossterm::Result<()> {
         let list_items: Vec<ListItem> = self
             .files

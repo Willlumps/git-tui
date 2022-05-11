@@ -5,7 +5,7 @@ use crate::component_style::ComponentTheme;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use git2::DiffLine as Git2DiffLine;
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
@@ -59,10 +59,10 @@ impl DiffComponent {
 }
 
 impl DiffComponent {
-    pub fn draw<B: tui::backend::Backend>(
+    pub fn draw<B: Backend>(
         &mut self,
-        f: &mut tui::Frame<B>,
-        rect: tui::layout::Rect,
+        f: &mut Frame<B>,
+        rect: Rect,
     ) -> crossterm::Result<()> {
         self.update_diff();
         self.window.set_height((f.size().height as usize) - 4);
