@@ -1,10 +1,5 @@
 use tui::style::{Color, Modifier, Style};
 
-pub enum ComponentStyle {
-    Selected(ComponentTheme),
-    UnSelected(ComponentTheme),
-}
-
 pub struct ComponentTheme {
     style: Style,
     border_style: Style,

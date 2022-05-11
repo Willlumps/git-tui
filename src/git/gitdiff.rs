@@ -2,9 +2,7 @@ use crate::components::diff::DiffLine;
 
 use git2::DiffFormat;
 use git2::Repository;
-use git2::StatusOptions;
-
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 
 use std::error::Error;
 

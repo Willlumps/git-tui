@@ -1,11 +1,6 @@
 use crate::component_style::ComponentTheme;
 
-use crossterm::event::{KeyCode, KeyEvent};
-use crossterm::{
-    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyModifiers},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
-};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use tui::backend::Backend;

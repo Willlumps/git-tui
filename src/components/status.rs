@@ -1,15 +1,13 @@
-use crate::component_style::ComponentTheme;
-
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
+use tui::layout::Rect;
+use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::widgets::{Block, BorderType, Borders, Paragraph};
 use tui::Frame;
 
 use std::error::Error;
 
+#[allow(unused)]
 pub struct StatusComponent {
     branch_name: String,
     files_changed: String,

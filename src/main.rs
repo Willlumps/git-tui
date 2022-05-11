@@ -1,4 +1,4 @@
-#![allow(unused_imports)]
+//#![allow(unused_imports)]
 mod app;
 mod list_window;
 mod components;
@@ -11,7 +11,6 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
-use git2::{Branch, BranchType, Error as Git2Error, Repository};
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::{
@@ -21,9 +20,7 @@ use std::{
 };
 use tui::{
     backend::{Backend, CrosstermBackend},
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, Clear, List as TuiList, ListItem, ListState, Paragraph},
+    layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
 

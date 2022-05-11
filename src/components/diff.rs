@@ -3,12 +3,11 @@ use crate::list_window::{ListWindow, ScrollDirection};
 use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use git2::DiffLine as Git2DiffLine;
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::layout::Rect;
+use tui::style::Style;
+use tui::text::Span;
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
 use std::error::Error;

@@ -1,7 +1,5 @@
-use git2::Oid;
 use git2::Repository;
 use git2::StatusOptions;
-
 use std::error::Error;
 
 pub fn get_modified_files(repo_path: &str) -> Result<(), Box<dyn Error>> {

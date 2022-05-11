@@ -4,8 +4,6 @@ use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::status::StatusComponent;
 
-use tui::style::{Color, Style};
-
 pub struct App {
     pub input: String,
     pub branches: BranchComponent,
