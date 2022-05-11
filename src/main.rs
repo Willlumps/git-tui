@@ -105,17 +105,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         )
         .split(container[0]);
 
-    let status_container = Paragraph::new(" Placeholder ")
-        .style(Style::default())
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::White))
-                .border_type(BorderType::Rounded)
-                .title(" Status "),
-        );
-    f.render_widget(status_container, left_container[0]);
-
+    // TODO
+    app.status.draw(f, left_container[0]);
     app.branches.draw(f, left_container[2]);
     app.logs.draw(f, left_container[3]);
     app.files.draw(f, left_container[1]);

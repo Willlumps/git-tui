@@ -78,8 +78,6 @@ impl BranchComponent {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
                     .title(" Search ")
                     .title_alignment(Alignment::Center),
             );
@@ -93,7 +91,6 @@ impl BranchComponent {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::White))
                     .border_type(BorderType::Rounded),
             )
             .highlight_style(
