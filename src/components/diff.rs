@@ -94,19 +94,11 @@ impl DiffComponent {
     pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
         let path = &self.path;
         let diff = get_diff(path.as_ref()).unwrap();
-        let matches = self
-            .diffs
-            .iter()
-            .zip(diff.iter())
-            .filter(|&(a, b)| a == b)
-            .count();
-
-        if matches != self.diffs.len() {
+        if diff.len() != self.diffs.len() {
             self.render_diff();
             self.diffs = diff;
             self.window.set_size(self.diffs.len());
         }
-
         Ok(())
     }
 
