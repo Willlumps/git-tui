@@ -106,6 +106,7 @@ impl DiffComponent {
             self.diffs = diff;
             self.window.set_size(self.diffs.len());
         }
+
         Ok(())
     }
 
@@ -142,7 +143,6 @@ impl DiffComponent {
     }
 
     fn render_diff(&mut self) {
-        // TODO: Keep same window position if possible
         self.window.reset();
         self.state.select(self.window.position());
     }

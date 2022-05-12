@@ -105,6 +105,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn Error>>
 
     // put this in app.rs?
     app.diff.update()?;
+    app.logs.update()?;
 
     app.status.draw(f, left_container[0])?;
     app.branches.draw(f, left_container[2])?;
@@ -159,12 +160,14 @@ fn run_app<B: Backend>(
                         app.diff.handle_event(input);
                     }
                 },
-                Event::Tick => {}
+                Event::Tick => {
+                }
             },
             Err(e) => {
                 // TODO
                 eprintln!("FIX ME {e}")
             }
         }
+
     }
 }

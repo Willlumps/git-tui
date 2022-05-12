@@ -1,4 +1,4 @@
-use crate::git::gitlog::{Commit, GitLog};
+use crate::git::gitlog::GitLog;
 use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -12,7 +12,7 @@ use tui::Frame;
 use std::error::Error;
 
 pub struct LogComponent {
-    pub logs: Vec<Commit>,
+    pub logs: GitLog,
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
@@ -21,11 +21,8 @@ pub struct LogComponent {
 
 impl LogComponent {
     pub fn new(repo_path: &str) -> Self {
-        let mut git_log = GitLog::new(repo_path.to_string());
-        git_log.get_history();
-
         Self {
-            logs: git_log.history,
+            logs: GitLog::new(repo_path.to_string()),
             state: ListState::default(),
             focused: false,
             position: 0,
@@ -39,7 +36,7 @@ impl LogComponent {
         rect: Rect,
     ) -> Result<(), Box<dyn Error>> {
         let list_items: Vec<ListItem> = self
-            .logs
+            .logs.history
             .iter()
             .map(|item| {
                 let text = Spans::from(vec![
@@ -67,6 +64,11 @@ impl LogComponent {
         Ok(())
     }
 
+    pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+        self.logs.get_history();
+        Ok(())
+    }
+
     pub fn handle_event(&mut self, ev: KeyEvent) {
         if !self.focused {
             return;
@@ -88,7 +90,7 @@ impl LogComponent {
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.logs.len() - 1 {
+        if self.position < self.logs.history.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }
