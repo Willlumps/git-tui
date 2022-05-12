@@ -4,25 +4,24 @@ use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::status::StatusComponent;
 
-pub struct App {
+pub struct App<'src> {
     pub input: String,
     pub branches: BranchComponent,
-    pub logs: LogComponent,
+    pub logs: LogComponent<'src>,
     pub files: FileComponent,
     pub diff: DiffComponent,
     pub status: StatusComponent,
-    pub repo_path: String,
+    pub repo_path: &'src str,
 }
 
-impl App {
-    pub fn new(repo_path: String) -> Self {
+impl<'src> App<'src> {
+    pub fn new(repo_path: &'src str) -> Self {
         Self {
-            //repo,
             input: String::new(),
             branches: BranchComponent::new(),
-            logs: LogComponent::new(repo_path.as_str()),
+            logs: LogComponent::new(repo_path),
             files: FileComponent::new(),
-            diff: DiffComponent::new(repo_path.as_str()),
+            diff: DiffComponent::new(repo_path),
             status: StatusComponent::new(),
             repo_path,
         }

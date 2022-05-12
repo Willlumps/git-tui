@@ -7,7 +7,7 @@ use tui::style::{Color, Style};
 use std::error::Error;
 
 pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>, Box<dyn Error>> {
-    let repo = match Repository::init(repo_path.to_string()) {
+    let repo = match Repository::init(repo_path) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),
     };

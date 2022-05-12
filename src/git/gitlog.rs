@@ -30,13 +30,13 @@ impl Commit {
     }
 }
 
-pub struct GitLog {
-    pub repo_path: String,
+pub struct GitLog<'src> {
+    pub repo_path: &'src str,
     pub history: Vec<Commit>,
 }
 
-impl GitLog {
-    pub fn new(repo_path: String) -> Self {
+impl<'src> GitLog<'src> {
+    pub fn new(repo_path: &'src str) -> Self {
         Self {
             repo_path,
             history: Vec::new(),
@@ -49,7 +49,7 @@ impl GitLog {
 
     fn fetch_history(&mut self) -> Result<(), Box<dyn Error>> {
         self.history.clear();
-        let repo = match Repository::init(&self.repo_path) {
+        let repo = match Repository::init(self.repo_path) {
             Ok(repo) => repo,
             Err(e) => panic!("failed to init: {}", e),
         };

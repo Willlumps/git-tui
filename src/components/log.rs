@@ -11,18 +11,18 @@ use tui::Frame;
 
 use std::error::Error;
 
-pub struct LogComponent {
-    pub logs: GitLog,
+pub struct LogComponent<'src> {
+    pub logs: GitLog<'src>,
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
     style: ComponentTheme,
 }
 
-impl LogComponent {
-    pub fn new(repo_path: &str) -> Self {
+impl<'src> LogComponent<'src> {
+    pub fn new(repo_path: &'src str) -> Self {
         Self {
-            logs: GitLog::new(repo_path.to_string()),
+            logs: GitLog::new(repo_path),
             state: ListState::default(),
             focused: false,
             position: 0,
