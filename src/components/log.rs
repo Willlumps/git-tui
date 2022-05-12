@@ -45,8 +45,6 @@ impl LogComponent {
                 let text = Spans::from(vec![
                     Span::styled(item.get_id(), Style::default().fg(Color::Green)),
                     Span::raw(" "),
-                    Span::styled(item.get_author(), Style::default().fg(Color::Yellow)),
-                    Span::raw(" "),
                     Span::raw(item.get_message()),
                 ]);
                 ListItem::new(text)

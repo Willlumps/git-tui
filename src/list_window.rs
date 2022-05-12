@@ -25,7 +25,7 @@ impl ListWindow {
     pub fn reset(&mut self) {
         self.min = 0;
         self.max = self.height;
-        self.position = self.height;
+        self.position = 0;
     }
 
     pub fn scroll(&mut self, direction: ScrollDirection, distance: usize) {

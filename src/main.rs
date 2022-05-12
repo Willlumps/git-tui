@@ -103,6 +103,9 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn Error>>
         )
         .split(container[0]);
 
+    // put this in app.rs?
+    app.diff.update()?;
+
     app.status.draw(f, left_container[0])?;
     app.branches.draw(f, left_container[2])?;
     app.logs.draw(f, left_container[3])?;

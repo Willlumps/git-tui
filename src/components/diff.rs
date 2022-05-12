@@ -1,6 +1,6 @@
+use crate::component_style::ComponentTheme;
 use crate::git::gitdiff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
-use crate::component_style::ComponentTheme;
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
@@ -22,6 +22,7 @@ pub struct DiffComponent {
     first_render: bool,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct DiffLine {
     pub content: String,
     pub origin: char,
@@ -60,16 +61,8 @@ impl DiffComponent {
 }
 
 impl DiffComponent {
-    pub fn draw<B: Backend>(
-        &mut self,
-        f: &mut Frame<B>,
-        rect: Rect,
-    ) -> Result<(), Box<dyn Error>> {
-        self.update_diff();
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<(), Box<dyn Error>> {
         self.window.set_height((f.size().height as usize) - 4);
-        if self.first_render {
-            self.render_diff();
-        }
 
         let list_items: Vec<ListItem> = self
             .diffs
@@ -84,18 +77,35 @@ impl DiffComponent {
                 ListItem::new(text)
             })
             .collect();
-        let list = TuiList::new(list_items)
-            .block(
-                Block::default()
-                    .title(" Diff ")
-                    .style(self.style.style())
-                    .borders(Borders::ALL)
-                    .border_style(self.style.border_style())
-                    .border_type(BorderType::Rounded),
-            );
+        let list = TuiList::new(list_items).block(
+            Block::default()
+                .title(" Diff ")
+                .style(self.style.style())
+                .borders(Borders::ALL)
+                .border_style(self.style.border_style())
+                .border_type(BorderType::Rounded),
+        );
 
         f.render_stateful_widget(list, rect, &mut self.state);
 
+        Ok(())
+    }
+
+    pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+        let path = &self.path;
+        let diff = get_diff(path.as_ref()).unwrap();
+        let matches = self
+            .diffs
+            .iter()
+            .zip(diff.iter())
+            .filter(|&(a, b)| a == b)
+            .count();
+
+        if matches != self.diffs.len() {
+            self.render_diff();
+            self.diffs = diff;
+            self.window.set_size(self.diffs.len());
+        }
         Ok(())
     }
 
@@ -122,16 +132,6 @@ impl DiffComponent {
         }
     }
 
-    pub fn update_diff(&mut self) {
-        let path = &self.path;
-        let diff = get_diff(path.as_ref()).unwrap();
-        if diff.len() != self.diffs.len() {
-            self.render_diff();
-            self.diffs = diff;
-            self.window.set_size(self.diffs.len());
-        }
-    }
-
     pub fn focus(&mut self, focus: bool) {
         if focus {
             self.style = ComponentTheme::focused();
@@ -142,7 +142,7 @@ impl DiffComponent {
     }
 
     fn render_diff(&mut self) {
-        self.first_render = false;
+        // TODO: Keep same window position if possible
         self.window.reset();
         self.state.select(self.window.position());
     }
