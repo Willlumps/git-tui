@@ -1,4 +1,3 @@
-//#![allow(unused_imports)]
 mod app;
 mod list_window;
 mod components;
