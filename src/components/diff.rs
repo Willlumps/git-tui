@@ -19,6 +19,7 @@ pub struct DiffComponent {
     style: ComponentTheme,
     path: String,
     window: ListWindow,
+    first_update: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -54,6 +55,7 @@ impl DiffComponent {
             style: ComponentTheme::default(),
             path: repo_path.to_string(),
             window: ListWindow::new(0, 0, 0, len, 0),
+            first_update: true,
         }
     }
 }
@@ -90,6 +92,11 @@ impl DiffComponent {
     }
 
     pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+        if self.first_update && self.window.height() > 0 {
+            self.first_update = false;
+            self.window.reset();
+        }
+
         let path = &self.path;
         let diff = get_diff(path.as_ref())?;
         if diff.len() != self.diffs.len() {

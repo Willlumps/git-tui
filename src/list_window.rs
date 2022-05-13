@@ -1,9 +1,9 @@
 pub struct ListWindow {
-    pub min: usize,
-    pub max: usize,
-    pub position: usize,
-    pub size: usize,
-    pub height: usize,
+    min: usize,
+    max: usize,
+    position: usize,
+    size: usize,
+    height: usize,
 }
 
 pub enum ScrollDirection {
@@ -24,7 +24,7 @@ impl ListWindow {
 
     pub fn reset(&mut self) {
         self.min = 0;
-        self.max = self.height;
+        self.max = self.size.min(self.height);
         self.position = 0;
     }
 
@@ -52,8 +52,9 @@ impl ListWindow {
     }
 
     fn scroll_up(&mut self, distance: usize) {
-        self.min = self.min.saturating_sub(distance);
         self.position = self.min;
+        self.min = self.min.saturating_sub(distance);
+        self.position = self.position.saturating_sub(distance);
 
         if self.position > 0 {
             self.max -= distance;
