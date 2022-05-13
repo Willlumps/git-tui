@@ -1,7 +1,6 @@
+use anyhow::Result;
 use git2::Oid;
 use git2::Repository;
-
-use std::error::Error;
 
 #[derive(Clone, Debug)]
 pub struct Commit {
@@ -47,7 +46,7 @@ impl<'src> GitLog<'src> {
         self.fetch_history().unwrap();
     }
 
-    fn fetch_history(&mut self) -> Result<(), Box<dyn Error>> {
+    fn fetch_history(&mut self) -> Result<()> {
         self.history.clear();
         let repo = match Repository::init(self.repo_path) {
             Ok(repo) => repo,

@@ -1,13 +1,12 @@
 use crate::git::gitstatus::DiffStats;
 
+use anyhow::Result;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, Paragraph};
 use tui::Frame;
-
-use std::error::Error;
 
 #[allow(unused)]
 pub struct StatusComponent<'src> {
@@ -33,7 +32,7 @@ impl<'src> StatusComponent<'src> {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let status_block = Block::default()
             .title(" Status ")
             .style(Style::default().fg(Color::White))
@@ -47,7 +46,6 @@ impl<'src> StatusComponent<'src> {
             .margin(1)
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
             .split(rect);
-
 
         let text = Spans::from(vec![
             Span::styled(format!("  {} ", self.files_changed), Style::default().fg(Color::Blue)),
@@ -68,7 +66,7 @@ impl<'src> StatusComponent<'src> {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn update(&mut self) -> Result<()> {
         let stats = DiffStats::get_stats(self.repo_path)?;
         self.files_changed = stats.files_changed;
         self.insertions = stats.insertions;

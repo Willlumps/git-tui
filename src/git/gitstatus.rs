@@ -1,5 +1,5 @@
+use anyhow::Result;
 use git2::Repository;
-use std::error::Error;
 
 pub struct DiffStats {
     pub files_changed: usize,
@@ -8,7 +8,7 @@ pub struct DiffStats {
 }
 
 impl DiffStats {
-    pub fn get_stats(repo_path: &str) -> Result<DiffStats, Box<dyn Error>> {
+    pub fn get_stats(repo_path: &str) -> Result<DiffStats> {
         let repo = match Repository::init(repo_path) {
             Ok(repo) => repo,
             Err(e) => panic!("failed to init: {}", e),

@@ -1,13 +1,12 @@
 use crate::component_style::ComponentTheme;
 
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use std::error::Error;
 
 pub struct FileComponent {
     pub files: Vec<String>, // TODO
@@ -35,7 +34,7 @@ impl FileComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let list_items: Vec<ListItem> = self
             .files
             .iter()

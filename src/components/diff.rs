@@ -2,6 +2,7 @@ use crate::component_style::ComponentTheme;
 use crate::git::gitdiff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
 
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -9,8 +10,6 @@ use tui::style::Style;
 use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use std::error::Error;
 
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,
@@ -61,7 +60,7 @@ impl DiffComponent {
 }
 
 impl DiffComponent {
-    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<(), Box<dyn Error>> {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         self.window.set_height((f.size().height as usize) - 4);
 
         let list_items: Vec<ListItem> = self
@@ -91,7 +90,7 @@ impl DiffComponent {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn update(&mut self) -> Result<()> {
         if self.first_update && self.window.height() > 0 {
             self.first_update = false;
             self.window.reset();

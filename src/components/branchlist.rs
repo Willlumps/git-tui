@@ -1,5 +1,6 @@
 use crate::component_style::ComponentTheme;
 
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
@@ -53,7 +54,7 @@ impl BranchComponent {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> crossterm::Result<()> {
+    ) -> Result<()> {
         let branch_block = Block::default()
             .title(" Branches ")
             .style(self.style.style())

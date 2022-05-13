@@ -6,6 +6,7 @@ mod git;
 mod component_style;
 use crate::app::App;
 
+use anyhow::Result;
 use crossterm::{
     event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyModifiers},
     execute,
@@ -14,7 +15,6 @@ use crossterm::{
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::{
-    error::Error,
     io, thread,
     time::{Duration, Instant},
 };
@@ -29,7 +29,7 @@ enum Event<I> {
     Tick,
 }
 
-fn main() -> crossterm::Result<()> {
+fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(500);
 
@@ -81,7 +81,7 @@ fn main() -> crossterm::Result<()> {
     Ok(())
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<(), Box<dyn Error>> {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     let size = f.size();
     let container = Layout::default()
         .direction(Direction::Horizontal)
@@ -121,7 +121,7 @@ fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
-) -> io::Result<()> {
+) -> Result<()> {
     app.branches.state.select(Some(0));
     app.logs.state.select(Some(0));
     app.branches.focus(true);

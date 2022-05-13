@@ -1,6 +1,7 @@
 use crate::git::gitlog::GitLog;
 use crate::component_style::ComponentTheme;
 
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -8,8 +9,6 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use std::error::Error;
 
 pub struct LogComponent<'src> {
     pub logs: GitLog<'src>,
@@ -34,7 +33,7 @@ impl<'src> LogComponent<'src> {
         &mut self,
         f: &mut Frame<B>,
         rect: Rect,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         let list_items: Vec<ListItem> = self
             .logs.history
             .iter()
@@ -64,7 +63,7 @@ impl<'src> LogComponent<'src> {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn update(&mut self) -> Result<()> {
         self.logs.get_history();
         Ok(())
     }

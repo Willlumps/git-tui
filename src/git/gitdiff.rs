@@ -1,12 +1,11 @@
 use crate::components::diff::DiffLine;
 
+use anyhow::Result;
 use git2::DiffFormat;
 use git2::Repository;
 use tui::style::{Color, Style};
 
-use std::error::Error;
-
-pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>, Box<dyn Error>> {
+pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>> {
     let repo = match Repository::init(repo_path) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),
