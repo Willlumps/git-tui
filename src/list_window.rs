@@ -24,7 +24,7 @@ impl ListWindow {
 
     pub fn reset(&mut self) {
         self.min = 0;
-        self.max = self.size.min(self.height) - 1;
+        self.max = self.size.min(self.height).saturating_sub(1);
         self.position = 0;
     }
 
