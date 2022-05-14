@@ -128,7 +128,6 @@ fn run_app<B: Backend>(
 ) -> Result<()> {
     app.branches.state.select(Some(0));
     app.logs.state.select(Some(0));
-    app.branches.focus(true);
 
     loop {
         terminal.draw(|f| {
@@ -144,19 +143,16 @@ fn run_app<B: Backend>(
                         return Ok(());
                     }
                     KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.branches.focus(false);
-                        app.logs.focus(true);
-                        app.diff.focus(false);
+                        app.focus(ComponentType::LogComponent);
                     }
                     KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.branches.focus(true);
-                        app.logs.focus(false);
-                        app.diff.focus(false);
+                        app.focus(ComponentType::BranchComponent);
                     }
                     KeyCode::Char('g') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.diff.focus(true);
-                        app.logs.focus(false);
-                        app.branches.focus(false);
+                        app.focus(ComponentType::DiffComponent);
+                    }
+                    KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.focus(ComponentType::FilesComponent);
                     }
                     _ => {
                         // Do the stuff...poorly

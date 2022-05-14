@@ -14,6 +14,7 @@ pub struct App {
     pub diff: DiffComponent,
     pub status: StatusComponent,
     pub repo_path: PathBuf,
+    pub focused_component: ComponentType,
 }
 
 impl App {
@@ -25,6 +26,33 @@ impl App {
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             repo_path,
+            focused_component: ComponentType::None,
         }
+    }
+
+    pub fn focus(&mut self, component: ComponentType) {
+        let current_focus = self.focused_component.clone();
+        self._focus(current_focus, false);
+        self._focus(component, true);
+    }
+
+    pub fn _focus(&mut self, component: ComponentType, focus: bool) {
+        match component {
+            ComponentType::LogComponent => {
+                self.logs.focus(focus);
+            },
+            ComponentType::DiffComponent => {
+                self.diff.focus(focus);
+            },
+            ComponentType::BranchComponent => {
+                self.branches.focus(focus);
+            },
+            ComponentType::FilesComponent => {
+                self.files.focus(focus);
+            },
+            ComponentType::None => {},
+        }
+
+        self.focused_component = component;
     }
 }
