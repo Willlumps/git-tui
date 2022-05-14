@@ -1,5 +1,6 @@
 use crate::git::gitlog::{fetch_history, Commit};
 use crate::component_style::ComponentTheme;
+use crate::components::Component;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -67,12 +68,29 @@ impl LogComponent {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<()> {
+
+
+    fn increment_position(&mut self) {
+        self.position = self.position.saturating_sub(1);
+        self.state.select(Some(self.position));
+    }
+
+    fn decrement_position(&mut self) {
+        if self.position < self.logs.len() - 1 {
+            self.position += 1;
+            self.state.select(Some(self.position));
+        }
+    }
+
+}
+
+impl Component for LogComponent {
+    fn update(&mut self) -> Result<()> {
         self.logs = fetch_history(&self.repo_path)?;
         Ok(())
     }
 
-    pub fn handle_event(&mut self, ev: KeyEvent) {
+    fn handle_event(&mut self, ev: KeyEvent) {
         if !self.focused {
             return;
         }
@@ -87,19 +105,7 @@ impl LogComponent {
         }
     }
 
-    fn increment_position(&mut self) {
-        self.position = self.position.saturating_sub(1);
-        self.state.select(Some(self.position));
-    }
-
-    fn decrement_position(&mut self) {
-        if self.position < self.logs.len() - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
-    pub fn focus(&mut self, focus: bool) {
+    fn focus(&mut self, focus: bool) {
         if focus {
             self.style = ComponentTheme::focused();
         } else {

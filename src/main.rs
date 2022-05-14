@@ -4,6 +4,7 @@ mod components;
 mod git;
 mod component_style;
 use crate::app::App;
+use components::{Component, ComponentType};
 
 use anyhow::Result;
 use crossterm::{
@@ -22,7 +23,6 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
-use std::path::PathBuf;
 use std::env::current_dir;
 
 enum Event<I> {
@@ -173,6 +173,5 @@ fn run_app<B: Backend>(
                 eprintln!("FIX ME {e}")
             }
         }
-
     }
 }

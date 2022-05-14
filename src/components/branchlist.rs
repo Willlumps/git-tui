@@ -10,6 +10,8 @@ use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
+use super::Component;
+
 pub struct BranchComponent {
     pub branches: Vec<String>,
     pub filtered_branches: Vec<String>,
@@ -102,7 +104,31 @@ impl BranchComponent {
         Ok(())
     }
 
-    pub fn handle_event(&mut self, ev: KeyEvent) {
+
+    fn increment_position(&mut self) {
+        self.position = self.position.saturating_sub(1);
+        self.state.select(Some(self.position));
+    }
+
+    fn decrement_position(&mut self) {
+        if self.position < self.filtered_branches.len() - 1 {
+            self.position += 1;
+            self.state.select(Some(self.position));
+        }
+    }
+
+    fn reset_state(&mut self) {
+        self.position = 0;
+        self.state.select(Some(0));
+    }
+}
+
+impl Component for BranchComponent {
+    fn update(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn handle_event(&mut self, ev: KeyEvent) {
         if !self.focused {
             return;
         }
@@ -127,30 +153,13 @@ impl BranchComponent {
         }
     }
 
-    pub fn focus(&mut self, focus: bool) {
+    fn focus(&mut self, focus: bool) {
         if focus {
             self.style = ComponentTheme::focused();
         } else {
             self.style = ComponentTheme::default();
         }
         self.focused = focus;
-    }
-
-    fn increment_position(&mut self) {
-        self.position = self.position.saturating_sub(1);
-        self.state.select(Some(self.position));
-    }
-
-    fn decrement_position(&mut self) {
-        if self.position < self.filtered_branches.len() - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
-    fn reset_state(&mut self) {
-        self.position = 0;
-        self.state.select(Some(0));
     }
 }
 

@@ -8,6 +8,8 @@ use tui::style::{Modifier, Style};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
+use super::Component;
+
 pub struct FileComponent {
     pub files: Vec<String>, // TODO
     pub state: ListState,
@@ -17,7 +19,6 @@ pub struct FileComponent {
     pub style: ComponentTheme,
 }
 
-#[allow(dead_code)]
 impl FileComponent {
     pub fn new() -> Self {
         Self {
@@ -57,21 +58,6 @@ impl FileComponent {
         Ok(())
     }
 
-    pub fn handle_event(&mut self, ev: KeyEvent) {
-        if !self.focused {
-            return;
-        }
-        match ev.code {
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.decrement_position();
-            }
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.increment_position();
-            }
-            _ => {}
-        }
-    }
-
     fn get_position(&self) -> usize {
         self.position
     }
@@ -90,7 +76,29 @@ impl FileComponent {
         }
     }
 
-    pub fn focus(&mut self, focus: bool) {
+}
+
+impl Component for FileComponent {
+    fn update(&mut self) -> Result<()> {
+        Ok(())
+    }
+
+    fn handle_event(&mut self, ev: KeyEvent) {
+        if !self.focused {
+            return;
+        }
+        match ev.code {
+            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.decrement_position();
+            }
+            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.increment_position();
+            }
+            _ => {}
+        }
+    }
+
+    fn focus(&mut self, focus: bool) {
         if focus {
             self.style = ComponentTheme::focused();
         } else {

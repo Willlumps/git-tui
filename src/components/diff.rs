@@ -13,6 +13,8 @@ use tui::Frame;
 
 use std::path::PathBuf;
 
+use super::Component;
+
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,
     pub state: ListState,
@@ -59,9 +61,7 @@ impl DiffComponent {
             first_update: true,
         }
     }
-}
 
-impl DiffComponent {
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         self.window.set_height((f.size().height as usize) - 4);
 
@@ -92,7 +92,24 @@ impl DiffComponent {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<()> {
+    fn render_diff(&mut self) {
+        self.window.reset();
+        self.state.select(self.window.position());
+    }
+
+    fn scroll_up(&mut self, i: usize) {
+        self.window.scroll(ScrollDirection::Up, i);
+        self.state.select(self.window.position());
+    }
+
+    fn scroll_down(&mut self, i: usize) {
+        self.window.scroll(ScrollDirection::Down, i);
+        self.state.select(self.window.position());
+    }
+}
+
+impl Component for DiffComponent {
+    fn update(&mut self) -> Result<()> {
         if self.first_update && self.window.height() > 0 {
             self.first_update = false;
             self.window.reset();
@@ -108,7 +125,7 @@ impl DiffComponent {
         Ok(())
     }
 
-    pub fn handle_event(&mut self, ev: KeyEvent) {
+    fn handle_event(&mut self, ev: KeyEvent) {
         if !self.focused {
             return;
         }
@@ -131,27 +148,12 @@ impl DiffComponent {
         }
     }
 
-    pub fn focus(&mut self, focus: bool) {
+    fn focus(&mut self, focus: bool) {
         if focus {
             self.style = ComponentTheme::focused();
         } else {
             self.style = ComponentTheme::default();
         }
         self.focused = focus;
-    }
-
-    fn render_diff(&mut self) {
-        self.window.reset();
-        self.state.select(self.window.position());
-    }
-
-    fn scroll_up(&mut self, i: usize) {
-        self.window.scroll(ScrollDirection::Up, i);
-        self.state.select(self.window.position());
-    }
-
-    fn scroll_down(&mut self, i: usize) {
-        self.window.scroll(ScrollDirection::Down, i);
-        self.state.select(self.window.position());
     }
 }

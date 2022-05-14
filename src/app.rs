@@ -3,6 +3,7 @@ use crate::components::diff::DiffComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::status::StatusComponent;
+use crate::components::{Component, ComponentType};
 
 use std::path::PathBuf;
 
