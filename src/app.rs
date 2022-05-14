@@ -22,9 +22,8 @@ impl App {
             logs: LogComponent::new(repo_path.clone()),
             files: FileComponent::new(),
             diff: DiffComponent::new(repo_path.clone()),
-             status: StatusComponent::new(repo_path.clone()),
+            status: StatusComponent::new(repo_path.clone()),
             repo_path,
-
         }
     }
 }

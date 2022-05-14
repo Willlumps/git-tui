@@ -23,6 +23,7 @@ use tui::{
     Frame, Terminal,
 };
 use std::path::PathBuf;
+use std::env::current_dir;
 
 enum Event<I> {
     Input(I),
@@ -61,7 +62,10 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    let repo_path = PathBuf::from("/Users/reina/projects/rust/git-buddy");
+    // Grab the project root for dev purposes, this will eventually want to be
+    // replaced with a passed argument or the current dir where the program
+    // is executed from.
+    let repo_path = current_dir()?;
     let mut app = App::new(repo_path);
     let res = run_app(&mut terminal, &mut app, rx);
 
