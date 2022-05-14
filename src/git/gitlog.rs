@@ -29,54 +29,36 @@ impl Commit {
     }
 }
 
-pub struct GitLog<'src> {
-    pub repo_path: &'src str,
-    pub history: Vec<Commit>,
-}
+pub fn fetch_history(repo_path: &str) -> Result<Vec<Commit>> {
+    let repo = match Repository::init(repo_path) {
+        Ok(repo) => repo,
+        Err(e) => panic!("failed to init: {}", e),
+    };
 
-impl<'src> GitLog<'src> {
-    pub fn new(repo_path: &'src str) -> Self {
-        Self {
-            repo_path,
-            history: Vec::new(),
+    let mut history: Vec<Commit> = Vec::new();
+    let mut revwalk = repo.revwalk()?;
+    revwalk.reset()?;
+    revwalk.push_head()?;
+
+    let oids: Vec<Result<Oid, git2::Error>> = revwalk.collect();
+    for oid in oids {
+        if oid.is_ok() {
+            let commit = repo.find_commit(oid.unwrap())?;
+            // TODO: Better error handling to avoid unwrapping these options
+            //       and fix whatever the hell is going on down here.
+            let id = commit.id().to_string()[0..8].to_string();
+            let author = commit.author().name().unwrap().to_string();
+            let email = commit.author().email().unwrap().to_string();
+            let message = commit.summary().unwrap().to_string();
+
+            history.push(Commit {
+                id,
+                author,
+                email,
+                message,
+            });
         }
     }
 
-    pub fn get_history(&mut self) {
-        self.fetch_history().unwrap();
-    }
-
-    fn fetch_history(&mut self) -> Result<()> {
-        self.history.clear();
-        let repo = match Repository::init(self.repo_path) {
-            Ok(repo) => repo,
-            Err(e) => panic!("failed to init: {}", e),
-        };
-
-        let mut revwalk = repo.revwalk()?;
-        revwalk.reset()?;
-        revwalk.push_head()?;
-
-        let oids: Vec<Result<Oid, git2::Error>> = revwalk.collect();
-        for oid in oids {
-            if oid.is_ok() {
-                let commit = repo.find_commit(oid.unwrap())?;
-                // TODO: Better error handling to avoid unwrapping these options
-                //       and fix whatever the hell is going on down here.
-                let id = commit.id().to_string()[0..8].to_string();
-                let author = commit.author().name().unwrap().to_string();
-                let email = commit.author().email().unwrap().to_string();
-                let message = commit.summary().unwrap().to_string();
-
-                self.history.push(Commit {
-                    id,
-                    author,
-                    email,
-                    message,
-                });
-            }
-        }
-
-        Ok(())
-    }
+    Ok(history)
 }

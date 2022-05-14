@@ -1,4 +1,4 @@
-use crate::git::gitlog::GitLog;
+use crate::git::gitlog::{fetch_history, Commit};
 use crate::component_style::ComponentTheme;
 
 use anyhow::Result;
@@ -11,21 +11,23 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 pub struct LogComponent<'src> {
-    pub logs: GitLog<'src>,
+    pub logs: Vec<Commit>,
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
+    repo_path: &'src str,
     style: ComponentTheme,
 }
 
 impl<'src> LogComponent<'src> {
     pub fn new(repo_path: &'src str) -> Self {
         Self {
-            logs: GitLog::new(repo_path),
+            logs: Vec::new(),
             state: ListState::default(),
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
+            repo_path,
         }
     }
 
@@ -35,7 +37,7 @@ impl<'src> LogComponent<'src> {
         rect: Rect,
     ) -> Result<()> {
         let list_items: Vec<ListItem> = self
-            .logs.history
+            .logs
             .iter()
             .map(|item| {
                 let text = Spans::from(vec![
@@ -64,7 +66,7 @@ impl<'src> LogComponent<'src> {
     }
 
     pub fn update(&mut self) -> Result<()> {
-        self.logs.get_history();
+        self.logs = fetch_history(self.repo_path)?;
         Ok(())
     }
 
@@ -89,7 +91,7 @@ impl<'src> LogComponent<'src> {
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.logs.history.len() - 1 {
+        if self.position < self.logs.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }
