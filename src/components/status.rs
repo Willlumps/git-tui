@@ -8,17 +8,19 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, Paragraph};
 use tui::Frame;
 
+use std::path::PathBuf;
+
 #[allow(unused)]
-pub struct StatusComponent<'src> {
+pub struct StatusComponent {
     current_branch: String,
     files_changed: usize,
     insertions: usize,
     deletions: usize,
-    repo_path: &'src str,
+    repo_path: PathBuf,
 }
 
-impl<'src> StatusComponent<'src> {
-    pub fn new(repo_path: &'src str) -> Self {
+impl StatusComponent {
+    pub fn new(repo_path: PathBuf) -> Self {
         Self {
             current_branch: String::new(),
             files_changed: 0,
@@ -67,7 +69,7 @@ impl<'src> StatusComponent<'src> {
     }
 
     pub fn update(&mut self) -> Result<()> {
-        let stats = DiffStats::get_stats(self.repo_path)?;
+        let stats = DiffStats::get_stats(&self.repo_path)?;
         self.files_changed = stats.files_changed;
         self.insertions = stats.insertions;
         self.deletions = stats.deletions;

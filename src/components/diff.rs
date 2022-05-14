@@ -11,12 +11,14 @@ use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
+use std::path::PathBuf;
+
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,
     pub state: ListState,
     pub focused: bool,
     style: ComponentTheme,
-    path: String,
+    repo_path: PathBuf,
     window: ListWindow,
     first_update: bool,
 }
@@ -43,8 +45,8 @@ impl DiffLine {
 }
 
 impl DiffComponent {
-    pub fn new(repo_path: &str) -> Self {
-        let diffs = get_diff(repo_path).unwrap();
+    pub fn new(repo_path: PathBuf) -> Self {
+        let diffs = get_diff(&repo_path).unwrap();
         let len = diffs.len();
 
         Self {
@@ -52,7 +54,7 @@ impl DiffComponent {
             state: ListState::default(),
             focused: false,
             style: ComponentTheme::default(),
-            path: repo_path.to_string(),
+            repo_path,
             window: ListWindow::new(0, 0, 0, len, 0),
             first_update: true,
         }
@@ -96,8 +98,8 @@ impl DiffComponent {
             self.window.reset();
         }
 
-        let path = &self.path;
-        let diff = get_diff(path.as_ref())?;
+        let path = &self.repo_path;
+        let diff = get_diff(path)?;
         if diff.len() != self.diffs.len() {
             self.render_diff();
             self.diffs = diff;

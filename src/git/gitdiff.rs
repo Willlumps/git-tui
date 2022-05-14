@@ -5,7 +5,9 @@ use git2::DiffFormat;
 use git2::Repository;
 use tui::style::{Color, Style};
 
-pub fn get_diff(repo_path: &str) -> Result<Vec<DiffLine>> {
+use std::path::Path;
+
+pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
     let repo = match Repository::init(repo_path) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),

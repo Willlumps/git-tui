@@ -22,6 +22,7 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
+use std::path::PathBuf;
 
 enum Event<I> {
     Input(I),
@@ -60,8 +61,8 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    //let mut app = App::new("/Users/reina/school/groupwork/capstone".to_string());
-    let mut app = App::new("/Users/reina/projects/rust/git-buddy");
+    let repo_path = PathBuf::from("/Users/reina/projects/rust/git-buddy");
+    let mut app = App::new(repo_path);
     let res = run_app(&mut terminal, &mut app, rx);
 
     // restore terminal

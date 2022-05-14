@@ -10,17 +10,19 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
-pub struct LogComponent<'src> {
+use std::path::PathBuf;
+
+pub struct LogComponent {
     pub logs: Vec<Commit>,
     pub state: ListState,
     pub focused: bool,
     pub position: usize,
-    repo_path: &'src str,
+    repo_path: PathBuf,
     style: ComponentTheme,
 }
 
-impl<'src> LogComponent<'src> {
-    pub fn new(repo_path: &'src str) -> Self {
+impl LogComponent {
+    pub fn new(repo_path: PathBuf) -> Self {
         Self {
             logs: Vec::new(),
             state: ListState::default(),
@@ -66,7 +68,7 @@ impl<'src> LogComponent<'src> {
     }
 
     pub fn update(&mut self) -> Result<()> {
-        self.logs = fetch_history(self.repo_path)?;
+        self.logs = fetch_history(&self.repo_path)?;
         Ok(())
     }
 

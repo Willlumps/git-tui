@@ -2,6 +2,8 @@ use anyhow::Result;
 use git2::Oid;
 use git2::Repository;
 
+use std::path::Path;
+
 #[derive(Clone, Debug)]
 pub struct Commit {
     pub id: String,
@@ -29,7 +31,7 @@ impl Commit {
     }
 }
 
-pub fn fetch_history(repo_path: &str) -> Result<Vec<Commit>> {
+pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>> {
     let repo = match Repository::init(repo_path) {
         Ok(repo) => repo,
         Err(e) => panic!("failed to init: {}", e),
