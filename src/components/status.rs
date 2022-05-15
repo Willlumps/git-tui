@@ -1,6 +1,7 @@
 use crate::git::git_status::{GitStatus, get_stats};
 
 use anyhow::Result;
+use crossterm::event::KeyEvent;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
@@ -9,6 +10,8 @@ use tui::widgets::{Block, BorderType, Borders, Paragraph};
 use tui::Frame;
 
 use std::path::PathBuf;
+
+use super::Component;
 
 #[allow(unused)]
 pub struct StatusComponent {
@@ -62,8 +65,15 @@ impl StatusComponent {
         Ok(())
     }
 
-    pub fn update(&mut self) -> Result<()> {
+}
+
+impl Component for StatusComponent {
+    fn update(&mut self) -> Result<()> {
         self.status = get_stats(&self.repo_path)?;
         Ok(())
     }
+
+    // no-op
+    fn handle_event(&mut self, _ev: KeyEvent) {}
+    fn focus(&mut self, _focus: bool) {}
 }
