@@ -13,13 +13,14 @@ use tui::Frame;
 use super::Component;
 
 pub struct BranchComponent {
-    pub branches: Vec<String>,
-    pub filtered_branches: Vec<String>,
-    pub state: ListState,
-    pub focused: bool,
-    pub position: usize,
-    pub style: ComponentTheme,
-    pub input: String,
+    branches: Vec<String>,
+    filtered_branches: Vec<String>,
+    state: ListState,
+    focused: bool,
+    position: usize,
+    style: ComponentTheme,
+    input: String,
+    first_update: bool,
 }
 
 impl BranchComponent {
@@ -49,6 +50,7 @@ impl BranchComponent {
             position: 0,
             style: ComponentTheme::default(),
             input: String::new(),
+            first_update: true,
         }
     }
 
@@ -125,6 +127,10 @@ impl BranchComponent {
 
 impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
+        if self.first_update {
+            self.first_update = false;
+            self.state.select(Some(0));
+        }
         Ok(())
     }
 

@@ -5,6 +5,7 @@ use crate::components::log::LogComponent;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 
+use anyhow::Result;
 use std::path::PathBuf;
 
 pub struct App {
@@ -30,13 +31,21 @@ impl App {
         }
     }
 
+    pub fn update(&mut self) -> Result<()> {
+        self.branches.update()?;
+        self.diff.update()?;
+        self.logs.update()?;
+        self.status.update()?;
+        Ok(())
+    }
+
     pub fn focus(&mut self, component: ComponentType) {
         let current_focus = self.focused_component.clone();
         self._focus(current_focus, false);
         self._focus(component, true);
     }
 
-    pub fn _focus(&mut self, component: ComponentType, focus: bool) {
+    fn _focus(&mut self, component: ComponentType, focus: bool) {
         match component {
             ComponentType::LogComponent => {
                 self.logs.focus(focus);

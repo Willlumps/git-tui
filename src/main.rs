@@ -107,10 +107,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
         )
         .split(container[0]);
 
-    // put this in app.rs?
-    app.diff.update()?;
-    app.logs.update()?;
-    app.status.update()?;
+    app.update()?;
 
     app.status.draw(f, left_container[0])?;
     app.branches.draw(f, left_container[2])?;
@@ -126,9 +123,6 @@ fn run_app<B: Backend>(
     app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
 ) -> Result<()> {
-    app.branches.state.select(Some(0));
-    app.logs.state.select(Some(0));
-
     loop {
         terminal.draw(|f| {
             if let Err(e) = ui(f, app) {
