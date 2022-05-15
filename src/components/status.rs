@@ -1,4 +1,4 @@
-use crate::git::gitstatus::DiffStats;
+use crate::git::git_status::DiffStats;
 
 use anyhow::Result;
 use tui::backend::Backend;

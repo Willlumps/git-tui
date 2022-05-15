@@ -1,5 +1,5 @@
 use crate::component_style::ComponentTheme;
-use crate::git::gitdiff::get_diff;
+use crate::git::git_diff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
 
 use anyhow::Result;

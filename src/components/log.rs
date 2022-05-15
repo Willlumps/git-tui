@@ -1,4 +1,4 @@
-use crate::git::gitlog::{fetch_history, Commit};
+use crate::git::git_log::{fetch_history, Commit};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 
