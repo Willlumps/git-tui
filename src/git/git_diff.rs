@@ -1,17 +1,12 @@
 use crate::components::diff::DiffLine;
-
 use anyhow::Result;
 use git2::DiffFormat;
-use git2::Repository;
 use tui::style::{Color, Style};
-
 use std::path::Path;
+use super::repo;
 
 pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
-    let repo = match Repository::init(repo_path) {
-        Ok(repo) => repo,
-        Err(e) => panic!("failed to init: {}", e),
-    };
+    let repo = repo(repo_path)?;
 
     let mut diff_lines: Vec<DiffLine> = Vec::new();
 
