@@ -1,4 +1,4 @@
-use crate::git::git_status::DiffStats;
+use crate::git::git_status::{GitStatus, get_stats};
 
 use anyhow::Result;
 use tui::backend::Backend;
@@ -12,21 +12,15 @@ use std::path::PathBuf;
 
 #[allow(unused)]
 pub struct StatusComponent {
-    current_branch: String,
-    files_changed: usize,
-    insertions: usize,
-    deletions: usize,
     repo_path: PathBuf,
+    status: GitStatus,
 }
 
 impl StatusComponent {
     pub fn new(repo_path: PathBuf) -> Self {
         Self {
-            current_branch: String::new(),
-            files_changed: 0,
-            insertions: 0,
-            deletions: 0,
             repo_path,
+            status: GitStatus::default(),
         }
     }
 
@@ -50,9 +44,9 @@ impl StatusComponent {
             .split(rect);
 
         let text = Spans::from(vec![
-            Span::styled(format!("  {} ", self.files_changed), Style::default().fg(Color::Blue)),
-            Span::styled(format!("  {} ", self.insertions), Style::default().fg(Color::Green)),
-            Span::styled(format!("  {} ", self.deletions), Style::default().fg(Color::Red)),
+            Span::styled(format!("  {} ", self.status.files_changed), Style::default().fg(Color::Blue)),
+            Span::styled(format!("  {} ", self.status.insertions), Style::default().fg(Color::Green)),
+            Span::styled(format!("  {} ", self.status.deletions), Style::default().fg(Color::Red)),
         ]);
         let diff_status = Paragraph::new(text)
             .style(Style::default());
@@ -60,7 +54,7 @@ impl StatusComponent {
 
         let text = Spans::from(vec![
             Span::raw(" On Branch: "),
-            Span::styled("Placeholder", Style::default().fg(Color::Yellow)),
+            Span::styled(&self.status.branch, Style::default().fg(Color::Yellow)),
         ]);
         let branch_status = Paragraph::new(text)
             .style(Style::default());
@@ -69,10 +63,7 @@ impl StatusComponent {
     }
 
     pub fn update(&mut self) -> Result<()> {
-        let stats = DiffStats::get_stats(&self.repo_path)?;
-        self.files_changed = stats.files_changed;
-        self.insertions = stats.insertions;
-        self.deletions = stats.deletions;
+        self.status = get_stats(&self.repo_path)?;
         Ok(())
     }
 }
