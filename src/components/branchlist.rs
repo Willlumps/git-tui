@@ -20,12 +20,14 @@ pub struct BranchComponent {
     position: usize,
     style: ComponentTheme,
     input: String,
-    first_update: bool,
 }
 
 impl BranchComponent {
     // TODO: Don't hardcode the list (obviously)
     pub fn new() -> Self {
+        let mut state = ListState::default();
+        state.select(Some(0));
+
         let words = vec![
             "main".to_string(),
             "task/ABK-12-Create-simulated-sensors".to_string(),
@@ -45,12 +47,11 @@ impl BranchComponent {
         Self {
             branches: words.clone(),
             filtered_branches: words,
-            state: ListState::default(),
+            state,
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
             input: String::new(),
-            first_update: true,
         }
     }
 
@@ -127,10 +128,6 @@ impl BranchComponent {
 
 impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
-        if self.first_update {
-            self.first_update = false;
-            self.state.select(Some(0));
-        }
         Ok(())
     }
 

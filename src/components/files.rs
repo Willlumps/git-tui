@@ -30,9 +30,12 @@ pub struct FileComponent {
 
 impl FileComponent {
     pub fn new(repo_path: PathBuf) -> Self {
+        let mut state = ListState::default();
+        state.select(Some(0));
+
         Self {
             files: Vec::new(),
-            state: ListState::default(),
+            state,
             focused: false,
             size: 0,
             position: 0,

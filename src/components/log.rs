@@ -20,19 +20,20 @@ pub struct LogComponent {
     position: usize,
     repo_path: PathBuf,
     style: ComponentTheme,
-    first_update: bool,
 }
 
 impl LogComponent {
     pub fn new(repo_path: PathBuf) -> Self {
+        let mut state = ListState::default();
+        state.select(Some(0));
+
         Self {
             logs: Vec::new(),
-            state: ListState::default(),
+            state,
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
             repo_path,
-            first_update: true,
         }
     }
 
@@ -88,10 +89,6 @@ impl LogComponent {
 
 impl Component for LogComponent {
     fn update(&mut self) -> Result<()> {
-        if self.first_update {
-            self.first_update = false;
-            self.state.select(Some(0));
-        }
         self.logs = fetch_history(&self.repo_path)?;
         Ok(())
     }
