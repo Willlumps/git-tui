@@ -1,4 +1,4 @@
-use crate::git::git_status::{GitStatus, get_stats};
+use crate::git::git_diff::{DiffWindow, get_diff_stats};
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -16,14 +16,14 @@ use super::Component;
 #[allow(unused)]
 pub struct StatusComponent {
     repo_path: PathBuf,
-    status: GitStatus,
+    status: DiffWindow,
 }
 
 impl StatusComponent {
     pub fn new(repo_path: PathBuf) -> Self {
         Self {
             repo_path,
-            status: GitStatus::default(),
+            status: DiffWindow::default(),
         }
     }
 
@@ -69,7 +69,7 @@ impl StatusComponent {
 
 impl Component for StatusComponent {
     fn update(&mut self) -> Result<()> {
-        self.status = get_stats(&self.repo_path)?;
+        self.status = get_diff_stats(&self.repo_path)?;
         Ok(())
     }
 

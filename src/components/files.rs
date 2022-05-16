@@ -1,4 +1,5 @@
 use crate::component_style::ComponentTheme;
+use crate::git::git_status::get_modified_files;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -9,25 +10,33 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 use super::Component;
+use std::path::PathBuf;
 
 pub struct FileComponent {
-    pub files: Vec<String>, // TODO
+    pub files: Vec<String>,
     pub state: ListState,
     pub focused: bool,
     pub size: usize,
     pub position: usize,
     pub style: ComponentTheme,
+    repo_path: PathBuf,
 }
 
+// TODO:
+//  - Show Delta next to name?
+//  - Add and Restore files for committing
+//  - Show file diff in window if desired
+
 impl FileComponent {
-    pub fn new() -> Self {
+    pub fn new(repo_path: PathBuf) -> Self {
         Self {
-            files: vec!["Placeholder1".to_string(), "Placeholder2".to_string()], // TODO
+            files: Vec::new(),
             state: ListState::default(),
             focused: false,
             size: 0,
             position: 0,
             style: ComponentTheme::default(),
+            repo_path,
         }
     }
 
@@ -80,6 +89,7 @@ impl FileComponent {
 
 impl Component for FileComponent {
     fn update(&mut self) -> Result<()> {
+        self.files = get_modified_files(&self.repo_path)?;
         Ok(())
     }
 

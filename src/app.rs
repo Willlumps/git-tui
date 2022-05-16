@@ -23,7 +23,7 @@ impl App {
         Self {
             branches: BranchComponent::new(),
             logs: LogComponent::new(repo_path.clone()),
-            files: FileComponent::new(),
+            files: FileComponent::new(repo_path.clone()),
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             repo_path,
@@ -36,6 +36,7 @@ impl App {
         self.diff.update()?;
         self.logs.update()?;
         self.status.update()?;
+        self.files.update()?;
         Ok(())
     }
 

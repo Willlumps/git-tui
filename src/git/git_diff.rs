@@ -5,6 +5,14 @@ use tui::style::{Color, Style};
 use std::path::Path;
 use super::repo;
 
+#[derive(Default)]
+pub struct DiffWindow {
+    pub files_changed: usize,
+    pub insertions: usize,
+    pub deletions: usize,
+    pub branch: String,
+}
+
 pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
     let repo = repo(repo_path)?;
 
@@ -33,3 +41,30 @@ pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
 
     Ok(diff_lines)
 }
+
+pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow> {
+    let repo = repo(repo_path)?;
+
+    let mut opt = git2::DiffOptions::new();
+    let diff = repo.diff_index_to_workdir(None, Some(&mut opt))?;
+    let stats = diff.stats()?;
+    let status = DiffWindow {
+        files_changed: stats.files_changed(),
+        insertions: stats.insertions(),
+        deletions: stats.deletions(),
+        branch: head(repo_path)?,
+    };
+
+    Ok(status)
+}
+
+fn head(repo_path: &Path) -> Result<String> {
+    let repo = repo(repo_path)?;
+    let head_ref = repo.head()?;
+    if let Some(branch_name) = head_ref.shorthand() {
+        Ok(String::from(branch_name))
+    } else {
+        Ok("".to_string())
+    }
+}
+
