@@ -1,5 +1,4 @@
 use crate::git::git_diff::{DiffWindow, get_diff_stats};
-use crate::git::git_status::FileStatus;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -65,7 +64,6 @@ impl StatusComponent {
         f.render_widget(branch_status, container[0]);
         Ok(())
     }
-
 }
 
 impl Component for StatusComponent {

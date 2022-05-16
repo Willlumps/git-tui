@@ -1,5 +1,5 @@
 use crate::component_style::ComponentTheme;
-use crate::git::git_status::get_modified_files;
+use crate::git::git_status::get_file_status;
 use crate::git::git_status::FileStatus;
 
 use anyhow::Result;
@@ -24,7 +24,6 @@ pub struct FileComponent {
 }
 
 // TODO:
-//  - Show Delta next to name?
 //  - Add and Restore files for committing
 //  - Show file diff in window if desired
 
@@ -52,7 +51,10 @@ impl FileComponent {
         let list_items: Vec<ListItem> = self
             .files
             .iter()
-            .map(|item| ListItem::new(item.path.clone()))
+            .map(|item| {
+                let status_type = char::from(item.status_type.clone());
+                ListItem::new(format!("{} {}", status_type, item.path.clone()))
+            })
             .collect();
         let list = TuiList::new(list_items)
             .block(
@@ -71,12 +73,8 @@ impl FileComponent {
         Ok(())
     }
 
-    fn get_position(&self) -> usize {
-        self.position
-    }
-
     fn increment_position(&mut self) {
-        if self.get_position() != 0 {
+        if self.position != 0 {
             self.position -= 1;
             self.state.select(Some(self.position));
         }
@@ -88,12 +86,11 @@ impl FileComponent {
             self.state.select(Some(self.position));
         }
     }
-
 }
 
 impl Component for FileComponent {
     fn update(&mut self) -> Result<()> {
-        self.files = get_modified_files(&self.repo_path)?;
+        self.files = get_file_status(&self.repo_path)?;
         Ok(())
     }
 
