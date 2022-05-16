@@ -1,5 +1,6 @@
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::get_modified_files;
+use crate::git::git_status::FileStatus;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -13,7 +14,7 @@ use super::Component;
 use std::path::PathBuf;
 
 pub struct FileComponent {
-    pub files: Vec<String>,
+    pub files: Vec<FileStatus>,
     pub state: ListState,
     pub focused: bool,
     pub size: usize,
@@ -48,7 +49,7 @@ impl FileComponent {
         let list_items: Vec<ListItem> = self
             .files
             .iter()
-            .map(|item| ListItem::new(item.to_string()))
+            .map(|item| ListItem::new(item.path.clone()))
             .collect();
         let list = TuiList::new(list_items)
             .block(
