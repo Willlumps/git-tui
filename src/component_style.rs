@@ -41,6 +41,7 @@ impl ComponentTheme {
         match loc {
             StatusLoc::Index => Style::default().fg(Color::Green),
             StatusLoc::WorkingTree => Style::default().fg(Color::Red),
+            StatusLoc::None => Style::default().fg(Color::White),
         }
     }
 }

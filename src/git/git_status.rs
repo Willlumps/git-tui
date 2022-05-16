@@ -13,6 +13,7 @@ pub enum StatusType {
     Renamed,
     Typechanged,
     Conflicted,
+    Unmodified,
 }
 
 #[derive(Clone, Debug)]
@@ -24,6 +25,7 @@ pub struct FileStatus {
 
 #[derive(Clone, Debug)]
 pub enum StatusLoc {
+    None,
     WorkingTree,
     Index,
 }
@@ -67,7 +69,7 @@ impl From<Status> for StatusType {
             StatusType::Typechanged
         } else if status.is_conflicted() {
             StatusType::Conflicted
-        }else {
+        } else {
             StatusType::Modified
         }
     }
@@ -93,6 +95,7 @@ impl From<StatusType> for char {
             Renamed => 'R',
             Typechanged => 'T',
             Conflicted => 'C',
+            Unmodified => ' ',
         }
     }
 }
