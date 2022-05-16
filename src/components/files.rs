@@ -7,6 +7,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
+use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
@@ -53,7 +54,8 @@ impl FileComponent {
             .iter()
             .map(|item| {
                 let status_type = char::from(item.status_type.clone());
-                ListItem::new(format!("{} {}", status_type, item.path.clone()))
+                let style = ComponentTheme::file_status_style(item.status_loc.clone());
+                ListItem::new(Span::styled(format!("{} {}", status_type, item.path.clone()), style))
             })
             .collect();
         let list = TuiList::new(list_items)

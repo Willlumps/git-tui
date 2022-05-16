@@ -19,6 +19,13 @@ pub enum StatusType {
 pub struct FileStatus {
     pub path: String,
     pub status_type: StatusType,
+    pub status_loc: StatusLoc,
+}
+
+#[derive(Clone, Debug)]
+pub enum StatusLoc {
+    WorkingTree,
+    Index,
 }
 
 pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
@@ -29,20 +36,20 @@ pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
     options
         .include_untracked(true)
         .renames_head_to_index(true)
-        .update_index(true);
+        .update_index(true)
+        .recurse_untracked_dirs(true);
     let statuses = repo.statuses(Some(&mut options))?;
 
     for status in statuses.iter() {
         let s = status.status();
         if let Some(file_path) = status.path() {
-            if let Some(path) = Path::new(file_path).file_name() {
-                let file_name = path.to_string_lossy().to_string();
+            let path = Path::new(file_path).to_string_lossy().to_string();
 
-                files.push(FileStatus {
-                    path: file_name,
-                    status_type: StatusType::from(s),
-                });
-            }
+            files.push(FileStatus {
+                path,
+                status_type: StatusType::from(s),
+                status_loc: StatusLoc::from(s),
+            });
         }
     }
     Ok(files)
@@ -62,6 +69,16 @@ impl From<Status> for StatusType {
             StatusType::Conflicted
         }else {
             StatusType::Modified
+        }
+    }
+}
+
+impl From<Status> for StatusLoc {
+    fn from(status: Status) -> StatusLoc {
+        if status.bits() < 128 {
+            StatusLoc::Index
+        } else {
+            StatusLoc::WorkingTree
         }
     }
 }
