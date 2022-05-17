@@ -1,9 +1,9 @@
 use crate::component_style::ComponentTheme;
-use crate::git::git_status::{get_file_status, stage_file, unstage_file};
-use crate::git::git_status::{FileStatus, StatusLoc, StatusType};
+use crate::git::stage::{stage_all, stage_file, unstage_file};
+use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
@@ -111,6 +111,9 @@ impl Component for FileComponent {
             }
             KeyCode::Char('k') => {
                 self.increment_position();
+            }
+            KeyCode::Char('s') if ev.modifiers == KeyModifiers::CONTROL => {
+                stage_all(&self.repo_path)?;
             }
             KeyCode::Char('s') => {
                 if let Some(file) = self.files.get(self.position) {

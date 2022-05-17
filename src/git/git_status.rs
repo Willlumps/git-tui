@@ -59,28 +59,6 @@ pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
     Ok(files)
 }
 
-pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<()> {
-    let repo = repo(repo_path)?;
-    let path = Path::new(file_path);
-    let mut index = repo.index()?;
-
-    index.add_path(path)?;
-    index.write()?;
-
-    Ok(())
-}
-
-pub fn unstage_file(repo_path: &Path, file_path: &str) -> Result<()> {
-    let repo = repo(repo_path)?;
-    let path = Path::new(file_path);
-
-    if let Some(head) = repo.head()?.target() {
-        let obj = repo.find_object(head, Some(git2::ObjectType::Commit))?;
-        repo.reset_default(Some(&obj), &[path])?;
-    }
-    Ok(())
-}
-
 impl From<Status> for StatusType {
     fn from(status: Status) -> StatusType {
         if status.is_wt_new() || status.is_index_new() {
