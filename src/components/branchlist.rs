@@ -131,9 +131,9 @@ impl Component for BranchComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.focused {
-            return;
+            return Ok(());
         }
         match ev.code {
             KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
@@ -154,6 +154,7 @@ impl Component for BranchComponent {
             }
             _ => {}
         }
+        Ok(())
     }
 
     fn focus(&mut self, focus: bool) {

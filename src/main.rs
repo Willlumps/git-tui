@@ -150,9 +150,10 @@ fn run_app<B: Backend>(
                     }
                     _ => {
                         // Do the stuff...poorly
-                        app.branches.handle_event(input);
-                        app.logs.handle_event(input);
-                        app.diff.handle_event(input);
+                        app.branches.handle_event(input)?;
+                        app.logs.handle_event(input)?;
+                        app.diff.handle_event(input)?;
+                        app.files.handle_event(input)?;
                     }
                 },
                 Event::Tick => {

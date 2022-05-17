@@ -19,5 +19,5 @@ pub enum ComponentType {
 pub trait Component {
     fn update(&mut self) -> Result<()>;
     fn focus(&mut self, focus: bool);
-    fn handle_event(&mut self, ev: KeyEvent);
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()>;
 }

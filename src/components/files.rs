@@ -1,10 +1,9 @@
 use crate::component_style::ComponentTheme;
-use crate::git::git_status::{StatusType, StatusLoc};
-use crate::git::git_status::get_file_status;
-use crate::git::git_status::FileStatus;
+use crate::git::git_status::{StatusType, StatusLoc, FileStatus};
+use crate::git::git_status::{get_file_status, stage};
 
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
@@ -19,7 +18,6 @@ pub struct FileComponent {
     pub files: Vec<FileStatus>,
     pub state: ListState,
     pub focused: bool,
-    pub size: usize,
     pub position: usize,
     pub style: ComponentTheme,
     repo_path: PathBuf,
@@ -28,6 +26,8 @@ pub struct FileComponent {
 // TODO:
 //  - Add and Restore files for committing
 //  - Show file diff in window if desired
+//  - Files that have some hunks staged while others aren't
+//    - Show both staged and unstaged?
 
 impl FileComponent {
     pub fn new(repo_path: PathBuf) -> Self {
@@ -38,7 +38,6 @@ impl FileComponent {
             files: Vec::new(),
             state,
             focused: false,
-            size: 0,
             position: 0,
             style: ComponentTheme::default(),
             repo_path,
@@ -83,7 +82,7 @@ impl FileComponent {
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.size - 1 {
+        if self.position < self.files.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }
@@ -95,7 +94,7 @@ impl Component for FileComponent {
         self.files = get_file_status(&self.repo_path)?;
         if self.files.is_empty() {
             self.files.push(FileStatus{
-                path: "Working tree clean.".to_string(),
+                path: "Working tree clean".to_string(),
                 status_type: StatusType::Unmodified,
                 status_loc: StatusLoc::None,
             });
@@ -103,19 +102,31 @@ impl Component for FileComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()>{
         if !self.focused {
-            return;
+            return Ok(());
         }
         match ev.code {
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('j') => {
                 self.decrement_position();
             }
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('k') => {
                 self.increment_position();
+            }
+            KeyCode::Char('s') => {
+                if let Some(file) = self.files.get(self.position) {
+                    stage(&self.repo_path, &file.path, true)?;
+                }
+            }
+            KeyCode::Char('u') => {
+                if let Some(file) = self.files.get(self.position) {
+                    stage(&self.repo_path, &file.path, false)?;
+                }
             }
             _ => {}
         }
+
+        Ok(())
     }
 
     fn focus(&mut self, focus: bool) {

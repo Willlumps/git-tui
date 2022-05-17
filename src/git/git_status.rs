@@ -9,7 +9,8 @@ use std::path::Path;
 pub enum StatusType {
     Added,
     Deleted,
-    Modified,
+    IndexModified,
+    WtModified,
     Renamed,
     Typechanged,
     Conflicted,
@@ -26,8 +27,9 @@ pub struct FileStatus {
 #[derive(Clone, Debug)]
 pub enum StatusLoc {
     None,
-    WorkingTree,
     Index,
+    WorkingDirectory,
+    WorkingDirectoryAndIndex
 }
 
 pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
@@ -57,6 +59,22 @@ pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
     Ok(files)
 }
 
+pub fn stage(repo_path: &Path, file_path: &str, stage: bool) -> Result<()> {
+    let repo = repo(repo_path)?;
+    let path = Path::new(file_path);
+    let mut index = repo.index()?;
+
+    if stage {
+        index.add_path(path)?;
+    } else {
+        // TODO
+        // index.remove_path(path)?;
+    }
+    index.write()?;
+
+    Ok(())
+}
+
 impl From<Status> for StatusType {
     fn from(status: Status) -> StatusType {
         if status.is_wt_new() || status.is_index_new() {
@@ -69,18 +87,24 @@ impl From<Status> for StatusType {
             StatusType::Typechanged
         } else if status.is_conflicted() {
             StatusType::Conflicted
+        // TODO: Do I need to differentiate between the two?
+        } else if status.is_index_modified() {
+            StatusType::IndexModified
         } else {
-            StatusType::Modified
+            StatusType::WtModified
         }
     }
 }
 
 impl From<Status> for StatusLoc {
     fn from(status: Status) -> StatusLoc {
-        if status.bits() < 128 {
+        let bits = status.bits();
+        if bits < 128 {
             StatusLoc::Index
+        } else if bits == 258 {
+            StatusLoc::WorkingDirectoryAndIndex
         } else {
-            StatusLoc::WorkingTree
+            StatusLoc::WorkingDirectory
         }
     }
 }
@@ -91,55 +115,11 @@ impl From<StatusType> for char {
         match status_type {
             Added => 'A',
             Deleted => 'D',
-            Modified => 'M',
+            IndexModified  | WtModified => 'M',
             Renamed => 'R',
             Typechanged => 'T',
             Conflicted => 'C',
             Unmodified => ' ',
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn from_deleted() {
-        let mut status: Status = Status::empty();
-
-        status.insert(Status::WT_DELETED);
-        assert!(status.is_wt_deleted());
-        assert_eq!(StatusType::from(status), StatusType::Deleted);
-
-        status.insert(Status::INDEX_DELETED);
-        assert!(status.is_index_deleted());
-        assert_eq!(StatusType::from(status), StatusType::Deleted);
-    }
-
-    #[test]
-    fn from_new() {
-        let mut status: Status = Status::empty();
-
-        status.insert(Status::WT_NEW);
-        assert!(status.is_wt_new());
-        assert_eq!(StatusType::from(status), StatusType::Added);
-
-        status.insert(Status::INDEX_NEW);
-        assert!(status.is_index_new());
-        assert_eq!(StatusType::from(status), StatusType::Added);
-    }
-
-    #[test]
-    fn from_modified() {
-        let mut status: Status = Status::empty();
-
-        status.insert(Status::WT_MODIFIED);
-        assert!(status.is_wt_modified());
-        assert_eq!(StatusType::from(status), StatusType::Modified);
-
-        status.insert(Status::INDEX_MODIFIED);
-        assert!(status.is_index_modified());
-        assert_eq!(StatusType::from(status), StatusType::Modified);
     }
 }

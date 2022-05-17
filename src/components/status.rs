@@ -73,6 +73,6 @@ impl Component for StatusComponent {
     }
 
     // no-op
-    fn handle_event(&mut self, _ev: KeyEvent) {}
+    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> { Ok(()) }
     fn focus(&mut self, _focus: bool) {}
 }

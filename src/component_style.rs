@@ -40,7 +40,8 @@ impl ComponentTheme {
     pub fn file_status_style(loc: StatusLoc) -> Style {
         match loc {
             StatusLoc::Index => Style::default().fg(Color::Green),
-            StatusLoc::WorkingTree => Style::default().fg(Color::Red),
+            StatusLoc::WorkingDirectory => Style::default().fg(Color::Red),
+            StatusLoc::WorkingDirectoryAndIndex => Style::default().fg(Color::Yellow),
             StatusLoc::None => Style::default().fg(Color::White),
         }
     }
