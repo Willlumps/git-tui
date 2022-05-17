@@ -115,6 +115,8 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     app.files.draw(f, left_container[1])?;
     app.diff.draw(f, container[1])?;
 
+    app.files.commit_popup.draw(f, size)?;
+
     Ok(())
 }
 
@@ -154,6 +156,7 @@ fn run_app<B: Backend>(
                         app.logs.handle_event(input)?;
                         app.diff.handle_event(input)?;
                         app.files.handle_event(input)?;
+                        app.files.commit_popup.handle_event(input)?;
                     }
                 },
                 Event::Tick => {}

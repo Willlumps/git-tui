@@ -1,6 +1,7 @@
 use crate::component_style::ComponentTheme;
 use crate::git::stage::{stage_all, stage_file, unstage_file};
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
+use crate::components::commit_popup::CommitPopup;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -15,12 +16,13 @@ use super::Component;
 use std::path::PathBuf;
 
 pub struct FileComponent {
-    pub files: Vec<FileStatus>,
-    pub state: ListState,
-    pub focused: bool,
-    pub position: usize,
-    pub style: ComponentTheme,
+    files: Vec<FileStatus>,
+    state: ListState,
+    focused: bool,
+    position: usize,
+    style: ComponentTheme,
     repo_path: PathBuf,
+    pub commit_popup: CommitPopup,
 }
 
 // TODO:
@@ -39,6 +41,7 @@ impl FileComponent {
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
+            commit_popup: CommitPopup::new(repo_path.clone()),
             repo_path,
         }
     }
@@ -124,6 +127,10 @@ impl Component for FileComponent {
                 if let Some(file) = self.files.get(self.position) {
                     unstage_file(&self.repo_path, &file.path)?;
                 }
+            }
+            KeyCode::Char('c') => {
+                // TODO: Check if there are staged files to commit?
+                self.commit_popup.focus();
             }
             _ => {}
         }

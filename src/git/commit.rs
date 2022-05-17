@@ -4,8 +4,9 @@ use std::path::PathBuf;
 
 use crate::git::repo;
 
-pub fn commit(repo_path: PathBuf, message: &str) -> Result<()> {
-    let repo = repo(&repo_path)?;
+pub fn commit(repo_path: &PathBuf, message: &str) -> Result<()> {
+    // TODO: Make this work for an initial commit
+    let repo = repo(repo_path)?;
     let signature = signature()?;
 
     let mut index = repo.index()?;
@@ -28,6 +29,7 @@ pub fn commit(repo_path: PathBuf, message: &str) -> Result<()> {
 }
 
 fn signature() -> Result<Signature<'static>> {
+    // Is there a better way to do this?
     let config = Config::open_default()?;
     if let Some(name) = config.get_entry("user.name")?.value() {
         if let Some(email) = config.get_entry("user.email")?.value() {
