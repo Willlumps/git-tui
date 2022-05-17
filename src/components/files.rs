@@ -1,6 +1,6 @@
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::{StatusType, StatusLoc, FileStatus};
-use crate::git::git_status::{get_file_status, stage};
+use crate::git::git_status::{get_file_status, stage_file, unstage_file};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -24,7 +24,6 @@ pub struct FileComponent {
 }
 
 // TODO:
-//  - Add and Restore files for committing
 //  - Show file diff in window if desired
 //  - Files that have some hunks staged while others aren't
 //    - Show both staged and unstaged?
@@ -115,12 +114,12 @@ impl Component for FileComponent {
             }
             KeyCode::Char('s') => {
                 if let Some(file) = self.files.get(self.position) {
-                    stage(&self.repo_path, &file.path, true)?;
+                    stage_file(&self.repo_path, &file.path)?;
                 }
             }
             KeyCode::Char('u') => {
                 if let Some(file) = self.files.get(self.position) {
-                    stage(&self.repo_path, &file.path, false)?;
+                    unstage_file(&self.repo_path, &file.path)?;
                 }
             }
             _ => {}
@@ -130,6 +129,7 @@ impl Component for FileComponent {
     }
 
     fn focus(&mut self, focus: bool) {
+        // Comment
         if focus {
             self.style = ComponentTheme::focused();
         } else {
