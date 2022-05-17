@@ -1,4 +1,4 @@
-use crate::git::git_diff::{DiffWindow, get_diff_stats};
+use crate::git::git_diff::{get_diff_stats, DiffWindow};
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -27,11 +27,7 @@ impl StatusComponent {
         }
     }
 
-    pub fn draw<B: Backend>(
-        &mut self,
-        f: &mut Frame<B>,
-        rect: Rect,
-    ) -> Result<()> {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         let status_block = Block::default()
             .title(" Status ")
             .style(Style::default().fg(Color::White))
@@ -47,20 +43,27 @@ impl StatusComponent {
             .split(rect);
 
         let text = Spans::from(vec![
-            Span::styled(format!("  {} ", self.status.files_changed), Style::default().fg(Color::Blue)),
-            Span::styled(format!("  {} ", self.status.insertions), Style::default().fg(Color::Green)),
-            Span::styled(format!("  {} ", self.status.deletions), Style::default().fg(Color::Red)),
+            Span::styled(
+                format!("  {} ", self.status.files_changed),
+                Style::default().fg(Color::Blue),
+            ),
+            Span::styled(
+                format!("  {} ", self.status.insertions),
+                Style::default().fg(Color::Green),
+            ),
+            Span::styled(
+                format!("  {} ", self.status.deletions),
+                Style::default().fg(Color::Red),
+            ),
         ]);
-        let diff_status = Paragraph::new(text)
-            .style(Style::default());
+        let diff_status = Paragraph::new(text).style(Style::default());
         f.render_widget(diff_status, container[1]);
 
         let text = Spans::from(vec![
             Span::raw(" On Branch: "),
             Span::styled(&self.status.branch, Style::default().fg(Color::Yellow)),
         ]);
-        let branch_status = Paragraph::new(text)
-            .style(Style::default());
+        let branch_status = Paragraph::new(text).style(Style::default());
         f.render_widget(branch_status, container[0]);
         Ok(())
     }
@@ -73,6 +76,8 @@ impl Component for StatusComponent {
     }
 
     // no-op
-    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> { Ok(()) }
+    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> {
+        Ok(())
+    }
     fn focus(&mut self, _focus: bool) {}
 }

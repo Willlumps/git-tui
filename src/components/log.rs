@@ -1,6 +1,6 @@
-use crate::git::git_log::{fetch_history, Commit};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
+use crate::git::git_log::{fetch_history, Commit};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -37,11 +37,7 @@ impl LogComponent {
         }
     }
 
-    pub fn draw<B: Backend>(
-        &mut self,
-        f: &mut Frame<B>,
-        rect: Rect,
-    ) -> Result<()> {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         let list_items: Vec<ListItem> = self
             .logs
             .iter()
@@ -71,8 +67,6 @@ impl LogComponent {
         Ok(())
     }
 
-
-
     fn increment_position(&mut self) {
         self.position = self.position.saturating_sub(1);
         self.state.select(Some(self.position));
@@ -84,7 +78,6 @@ impl LogComponent {
             self.state.select(Some(self.position));
         }
     }
-
 }
 
 impl Component for LogComponent {

@@ -1,7 +1,7 @@
+use super::repo;
 use anyhow::Result;
 use git2::Oid;
 use std::path::Path;
-use super::repo;
 
 #[derive(Clone, Debug)]
 pub struct Commit {

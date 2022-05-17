@@ -10,9 +10,7 @@ pub struct ComponentTheme {
 impl ComponentTheme {
     pub fn default() -> Self {
         Self {
-            style: Style::default()
-                .fg(Color::Gray)
-                .add_modifier(Modifier::DIM),
+            style: Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
             border_style: Style::default()
                 .fg(Color::White)
                 .add_modifier(Modifier::DIM),
@@ -21,8 +19,7 @@ impl ComponentTheme {
 
     pub fn focused() -> Self {
         Self {
-            style: Style::default()
-                .fg(Color::White),
+            style: Style::default().fg(Color::White),
             border_style: Style::default()
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),

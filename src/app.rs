@@ -50,17 +50,17 @@ impl App {
         match component {
             ComponentType::LogComponent => {
                 self.logs.focus(focus);
-            },
+            }
             ComponentType::DiffComponent => {
                 self.diff.focus(focus);
-            },
+            }
             ComponentType::BranchComponent => {
                 self.branches.focus(focus);
-            },
+            }
             ComponentType::FilesComponent => {
                 self.files.focus(focus);
-            },
-            ComponentType::None => {},
+            }
+            ComponentType::None => {}
         }
 
         self.focused_component = component;

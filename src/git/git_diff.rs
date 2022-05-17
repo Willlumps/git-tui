@@ -1,9 +1,9 @@
+use super::repo;
 use crate::components::diff::DiffLine;
 use anyhow::Result;
 use git2::DiffFormat;
-use tui::style::{Color, Style};
 use std::path::Path;
-use super::repo;
+use tui::style::{Color, Style};
 
 #[derive(Default)]
 pub struct DiffWindow {
@@ -67,4 +67,3 @@ fn head(repo_path: &Path) -> Result<String> {
         Ok("".to_string())
     }
 }
-

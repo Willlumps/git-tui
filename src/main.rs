@@ -1,8 +1,8 @@
 mod app;
-mod list_window;
+mod component_style;
 mod components;
 mod git;
-mod component_style;
+mod list_window;
 use crate::app::App;
 use components::{Component, ComponentType};
 
@@ -12,6 +12,7 @@ use crossterm::{
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
+use std::env::current_dir;
 use std::sync::mpsc;
 use std::sync::mpsc::Receiver;
 use std::{
@@ -23,7 +24,6 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
-use std::env::current_dir;
 
 enum Event<I> {
     Input(I),
@@ -156,8 +156,7 @@ fn run_app<B: Backend>(
                         app.files.handle_event(input)?;
                     }
                 },
-                Event::Tick => {
-                }
+                Event::Tick => {}
             },
             Err(e) => {
                 // TODO

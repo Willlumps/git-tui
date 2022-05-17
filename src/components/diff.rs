@@ -132,18 +132,18 @@ impl Component for DiffComponent {
         match ev.code {
             KeyCode::Char('j') => {
                 self.scroll_down(1);
-            },
+            }
             KeyCode::Char('k') => {
                 self.scroll_up(1);
-            },
+            }
             KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
                 let height = self.window.height();
                 self.scroll_down(height / 2);
-            },
+            }
             KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
                 let height = self.window.height();
                 self.scroll_up(height / 2);
-            },
+            }
             _ => {}
         }
         Ok(())

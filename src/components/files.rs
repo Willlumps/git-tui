@@ -1,6 +1,6 @@
 use crate::component_style::ComponentTheme;
-use crate::git::git_status::{StatusType, StatusLoc, FileStatus};
 use crate::git::git_status::{get_file_status, stage_file, unstage_file};
+use crate::git::git_status::{FileStatus, StatusLoc, StatusType};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -92,7 +92,7 @@ impl Component for FileComponent {
     fn update(&mut self) -> Result<()> {
         self.files = get_file_status(&self.repo_path)?;
         if self.files.is_empty() {
-            self.files.push(FileStatus{
+            self.files.push(FileStatus {
                 path: "Working tree clean".to_string(),
                 status_type: StatusType::Unmodified,
                 status_loc: StatusLoc::None,
@@ -101,7 +101,7 @@ impl Component for FileComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()>{
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.focused {
             return Ok(());
         }

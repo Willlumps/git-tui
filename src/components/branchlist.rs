@@ -55,11 +55,7 @@ impl BranchComponent {
         }
     }
 
-    pub fn draw<B: Backend>(
-        &mut self,
-        f: &mut Frame<B>,
-        rect: Rect,
-    ) -> Result<()> {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
         let branch_block = Block::default()
             .title(" Branches ")
             .style(self.style.style())
@@ -106,7 +102,6 @@ impl BranchComponent {
 
         Ok(())
     }
-
 
     fn increment_position(&mut self) {
         self.position = self.position.saturating_sub(1);
