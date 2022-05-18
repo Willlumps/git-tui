@@ -130,6 +130,7 @@ impl Component for BranchComponent {
         if !self.focused {
             return Ok(());
         }
+
         match ev.code {
             KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.decrement_position();

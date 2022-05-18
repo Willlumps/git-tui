@@ -138,17 +138,17 @@ fn run_app<B: Backend>(
                     KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                         return Ok(());
                     }
-                    KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::LogComponent);
+                    KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.focus(ComponentType::FilesComponent);
                     }
                     KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
                         app.focus(ComponentType::BranchComponent);
                     }
-                    KeyCode::Char('g') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::DiffComponent);
+                    KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.focus(ComponentType::LogComponent);
                     }
-                    KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::FilesComponent);
+                    KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
+                        app.focus(ComponentType::DiffComponent);
                     }
                     _ => {
                         // Do the stuff...poorly

@@ -3,7 +3,7 @@ use crate::components::Component;
 use crate::git::git_log::{fetch_history, Commit};
 
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
@@ -91,10 +91,10 @@ impl Component for LogComponent {
             return Ok(());
         }
         match ev.code {
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('j') => {
                 self.decrement_position();
             }
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('k') => {
                 self.increment_position();
             }
             _ => {}
