@@ -71,7 +71,6 @@ impl From<Status> for StatusType {
             StatusType::Typechanged
         } else if status.is_conflicted() {
             StatusType::Conflicted
-        // TODO: Do I need to differentiate between the two?
         } else if status.is_index_modified() {
             StatusType::IndexModified
         } else {

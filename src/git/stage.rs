@@ -32,3 +32,12 @@ pub fn stage_all(repo_path: &Path) -> Result<()> {
     Ok(())
 }
 
+pub fn unstage_all(repo_path: &Path) -> Result<()> {
+    let repo = repo(repo_path)?;
+
+    if let Some(head) = repo.head()?.target() {
+        let obj = repo.find_object(head, Some(git2::ObjectType::Commit))?;
+        repo.reset_default(Some(&obj), ["*"].iter())?;
+    }
+    Ok(())
+}

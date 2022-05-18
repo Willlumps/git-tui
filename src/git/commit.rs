@@ -1,10 +1,10 @@
 use anyhow::Result;
 use git2::{Config, Signature};
-use std::path::PathBuf;
+use std::path::Path;
 
 use crate::git::repo;
 
-pub fn commit(repo_path: &PathBuf, message: &str) -> Result<()> {
+pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
     // TODO: Make this work for an initial commit
     let repo = repo(repo_path)?;
     let signature = signature()?;

@@ -1,10 +1,10 @@
 use crate::component_style::ComponentTheme;
-use crate::git::stage::{stage_all, stage_file, unstage_file};
+use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::components::commit_popup::CommitPopup;
 
 use anyhow::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Modifier, Style};
@@ -89,6 +89,10 @@ impl FileComponent {
             self.state.select(Some(self.position));
         }
     }
+
+    fn has_files_staged(&self) -> bool {
+        self.files.iter().any(|file| file.status_type == StatusType::IndexModified)
+    }
 }
 
 impl Component for FileComponent {
@@ -115,8 +119,11 @@ impl Component for FileComponent {
             KeyCode::Char('k') => {
                 self.increment_position();
             }
-            KeyCode::Char('s') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('a') => {
                 stage_all(&self.repo_path)?;
+            }
+            KeyCode::Char('A') => {
+                unstage_all(&self.repo_path)?;
             }
             KeyCode::Char('s') => {
                 if let Some(file) = self.files.get(self.position) {
@@ -129,8 +136,9 @@ impl Component for FileComponent {
                 }
             }
             KeyCode::Char('c') => {
-                // TODO: Check if there are staged files to commit?
-                self.commit_popup.focus();
+                if self.has_files_staged() {
+                    self.commit_popup.focus();
+                }
             }
             _ => {}
         }
