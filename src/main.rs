@@ -109,6 +109,13 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
 
     app.update()?;
 
+    // 1. See if any popups are currently visible
+    // 2. Focus them if they are
+    // 3. Only send events to that popup
+    if app.is_popup_visible() {
+        // Draw popups
+    }
+
     app.status.draw(f, left_container[0])?;
     app.branches.draw(f, left_container[2])?;
     app.logs.draw(f, left_container[3])?;

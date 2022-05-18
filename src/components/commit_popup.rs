@@ -12,7 +12,6 @@ use std::path::PathBuf;
 pub struct CommitPopup {
     input: String,
     visible: bool,
-    focus: bool,
     repo_path: PathBuf,
 }
 
@@ -21,19 +20,16 @@ impl CommitPopup {
         Self {
             input: String::new(),
             visible: false,
-            focus: false,
             repo_path,
         }
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        if !self.focus {
+        if !self.visible {
             return Ok(());
         }
 
         let area = centered_rect(40, 3, rect);
-        self.visible = true;
-
         let input = Paragraph::new(self.input.as_ref())
             .style(Style::default())
             .block(
@@ -53,7 +49,6 @@ impl CommitPopup {
     }
 
     fn reset(&mut self) {
-        self.focus = false;
         self.visible = false;
         self.input.clear();
     }
@@ -95,7 +90,7 @@ impl Component for CommitPopup {
     }
 
     fn focus(&mut self, focus: bool) {
-        self.focus = focus;
+        self.visible = focus;
     }
 
     fn update(&mut self) -> Result<()> {

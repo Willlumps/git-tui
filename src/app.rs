@@ -1,4 +1,5 @@
 use crate::components::branchlist::BranchComponent;
+use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
@@ -9,12 +10,13 @@ use anyhow::Result;
 use std::path::PathBuf;
 
 pub struct App {
+    pub repo_path: PathBuf,
     pub branches: BranchComponent,
     pub logs: LogComponent,
     pub files: FileComponent,
     pub diff: DiffComponent,
     pub status: StatusComponent,
-    pub repo_path: PathBuf,
+    pub commit_popup: CommitPopup,
     pub focused_component: ComponentType,
 }
 
@@ -26,9 +28,14 @@ impl App {
             files: FileComponent::new(repo_path.clone()),
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
-            repo_path,
+            commit_popup: CommitPopup::new(repo_path.clone()),
             focused_component: ComponentType::None,
+            repo_path,
         }
+    }
+
+    pub fn is_popup_visible(&self) -> bool {
+        self.files.commit_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<()> {
