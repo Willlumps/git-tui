@@ -112,6 +112,11 @@ impl Component for FileComponent {
         if !self.focused {
             return Ok(());
         }
+        if self.commit_popup.visible() {
+            self.commit_popup.handle_event(ev)?;
+            return Ok(())
+        }
+
         match ev.code {
             KeyCode::Char('j') => {
                 self.decrement_position();
@@ -137,7 +142,7 @@ impl Component for FileComponent {
             }
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
-                    self.commit_popup.focus();
+                    self.commit_popup.focus(true);
                 }
             }
             _ => {}

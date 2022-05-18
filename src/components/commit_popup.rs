@@ -1,7 +1,7 @@
 use anyhow::Result;
 use crate::git::commit::commit;
 use crossterm::event::{KeyCode, KeyEvent};
-use super::centered_rect;
+use super::{centered_rect, Component};
 use tui::backend::Backend;
 use tui::layout::{Alignment, Rect};
 use tui::Frame;
@@ -48,7 +48,28 @@ impl CommitPopup {
         Ok(())
     }
 
-    pub fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    pub fn visible(&self) -> bool {
+        self.visible
+    }
+
+    fn reset(&mut self) {
+        self.focus = false;
+        self.visible = false;
+        self.input.clear();
+    }
+
+    fn commit(&mut self) -> Result<()> {
+        if self.input.is_empty() {
+            return Ok(());
+        }
+
+        commit(&self.repo_path, &self.input)?;
+        Ok(())
+    }
+}
+
+impl Component for CommitPopup {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.visible {
             return Ok(());
         }
@@ -73,22 +94,11 @@ impl CommitPopup {
         Ok(())
     }
 
-    pub fn focus(&mut self) {
-        self.focus = true;
+    fn focus(&mut self, focus: bool) {
+        self.focus = focus;
     }
 
-    fn reset(&mut self) {
-        self.focus = false;
-        self.visible = false;
-        self.input.clear();
-    }
-
-    fn commit(&mut self) -> Result<()> {
-        if self.input.is_empty() {
-            return Ok(());
-        }
-
-        commit(&self.repo_path, &self.input)?;
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }
