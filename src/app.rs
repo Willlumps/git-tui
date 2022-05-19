@@ -25,9 +25,9 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(repo_path: PathBuf, event_sender: &Sender<ComponentType>) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: &Sender<ComponentType>) -> App {
         Self {
-            branches: BranchComponent::new(),
+            branches: BranchComponent::new(repo_path.clone()),
             logs: LogComponent::new(repo_path.clone()),
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
             diff: DiffComponent::new(repo_path.clone()),

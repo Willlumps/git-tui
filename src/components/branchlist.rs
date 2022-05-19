@@ -1,4 +1,7 @@
+use std::path::PathBuf;
+
 use crate::component_style::ComponentTheme;
+use crate::git::git_branch::{branches, Branch};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -13,45 +16,30 @@ use tui::Frame;
 use super::Component;
 
 pub struct BranchComponent {
-    branches: Vec<String>,
-    filtered_branches: Vec<String>,
+    branches: Vec<Branch>,
+    filtered_branches: Vec<Branch>,
     state: ListState,
     focused: bool,
     position: usize,
     style: ComponentTheme,
     input: String,
+    repo_path: PathBuf,
 }
 
 impl BranchComponent {
-    // TODO: Don't hardcode the list (obviously)
-    pub fn new() -> Self {
+    pub fn new(repo_path: PathBuf) -> BranchComponent {
         let mut state = ListState::default();
         state.select(Some(0));
 
-        let words = vec![
-            "main".to_string(),
-            "task/ABK-12-Create-simulated-sensors".to_string(),
-            "task/ABK-19-Setup-Communication-IoT-Hub".to_string(),
-            "task/ABK-20-IoT-Hub-Msg-Handling-Pi".to_string(),
-            "task/ABK-23-Create-Azure-Function-Read-Grow-Chamber".to_string(),
-            "task/ABK-24-Create-Azure-Function-Write-Grow-Chamber".to_string(),
-            "task/ABK-30-Create-graph-components".to_string(),
-            "task/ABK-46-Integrate-backend-with-devices".to_string(),
-            "task/abk-11-create-sensor-and-actuator-routines".to_string(),
-            "task/abk-17-raspberry-pi-interfacing".to_string(),
-            "task/abk-42-create-non-blocking-arduino-routine".to_string(),
-            "task/abk-9-create-motr-and-servo-routine".to_string(),
-            "topic/ABK-47-Integrate-backend-frontend".to_string(),
-        ];
-
         Self {
-            branches: words.clone(),
-            filtered_branches: words,
+            branches: Vec::new(),
+            filtered_branches: Vec::new(),
             state,
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
             input: String::new(),
+            repo_path,
         }
     }
 
@@ -80,9 +68,9 @@ impl BranchComponent {
             );
 
         let list_items: Vec<ListItem> = self
-            .filtered_branches
+            .branches
             .iter()
-            .map(|item| ListItem::new(item.to_string()))
+            .map(|item| ListItem::new(&*item.name))
             .collect();
         let list = TuiList::new(list_items)
             .block(
@@ -109,20 +97,21 @@ impl BranchComponent {
     }
 
     fn decrement_position(&mut self) {
-        if self.position < self.filtered_branches.len() - 1 {
+        if self.position < self.branches.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
         }
     }
 
-    fn reset_state(&mut self) {
-        self.position = 0;
-        self.state.select(Some(0));
-    }
+    // fn reset_state(&mut self) {
+    //     self.position = 0;
+    //     self.state.select(Some(0));
+    // }
 }
 
 impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
+        self.branches = branches(&self.repo_path)?;
         Ok(())
     }
 
@@ -138,16 +127,16 @@ impl Component for BranchComponent {
             KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.increment_position();
             }
-            KeyCode::Char(c) => {
-                self.input.push(c);
-                self.filtered_branches = fuzzy_find(&self.branches, &self.input);
-                self.reset_state();
-            }
-            KeyCode::Backspace => {
-                self.input.pop();
-                self.filtered_branches = fuzzy_find(&self.branches, &self.input);
-                self.reset_state();
-            }
+            // KeyCode::Char(c) => {
+            //     self.input.push(c);
+            //     self.filtered_branches = fuzzy_find(&self.branches, &self.input);
+            //     self.reset_state();
+            // }
+            // KeyCode::Backspace => {
+            //     self.input.pop();
+            //     self.filtered_branches = fuzzy_find(&self.branches, &self.input);
+            //     self.reset_state();
+            // }
             _ => {}
         }
         Ok(())
@@ -163,7 +152,7 @@ impl Component for BranchComponent {
     }
 }
 
-// TODO: Where to put this
+#[allow(dead_code)]
 fn fuzzy_find(filtered_list: &[String], query: &str) -> Vec<String> {
     let matcher = SkimMatcherV2::default();
     filtered_list
