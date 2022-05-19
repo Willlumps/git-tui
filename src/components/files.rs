@@ -1,7 +1,6 @@
 use crate::component_style::ComponentTheme;
-use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
-use crate::components::commit_popup::CommitPopup;
+use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -12,8 +11,9 @@ use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
-use super::Component;
+use super::{Component, ComponentType};
 use std::path::PathBuf;
+use std::sync::mpsc::Sender;
 
 pub struct FileComponent {
     files: Vec<FileStatus>,
@@ -21,8 +21,9 @@ pub struct FileComponent {
     focused: bool,
     position: usize,
     style: ComponentTheme,
+    event_sender: Sender<ComponentType>,
     repo_path: PathBuf,
-    pub commit_popup: CommitPopup,
+    //pub commit_popup: CommitPopup,
 }
 
 // TODO:
@@ -31,7 +32,7 @@ pub struct FileComponent {
 //    - Show both staged and unstaged?
 
 impl FileComponent {
-    pub fn new(repo_path: PathBuf) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ComponentType>) -> Self {
         let mut state = ListState::default();
         state.select(Some(0));
 
@@ -41,7 +42,8 @@ impl FileComponent {
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
-            commit_popup: CommitPopup::new(repo_path.clone()),
+            //commit_popup: CommitPopup::new(repo_path.clone()),
+            event_sender,
             repo_path,
         }
     }
@@ -91,7 +93,9 @@ impl FileComponent {
     }
 
     fn has_files_staged(&self) -> bool {
-        self.files.iter().any(|file| file.status_type == StatusType::IndexModified)
+        self.files
+            .iter()
+            .any(|file| file.status_type == StatusType::IndexModified)
     }
 }
 
@@ -112,10 +116,10 @@ impl Component for FileComponent {
         if !self.focused {
             return Ok(());
         }
-        if self.commit_popup.visible() {
-            self.commit_popup.handle_event(ev)?;
-            return Ok(())
-        }
+        // if self.commit_popup.visible() {
+        //     self.commit_popup.handle_event(ev)?;
+        //     return Ok(())
+        // }
 
         match ev.code {
             KeyCode::Char('j') => {
@@ -142,7 +146,7 @@ impl Component for FileComponent {
             }
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
-                    self.commit_popup.focus(true);
+                    self.event_sender.send(ComponentType::CommitPopup)?;
                 }
             }
             _ => {}

@@ -25,13 +25,14 @@ use tui::{
     Frame, Terminal,
 };
 
-enum Event<I> {
+pub enum Event<I> {
     Input(I),
     Tick,
 }
 
 fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel();
+    let (ev_tx, ev_rx) = mpsc::channel();
     let tick_rate = Duration::from_millis(500);
 
     thread::spawn(move || {
@@ -66,8 +67,8 @@ fn main() -> Result<()> {
     // replaced with a passed argument or the current dir where the program
     // is executed from.
     let repo_path = current_dir()?;
-    let mut app = App::new(repo_path);
-    let res = run_app(&mut terminal, &mut app, rx);
+    let mut app = App::new(repo_path, &ev_tx);
+    let res = run_app(&mut terminal, &mut app, rx, ev_rx);
 
     // restore terminal
     disable_raw_mode()?;
@@ -109,20 +110,18 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
 
     app.update()?;
 
-    // 1. See if any popups are currently visible
-    // 2. Focus them if they are
-    // 3. Only send events to that popup
-    if app.is_popup_visible() {
-        // Draw popups
-    }
-
     app.status.draw(f, left_container[0])?;
     app.branches.draw(f, left_container[2])?;
     app.logs.draw(f, left_container[3])?;
     app.files.draw(f, left_container[1])?;
     app.diff.draw(f, container[1])?;
 
-    app.files.commit_popup.draw(f, size)?;
+    // 1. See if any popups are currently visible
+    // 2. Focus them if they are
+    // 3. Only send events to that popup
+    if app.is_popup_visible() {
+        app.commit_popup.draw(f, size)?;
+    }
 
     Ok(())
 }
@@ -131,6 +130,7 @@ fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
+    event_rx: Receiver<ComponentType>,
 ) -> Result<()> {
     loop {
         terminal.draw(|f| {
@@ -139,37 +139,44 @@ fn run_app<B: Backend>(
             }
         })?;
 
-        match rx.recv() {
-            Ok(event) => match event {
-                Event::Input(input) => match input.code {
-                    KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
-                        return Ok(());
-                    }
-                    KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::FilesComponent);
-                    }
-                    KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::BranchComponent);
-                    }
-                    KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::LogComponent);
-                    }
-                    KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
-                        app.focus(ComponentType::DiffComponent);
-                    }
-                    _ => {
-                        // Do the stuff...poorly
-                        app.branches.handle_event(input)?;
-                        app.logs.handle_event(input)?;
-                        app.diff.handle_event(input)?;
-                        app.files.handle_event(input)?;
-                    }
-                },
-                Event::Tick => {}
-            },
-            Err(e) => {
-                // TODO
-                eprintln!("FIX ME {e}")
+        match event_rx.try_recv() {
+            Ok(component) => {
+                app.focus(component);
+            }
+            Err(_e) => {}
+        }
+
+        if let Ok(input_event) = rx.recv() {
+            if app.is_popup_visible() {
+                app.handle_popup_event(input_event)?;
+            } else {
+                match input_event {
+                    Event::Input(input) => match input.code {
+                        KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
+                            return Ok(());
+                        }
+                        KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
+                            app.focus(ComponentType::FilesComponent);
+                        }
+                        KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
+                            app.focus(ComponentType::BranchComponent);
+                        }
+                        KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
+                            app.focus(ComponentType::LogComponent);
+                        }
+                        KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
+                            app.focus(ComponentType::DiffComponent);
+                        }
+                        _ => {
+                            // Do the stuff...poorly
+                            app.branches.handle_event(input)?;
+                            app.logs.handle_event(input)?;
+                            app.diff.handle_event(input)?;
+                            app.files.handle_event(input)?;
+                        }
+                    },
+                    Event::Tick => {}
+                }
             }
         }
     }
