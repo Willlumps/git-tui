@@ -23,7 +23,6 @@ pub struct FileComponent {
     style: ComponentTheme,
     event_sender: Sender<ComponentType>,
     repo_path: PathBuf,
-    //pub commit_popup: CommitPopup,
 }
 
 // TODO:
@@ -42,7 +41,6 @@ impl FileComponent {
             focused: false,
             position: 0,
             style: ComponentTheme::default(),
-            //commit_popup: CommitPopup::new(repo_path.clone()),
             event_sender,
             repo_path,
         }
@@ -116,10 +114,6 @@ impl Component for FileComponent {
         if !self.focused {
             return Ok(());
         }
-        // if self.commit_popup.visible() {
-        //     self.commit_popup.handle_event(ev)?;
-        //     return Ok(())
-        // }
 
         match ev.code {
             KeyCode::Char('j') => {

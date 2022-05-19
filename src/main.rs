@@ -86,43 +86,6 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
-    let size = f.size();
-    let container = Layout::default()
-        .direction(Direction::Horizontal)
-        .margin(1)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .split(size);
-
-    // Status, Files, Branches, Logs?
-    let left_container = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(4),
-                Constraint::Length(8),
-                Constraint::Length(15),
-                Constraint::Length(8),
-            ]
-            .as_ref(),
-        )
-        .split(container[0]);
-
-    app.update()?;
-
-    app.status.draw(f, left_container[0])?;
-    app.branches.draw(f, left_container[2])?;
-    app.logs.draw(f, left_container[3])?;
-    app.files.draw(f, left_container[1])?;
-    app.diff.draw(f, container[1])?;
-
-    if app.is_popup_visible() {
-        app.commit_popup.draw(f, size)?;
-    }
-
-    Ok(())
-}
-
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
@@ -130,22 +93,13 @@ fn run_app<B: Backend>(
     event_rx: Receiver<ComponentType>,
 ) -> Result<()> {
     loop {
-        terminal.draw(|f| {
-            if let Err(e) = ui(f, app) {
-                eprintln!("Draw error: {}", e);
-            }
-        })?;
+        app.update()?;
 
-        // This isn't super fast, there is a noticable delay when opening and closing a popup.
-        // Maybe look into crossbeam?
-        match event_rx.try_recv() {
-            Ok(component) => {
-                app.focus(component);
-            }
-            Err(_e) => {}
+        if let Ok(component) = event_rx.try_recv() {
+            app.focus(component);
         }
 
-        if let Ok(input_event) = rx.recv() {
+        if let Ok(input_event) = rx.try_recv() {
             if app.is_popup_visible() {
                 app.handle_popup_event(input_event)?;
             } else {
@@ -178,5 +132,46 @@ fn run_app<B: Backend>(
                 }
             }
         }
+
+        terminal.draw(|f| {
+            if let Err(e) = ui(f, app) {
+                eprintln!("Draw error: {}", e);
+            }
+        })?;
     }
+}
+
+fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
+    let size = f.size();
+    let container = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(1)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(size);
+
+    // Status, Files, Branches, Logs?
+    let left_container = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Length(4),
+                Constraint::Length(8),
+                Constraint::Length(15),
+                Constraint::Length(8),
+            ]
+            .as_ref(),
+        )
+        .split(container[0]);
+
+    app.status.draw(f, left_container[0])?;
+    app.branches.draw(f, left_container[2])?;
+    app.logs.draw(f, left_container[3])?;
+    app.files.draw(f, left_container[1])?;
+    app.diff.draw(f, container[1])?;
+
+    if app.is_popup_visible() {
+        app.commit_popup.draw(f, size)?;
+    }
+
+    Ok(())
 }
