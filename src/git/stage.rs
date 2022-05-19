@@ -1,5 +1,5 @@
-use anyhow::Result;
 use super::repo;
+use anyhow::Result;
 use std::path::Path;
 
 pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<()> {

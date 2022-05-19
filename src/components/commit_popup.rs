@@ -1,25 +1,28 @@
-use anyhow::Result;
+use super::{centered_rect, Component, ComponentType};
 use crate::git::commit::commit;
+use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
-use super::{centered_rect, Component};
+use std::path::PathBuf;
+use std::sync::mpsc::Sender;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Rect};
-use tui::Frame;
 use tui::style::Style;
-use tui::widgets::{Clear, Borders, Block, Paragraph};
-use std::path::PathBuf;
+use tui::widgets::{Block, Borders, Clear, Paragraph};
+use tui::Frame;
 
 pub struct CommitPopup {
     input: String,
     visible: bool,
+    event_sender: Sender<ComponentType>,
     repo_path: PathBuf,
 }
 
 impl CommitPopup {
-   pub fn new(repo_path: PathBuf) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ComponentType>) -> Self {
         Self {
             input: String::new(),
             visible: false,
+            event_sender,
             repo_path,
         }
     }
@@ -48,9 +51,11 @@ impl CommitPopup {
         self.visible
     }
 
-    fn reset(&mut self) {
+    fn reset(&mut self) -> Result<()> {
         self.visible = false;
         self.input.clear();
+        self.event_sender.send(ComponentType::FilesComponent)?;
+        Ok(())
     }
 
     fn commit(&mut self) -> Result<()> {
@@ -78,10 +83,10 @@ impl Component for CommitPopup {
             }
             KeyCode::Enter => {
                 self.commit()?;
-                self.reset();
+                self.reset()?;
             }
             KeyCode::Esc => {
-                self.reset();
+                self.reset()?;
             }
             _ => {}
         }

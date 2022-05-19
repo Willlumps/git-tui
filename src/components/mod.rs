@@ -1,13 +1,13 @@
 use anyhow::Result;
 use crossterm::event::KeyEvent;
-use tui::layout::{Layout, Direction, Constraint, Rect};
+use tui::layout::{Constraint, Direction, Layout, Rect};
 
 pub mod branchlist;
+pub mod commit_popup;
 pub mod diff;
 pub mod files;
 pub mod log;
 pub mod status;
-pub mod commit_popup;
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {
@@ -16,6 +16,7 @@ pub enum ComponentType {
     DiffComponent,
     FilesComponent,
     BranchComponent,
+    CommitPopup,
 }
 
 pub trait Component {
