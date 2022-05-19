@@ -52,9 +52,9 @@ impl CommitPopup {
     }
 
     fn reset(&mut self) -> Result<()> {
+        self.event_sender.send(ComponentType::FilesComponent)?;
         self.visible = false;
         self.input.clear();
-        self.event_sender.send(ComponentType::FilesComponent)?;
         Ok(())
     }
 

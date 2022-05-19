@@ -116,9 +116,6 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     app.files.draw(f, left_container[1])?;
     app.diff.draw(f, container[1])?;
 
-    // 1. See if any popups are currently visible
-    // 2. Focus them if they are
-    // 3. Only send events to that popup
     if app.is_popup_visible() {
         app.commit_popup.draw(f, size)?;
     }
@@ -139,6 +136,8 @@ fn run_app<B: Backend>(
             }
         })?;
 
+        // This isn't super fast, there is a noticable delay when opening and closing a popup.
+        // Maybe look into crossbeam?
         match event_rx.try_recv() {
             Ok(component) => {
                 app.focus(component);
@@ -155,16 +154,16 @@ fn run_app<B: Backend>(
                         KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
                             return Ok(());
                         }
-                        KeyCode::Char('f') if input.modifiers == KeyModifiers::CONTROL => {
+                        KeyCode::Char('1') => {
                             app.focus(ComponentType::FilesComponent);
                         }
-                        KeyCode::Char('b') if input.modifiers == KeyModifiers::CONTROL => {
+                        KeyCode::Char('2') => {
                             app.focus(ComponentType::BranchComponent);
                         }
-                        KeyCode::Char('l') if input.modifiers == KeyModifiers::CONTROL => {
+                        KeyCode::Char('3') => {
                             app.focus(ComponentType::LogComponent);
                         }
-                        KeyCode::Char('d') if input.modifiers == KeyModifiers::CONTROL => {
+                        KeyCode::Char('4') => {
                             app.focus(ComponentType::DiffComponent);
                         }
                         _ => {
