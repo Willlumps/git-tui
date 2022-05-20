@@ -3,6 +3,7 @@ use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
+use crate::components::push_popup::PushPopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::Event;
@@ -20,6 +21,7 @@ pub struct App {
     pub diff: DiffComponent,
     pub status: StatusComponent,
     pub commit_popup: CommitPopup,
+    pub push_popup: PushPopup,
     pub focused_component: ComponentType,
     pub event_sender: Sender<ComponentType>,
 }
@@ -33,6 +35,7 @@ impl App {
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
+            push_popup: PushPopup::new(event_sender.clone()),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
@@ -41,6 +44,7 @@ impl App {
 
     pub fn is_popup_visible(&self) -> bool {
         self.commit_popup.visible()
+            || self.push_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<()> {
@@ -56,6 +60,7 @@ impl App {
         match ev {
             Event::Input(input) => {
                 self.commit_popup.handle_event(input)?;
+                self.push_popup.handle_event(input)?;
             }
             Event::Tick => {}
         }
@@ -84,6 +89,9 @@ impl App {
             }
             ComponentType::CommitPopup => {
                 self.commit_popup.focus(focus);
+            }
+            ComponentType::PushPopup => {
+                self.push_popup.focus(focus);
             }
             ComponentType::None => {}
         }

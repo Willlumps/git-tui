@@ -171,6 +171,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
 
     if app.is_popup_visible() {
         app.commit_popup.draw(f, size)?;
+        app.push_popup.draw(f, size)?;
     }
 
     Ok(())

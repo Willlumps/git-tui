@@ -7,6 +7,7 @@ pub mod commit_popup;
 pub mod diff;
 pub mod files;
 pub mod log;
+pub mod push_popup;
 pub mod status;
 
 #[derive(Clone, Debug)]
@@ -17,6 +18,7 @@ pub enum ComponentType {
     FilesComponent,
     BranchComponent,
     CommitPopup,
+    PushPopup,
 }
 
 pub trait Component {

@@ -1,5 +1,6 @@
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
+use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 
 use anyhow::Result;
@@ -142,6 +143,10 @@ impl Component for FileComponent {
                 if self.has_files_staged() {
                     self.event_sender.send(ComponentType::CommitPopup)?;
                 }
+            }
+            KeyCode::Char('p') => {
+                //self.event_sender.send(ComponentType::PushPopup)?;
+                push(&self.repo_path)?;
             }
             _ => {}
         }
