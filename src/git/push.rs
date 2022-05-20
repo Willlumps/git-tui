@@ -2,9 +2,10 @@ use anyhow::Result;
 use git2::{Cred, PushOptions, RemoteCallbacks};
 use std::path::Path;
 use std::env;
+use std::sync::mpsc::Sender;
 use super::repo;
 
-pub fn push(repo_path: &Path) -> Result<()>{
+pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<()>{
     let repo = repo(repo_path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -20,6 +21,9 @@ pub fn push(repo_path: &Path) -> Result<()>{
     });
     callbacks.push_transfer_progress(|_current, _total, _bytes| {
         // TODO: Progress bar in the future?
+        if let Err(err) = progress_sender.send(true) {
+            eprintln!("Progress send failed: {err}");
+        }
     });
     callbacks.push_update_reference(|_remote, status| {
         if status.is_some() {
@@ -30,7 +34,8 @@ pub fn push(repo_path: &Path) -> Result<()>{
 
     let mut options = PushOptions::new();
     options.remote_callbacks(callbacks);
-
     remote.push(&["refs/heads/master"], Some(&mut options))?;
+
+    progress_sender.send(false)?;
     Ok(())
 }

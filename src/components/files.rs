@@ -4,6 +4,7 @@ use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 
 use anyhow::Result;
+use core::time::Duration;
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -14,7 +15,8 @@ use tui::Frame;
 
 use super::{Component, ComponentType};
 use std::path::PathBuf;
-use std::sync::mpsc::Sender;
+use std::sync::mpsc::{Sender, self};
+use std::thread;
 
 pub struct FileComponent {
     files: Vec<FileStatus>,
@@ -116,8 +118,7 @@ impl Component for FileComponent {
             return Ok(());
         }
 
-        match ev.code {
-            KeyCode::Char('j') => {
+        match ev.code { KeyCode::Char('j') => {
                 self.decrement_position();
             }
             KeyCode::Char('k') => {
@@ -145,9 +146,30 @@ impl Component for FileComponent {
                 }
             }
             KeyCode::Char('p') => {
-                //self.event_sender.send(ComponentType::PushPopup)?;
-                push(&self.repo_path)?;
+                let (progress_sender, progress_receiver) = mpsc::channel();
+                let repo_path = self.repo_path.clone();
+                let event_sender = self.event_sender.clone();
+
+                thread::spawn(move || {
+                    if let Err(err) = event_sender.send(ComponentType::PushPopup) {
+                        eprintln!("Focus event send error: {err}");
+                    }
+
+                    if let Err(err) = push(&repo_path, progress_sender) {
+                        eprintln!("Failed to push: {err}");
+                    }
+
+                    while progress_receiver.recv().unwrap() {
+                        thread::sleep(Duration::from_millis(500));
+                    }
+
+                    thread::sleep(Duration::from_millis(500));
+                    if let Err(err) = event_sender.send(ComponentType::FilesComponent) {
+                        eprintln!("Focus event send error: {err}");
+                    }
+                });
             }
+
             _ => {}
         }
 

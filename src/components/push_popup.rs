@@ -1,24 +1,22 @@
-use std::sync::mpsc::Sender;
-
-use super::{centered_rect, Component, ComponentType};
+use super::{centered_rect, Component};
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tui::backend::Backend;
 use tui::layout::Rect;
-use tui::style::Style;
+use tui::style::{Style, Color};
 use tui::widgets::{Block, Borders, Clear, Paragraph};
 use tui::Frame;
 
 pub struct PushPopup {
     visible: bool,
-    _event_sender: Sender<ComponentType>,
+    message: String,
 }
 
 impl PushPopup {
-    pub fn new(event_sender: Sender<ComponentType>) -> Self {
+    pub fn new() -> Self {
         Self {
             visible: false,
-            _event_sender: event_sender,
+            message: String::from("Pushing..."),
         }
     }
 
@@ -28,12 +26,13 @@ impl PushPopup {
         }
 
         let area = centered_rect(10, 3, rect);
-        let input = Paragraph::new("Pushing...")
-            .style(Style::default())
+        let input = Paragraph::new(self.message.as_ref())
+            .style(Style::default().fg(Color::White))
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-            );
+            )
+            .alignment(tui::layout::Alignment::Center);
 
         f.render_widget(Clear, area);
         f.render_widget(input, area);

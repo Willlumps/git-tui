@@ -35,7 +35,7 @@ impl App {
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
-            push_popup: PushPopup::new(event_sender.clone()),
+            push_popup: PushPopup::new(),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
