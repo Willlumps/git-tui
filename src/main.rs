@@ -3,7 +3,7 @@ mod component_style;
 mod components;
 mod git;
 mod list_window;
-use crate::app::App;
+use crate::app::{App, ProgramEvent};
 use components::{Component, ComponentType};
 
 use anyhow::Result;
@@ -90,13 +90,20 @@ fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
-    event_rx: Receiver<ComponentType>,
+    event_rx: Receiver<ProgramEvent>,
 ) -> Result<()> {
     loop {
         app.update()?;
 
-        if let Ok(component) = event_rx.try_recv() {
-            app.focus(component);
+        if let Ok(event) = event_rx.try_recv() {
+            match event {
+                ProgramEvent::FocusEvent(component) => {
+                    app.focus(component);
+                }
+                ProgramEvent::GitEvent(git_event) => {
+                    app.handle_git_event(git_event);
+                }
+            }
         }
 
         if let Ok(input_event) = rx.try_recv() {

@@ -27,7 +27,7 @@ pub trait Component {
     fn handle_event(&mut self, ev: KeyEvent) -> Result<()>;
 }
 
-fn centered_rect(percent_x: u16, y: u16, r: Rect) -> Rect {
+fn centered_rect(x: u16, y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -44,9 +44,9 @@ fn centered_rect(percent_x: u16, y: u16, r: Rect) -> Rect {
         .direction(Direction::Horizontal)
         .constraints(
             [
-                Constraint::Percentage((100 - percent_x) / 2),
-                Constraint::Percentage(percent_x),
-                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Length((r.width - x) / 2),
+                Constraint::Length(x),
+                Constraint::Length((r.width - x) / 2),
             ]
             .as_ref(),
         )

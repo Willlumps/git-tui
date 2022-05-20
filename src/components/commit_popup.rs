@@ -1,5 +1,6 @@
 use super::{centered_rect, Component, ComponentType};
 use crate::git::commit::commit;
+use crate::app::ProgramEvent;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use std::path::PathBuf;
@@ -13,12 +14,12 @@ use tui::Frame;
 pub struct CommitPopup {
     input: String,
     visible: bool,
-    event_sender: Sender<ComponentType>,
+    event_sender: Sender<ProgramEvent>,
     repo_path: PathBuf,
 }
 
 impl CommitPopup {
-    pub fn new(repo_path: PathBuf, event_sender: Sender<ComponentType>) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         Self {
             input: String::new(),
             visible: false,
@@ -32,7 +33,7 @@ impl CommitPopup {
             return Ok(());
         }
 
-        let area = centered_rect(40, 3, rect);
+        let area = centered_rect(80, 3, rect);
         let input = Paragraph::new(self.input.as_ref())
             .style(Style::default())
             .block(
@@ -52,7 +53,7 @@ impl CommitPopup {
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.event_sender.send(ComponentType::FilesComponent)?;
+        self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))?;
         self.visible = false;
         self.input.clear();
         Ok(())

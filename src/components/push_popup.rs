@@ -4,7 +4,7 @@ use crossterm::event::KeyEvent;
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Style, Color};
-use tui::widgets::{Block, Borders, Clear, Paragraph};
+use tui::widgets::{Block, Borders, BorderType, Clear, Paragraph};
 use tui::Frame;
 
 pub struct PushPopup {
@@ -25,12 +25,14 @@ impl PushPopup {
             return Ok(());
         }
 
-        let area = centered_rect(10, 3, rect);
+        let area = centered_rect(30, 3, rect);
         let input = Paragraph::new(self.message.as_ref())
             .style(Style::default().fg(Color::White))
             .block(
                 Block::default()
+                    .style(Style::default())
                     .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
             )
             .alignment(tui::layout::Alignment::Center);
 
@@ -42,6 +44,10 @@ impl PushPopup {
     pub fn visible(&self) -> bool {
         self.visible
     }
+
+    pub fn set_message(&mut self, message: &str) {
+        self.message = message.to_string();
+    }
 }
 
 impl Component for PushPopup {
@@ -50,6 +56,7 @@ impl Component for PushPopup {
     }
 
     fn focus(&mut self, focus: bool) {
+        self.message = String::from("Pushing...");
         self.visible = focus;
     }
 

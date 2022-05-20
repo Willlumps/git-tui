@@ -13,6 +13,16 @@ use crossterm::event::KeyEvent;
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 
+pub enum ProgramEvent {
+    GitEvent(GitEvent),
+    FocusEvent(ComponentType),
+}
+
+pub enum GitEvent {
+    PushSuccess,
+    PushFailure,
+}
+
 pub struct App {
     pub repo_path: PathBuf,
     pub branches: BranchComponent,
@@ -23,11 +33,11 @@ pub struct App {
     pub commit_popup: CommitPopup,
     pub push_popup: PushPopup,
     pub focused_component: ComponentType,
-    pub event_sender: Sender<ComponentType>,
+    pub event_sender: Sender<ProgramEvent>,
 }
 
 impl App {
-    pub fn new(repo_path: PathBuf, event_sender: &Sender<ComponentType>) -> App {
+    pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> App {
         Self {
             branches: BranchComponent::new(repo_path.clone()),
             logs: LogComponent::new(repo_path.clone()),
@@ -65,6 +75,18 @@ impl App {
             Event::Tick => {}
         }
         Ok(())
+    }
+
+    pub fn handle_git_event(&mut self, ev: GitEvent) {
+        match ev {
+            GitEvent::PushSuccess => {
+                self.push_popup.set_message("Push Successfull!");
+            }
+            GitEvent::PushFailure => {
+                self.push_popup.set_message("Push Failed");
+            }
+
+        }
     }
 
     pub fn focus(&mut self, component: ComponentType) {

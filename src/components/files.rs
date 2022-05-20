@@ -1,3 +1,4 @@
+use crate::app::{ProgramEvent, GitEvent};
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
@@ -15,7 +16,7 @@ use tui::Frame;
 
 use super::{Component, ComponentType};
 use std::path::PathBuf;
-use std::sync::mpsc::{Sender, self};
+use std::sync::mpsc::{self, Sender};
 use std::thread;
 
 pub struct FileComponent {
@@ -24,7 +25,7 @@ pub struct FileComponent {
     focused: bool,
     position: usize,
     style: ComponentTheme,
-    event_sender: Sender<ComponentType>,
+    event_sender: Sender<ProgramEvent>,
     repo_path: PathBuf,
 }
 
@@ -34,7 +35,7 @@ pub struct FileComponent {
 //    - Show both staged and unstaged?
 
 impl FileComponent {
-    pub fn new(repo_path: PathBuf, event_sender: Sender<ComponentType>) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         let mut state = ListState::default();
         state.select(Some(0));
 
@@ -118,7 +119,8 @@ impl Component for FileComponent {
             return Ok(());
         }
 
-        match ev.code { KeyCode::Char('j') => {
+        match ev.code {
+            KeyCode::Char('j') => {
                 self.decrement_position();
             }
             KeyCode::Char('k') => {
@@ -142,7 +144,7 @@ impl Component for FileComponent {
             }
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
-                    self.event_sender.send(ComponentType::CommitPopup)?;
+                    self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::CommitPopup))?;
                 }
             }
             KeyCode::Char('p') => {
@@ -151,12 +153,14 @@ impl Component for FileComponent {
                 let event_sender = self.event_sender.clone();
 
                 thread::spawn(move || {
-                    if let Err(err) = event_sender.send(ComponentType::PushPopup) {
+                    if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::PushPopup)) {
                         eprintln!("Focus event send error: {err}");
                     }
 
-                    if let Err(err) = push(&repo_path, progress_sender) {
-                        eprintln!("Failed to push: {err}");
+                    if let Err(_err) = push(&repo_path, progress_sender) {
+                        event_sender.send(ProgramEvent::GitEvent(GitEvent::PushFailure)).expect("Event should be receieved");
+                        thread::sleep(Duration::from_millis(500));
+                        return;
                     }
 
                     while progress_receiver.recv().unwrap() {
@@ -164,7 +168,13 @@ impl Component for FileComponent {
                     }
 
                     thread::sleep(Duration::from_millis(500));
-                    if let Err(err) = event_sender.send(ComponentType::FilesComponent) {
+                    // Not sure if getting here will fully indicate success, I think we may need to
+                    // use the `push_update_reference` callback.
+                    // For now we will treat getting here as a success unless it hits the fan
+                    event_sender.send(ProgramEvent::GitEvent(GitEvent::PushSuccess)).expect("Event should be received");
+                    thread::sleep(Duration::from_millis(1000));
+
+                    if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)) {
                         eprintln!("Focus event send error: {err}");
                     }
                 });
@@ -177,7 +187,6 @@ impl Component for FileComponent {
     }
 
     fn focus(&mut self, focus: bool) {
-        // Comment
         if focus {
             self.style = ComponentTheme::focused();
         } else {
