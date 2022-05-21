@@ -58,7 +58,7 @@ pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow> {
     Ok(status)
 }
 
-fn head(repo_path: &Path) -> Result<String> {
+pub fn head(repo_path: &Path) -> Result<String> {
     let repo = repo(repo_path)?;
     let head_ref = repo.head()?;
     if let Some(branch_name) = head_ref.shorthand() {

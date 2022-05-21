@@ -1,10 +1,10 @@
 use crate::app::{GitEvent, ProgramEvent};
 use anyhow::Result;
 use git2::{Cred, PushOptions, RemoteCallbacks};
-use std::env;
 use std::path::Path;
 use std::sync::mpsc::Sender;
 
+use super::git_diff::head;
 use super::repo;
 
 pub fn push(
@@ -21,7 +21,7 @@ pub fn push(
         Cred::ssh_key(
             username_from_url.unwrap(),
             None,
-            std::path::Path::new(&format!("{}/.ssh/id_ed25519", env::var("HOME").unwrap())),
+            std::path::Path::new(&format!("{}/.ssh/id_ed25519", std::env::var("HOME").unwrap())),
             None,
         )
     });
@@ -43,8 +43,11 @@ pub fn push(
     });
 
     let mut options = PushOptions::new();
+    let head = head(repo_path)?;
+    let refspec = format!("refs/heads/{}", head);
+
     options.remote_callbacks(callbacks);
-    remote.push(&["refs/heads/master"], Some(&mut options))?;
+    remote.push(&[refspec], Some(&mut options))?;
 
     progress_sender.send(false)?;
     Ok(())
