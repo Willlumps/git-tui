@@ -11,6 +11,6 @@ pub mod stage;
 pub mod push;
 
 pub fn repo(repo_path: &Path) -> Result<Repository> {
-    let repo = Repository::init(repo_path)?;
+    let repo = Repository::open(repo_path)?;
     Ok(repo)
 }
