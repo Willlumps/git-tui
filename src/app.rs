@@ -20,7 +20,7 @@ pub enum ProgramEvent {
 
 pub enum GitEvent {
     PushSuccess,
-    PushFailure,
+    PushFailure(String),
 }
 
 pub struct App {
@@ -82,8 +82,8 @@ impl App {
             GitEvent::PushSuccess => {
                 self.push_popup.set_message("Push Successfull!");
             }
-            GitEvent::PushFailure => {
-                self.push_popup.set_message("Push Failed");
+            GitEvent::PushFailure(message) => {
+                self.push_popup.set_message(&format!("Push Failed: {}", message));
             }
 
         }

@@ -1,11 +1,17 @@
+use crate::app::{GitEvent, ProgramEvent};
 use anyhow::Result;
 use git2::{Cred, PushOptions, RemoteCallbacks};
-use std::path::Path;
 use std::env;
+use std::path::Path;
 use std::sync::mpsc::Sender;
+
 use super::repo;
 
-pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<()>{
+pub fn push(
+    repo_path: &Path,
+    progress_sender: Sender<bool>,
+    event_sender: Sender<ProgramEvent>,
+) -> Result<()> {
     let repo = repo(repo_path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -26,8 +32,12 @@ pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<()>{
         }
     });
     callbacks.push_update_reference(|_remote, status| {
-        if status.is_some() {
-            // Push failed, log something eventually
+        if let Some(message) = status {
+            if let Err(err) = event_sender.send(ProgramEvent::GitEvent(GitEvent::PushFailure(
+                message.to_string(),
+            ))) {
+                eprintln!("Event send failure: {err}");
+            }
         }
         Ok(())
     });

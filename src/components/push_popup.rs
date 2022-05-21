@@ -1,6 +1,6 @@
 use super::{centered_rect, Component};
 use anyhow::Result;
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Style, Color};
@@ -25,7 +25,7 @@ impl PushPopup {
             return Ok(());
         }
 
-        let area = centered_rect(30, 3, rect);
+        let area = centered_rect(100, 3, rect);
         let input = Paragraph::new(self.message.as_ref())
             .style(Style::default().fg(Color::White))
             .block(
@@ -51,7 +51,14 @@ impl PushPopup {
 }
 
 impl Component for PushPopup {
-    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+        match ev.code {
+            KeyCode::Char('q') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.focus(false);
+                return Ok(());
+            }
+            _ => {}
+        }
         Ok(())
     }
 

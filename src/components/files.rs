@@ -1,4 +1,4 @@
-use crate::app::{ProgramEvent, GitEvent};
+use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
@@ -57,10 +57,7 @@ impl FileComponent {
             .map(|item| {
                 let status_type = char::from(item.status_type.clone());
                 let style = ComponentTheme::file_status_style(item.status_loc.clone());
-                ListItem::new(Span::styled(
-                    format!("{} {}", status_type, item.path.clone()),
-                    style,
-                ))
+                ListItem::new(Span::styled(format!("{} {}", status_type, item.path.clone()), style))
             })
             .collect();
         let list = TuiList::new(list_items)
@@ -95,9 +92,7 @@ impl FileComponent {
     }
 
     fn has_files_staged(&self) -> bool {
-        self.files
-            .iter()
-            .any(|file| file.status_type == StatusType::IndexModified)
+        self.files.iter().any(|file| file.status_type == StatusType::IndexModified)
     }
 }
 
@@ -157,9 +152,15 @@ impl Component for FileComponent {
                         eprintln!("Focus event send error: {err}");
                     }
 
-                    if let Err(_err) = push(&repo_path, progress_sender) {
-                        event_sender.send(ProgramEvent::GitEvent(GitEvent::PushFailure)).expect("Event should be receieved");
-                        thread::sleep(Duration::from_millis(500));
+                    if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
+                        // Maybe it is time for custom error types?
+                        event_sender
+                            .send(ProgramEvent::GitEvent(GitEvent::PushFailure(err.to_string())))
+                            .unwrap();
+                        thread::sleep(Duration::from_millis(2000));
+                        if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)) {
+                            eprintln!("Focus event send error: {err}");
+                        }
                         return;
                     }
 
@@ -171,7 +172,9 @@ impl Component for FileComponent {
                     // Not sure if getting here will fully indicate success, I think we may need to
                     // use the `push_update_reference` callback.
                     // For now we will treat getting here as a success unless it hits the fan
-                    event_sender.send(ProgramEvent::GitEvent(GitEvent::PushSuccess)).expect("Event should be received");
+                    event_sender
+                        .send(ProgramEvent::GitEvent(GitEvent::PushSuccess))
+                        .unwrap();
                     thread::sleep(Duration::from_millis(1000));
 
                     if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)) {
