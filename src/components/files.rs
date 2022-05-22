@@ -145,7 +145,7 @@ impl Component for FileComponent {
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
                     self.event_sender
-                        .send(ProgramEvent::FocusEvent(ComponentType::CommitPopup))?;
+                        .send(ProgramEvent::Focus(ComponentType::CommitComponent))?;
                 }
             }
             KeyCode::Char('p') => {
@@ -155,20 +155,14 @@ impl Component for FileComponent {
 
                 thread::spawn(move || {
                     event_sender
-                        .send(ProgramEvent::FocusEvent(ComponentType::PushPopup))
+                        .send(ProgramEvent::Focus(ComponentType::PushComponent))
                         .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
                         // Maybe it is time for custom error types?
                         event_sender
-                            .send(ProgramEvent::GitEvent(GitEvent::PushFailure(
-                                err.to_string(),
-                            )))
+                            .send(ProgramEvent::Error(err.to_string()))
                             .expect("Push failure event send failed.");
-                        thread::sleep(Duration::from_millis(2000));
-                        event_sender
-                            .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
-                            .expect("Focus event send failed.");
                         return;
                     }
 
@@ -181,11 +175,11 @@ impl Component for FileComponent {
                     // use the `push_update_reference` callback.
                     // For now we will treat getting here as a success unless it hits the fan
                     event_sender
-                        .send(ProgramEvent::GitEvent(GitEvent::PushSuccess))
+                        .send(ProgramEvent::Git(GitEvent::PushSuccess))
                         .expect("Push success event send failed.");
                     thread::sleep(Duration::from_millis(1000));
                     event_sender
-                        .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
+                        .send(ProgramEvent::Focus(ComponentType::FilesComponent))
                         .expect("Focus event send failed.");
                 });
             }

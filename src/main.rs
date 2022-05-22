@@ -102,11 +102,14 @@ fn run_app<B: Backend>(
 
         if let Ok(event) = event_rx.try_recv() {
             match event {
-                ProgramEvent::FocusEvent(component) => {
+                ProgramEvent::Focus(component) => {
                     app.focus(component);
                 }
-                ProgramEvent::GitEvent(git_event) => {
+                ProgramEvent::Git(git_event) => {
                     app.handle_git_event(git_event)?;
+                }
+                ProgramEvent::Error(message) => {
+                    app.display_error(message);
                 }
             }
         }
@@ -187,6 +190,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     if app.is_popup_visible() {
         app.commit_popup.draw(f, size)?;
         app.push_popup.draw(f, size)?;
+        app.error_popup.draw(f, size)?;
     }
 
     Ok(())

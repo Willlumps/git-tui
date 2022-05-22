@@ -54,7 +54,7 @@ impl CommitPopup {
 
     fn reset(&mut self) -> Result<()> {
         self.event_sender
-            .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
+            .send(ProgramEvent::Focus(ComponentType::FilesComponent))
             .expect("Focus event send failed.");
         self.visible = false;
         self.input.clear();
@@ -87,7 +87,7 @@ impl Component for CommitPopup {
             KeyCode::Enter => {
                 self.commit()?;
                 self.reset()?;
-                self.event_sender.send(ProgramEvent::GitEvent(GitEvent::RefreshCommitLog)).expect("Send failed");
+                self.event_sender.send(ProgramEvent::Git(GitEvent::RefreshCommitLog)).expect("Send failed");
             }
             KeyCode::Esc => {
                 self.reset()?;

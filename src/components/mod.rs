@@ -5,6 +5,7 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 pub mod branchlist;
 pub mod commit_popup;
 pub mod diff;
+pub mod error;
 pub mod files;
 pub mod log;
 pub mod push_popup;
@@ -15,10 +16,11 @@ pub enum ComponentType {
     None,
     LogComponent,
     DiffComponent,
+    ErrorComponent,
     FilesComponent,
     BranchComponent,
-    CommitPopup,
-    PushPopup,
+    CommitComponent,
+    PushComponent,
 }
 
 pub trait Component {

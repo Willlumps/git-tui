@@ -1,6 +1,7 @@
 use crate::components::branchlist::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
+use crate::components::error::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::push_popup::PushPopup;
@@ -14,13 +15,13 @@ use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 
 pub enum ProgramEvent {
-    GitEvent(GitEvent),
-    FocusEvent(ComponentType),
+    Git(GitEvent),
+    Focus(ComponentType),
+    Error(String),
 }
 
 pub enum GitEvent {
     PushSuccess,
-    PushFailure(String),
     RefreshCommitLog,
 }
 
@@ -29,6 +30,7 @@ pub struct App {
     pub branches: BranchComponent,
     pub logs: LogComponent,
     pub files: FileComponent,
+    pub error_popup: ErrorComponent,
     pub diff: DiffComponent,
     pub status: StatusComponent,
     pub commit_popup: CommitPopup,
@@ -43,6 +45,7 @@ impl App {
             branches: BranchComponent::new(repo_path.clone()),
             logs: LogComponent::new(repo_path.clone()),
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
+            error_popup: ErrorComponent::new(event_sender.clone()),
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
@@ -56,6 +59,7 @@ impl App {
     pub fn is_popup_visible(&self) -> bool {
         self.commit_popup.visible()
             || self.push_popup.visible()
+            || self.error_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<()> {
@@ -80,6 +84,7 @@ impl App {
             Event::Input(input) => {
                 self.commit_popup.handle_event(input)?;
                 self.push_popup.handle_event(input)?;
+                self.error_popup.handle_event(input)?;
             }
             Event::Tick => {}
         }
@@ -91,14 +96,16 @@ impl App {
             GitEvent::PushSuccess => {
                 self.push_popup.set_message("Push Successfull!");
             }
-            GitEvent::PushFailure(message) => {
-                self.push_popup.set_message(&format!("Push Failed: {}", message));
-            }
             GitEvent::RefreshCommitLog => {
                 self.logs.update()?;
             }
         }
         Ok(())
+    }
+
+    pub fn display_error(&mut self, message: String) {
+        self.error_popup.set_message(message);
+        self.focus(ComponentType::ErrorComponent);
     }
 
     pub fn focus(&mut self, component: ComponentType) {
@@ -115,16 +122,19 @@ impl App {
             ComponentType::DiffComponent => {
                 self.diff.focus(focus);
             }
+            ComponentType::ErrorComponent => {
+                self.error_popup.focus(focus);
+            }
             ComponentType::BranchComponent => {
                 self.branches.focus(focus);
             }
             ComponentType::FilesComponent => {
                 self.files.focus(focus);
             }
-            ComponentType::CommitPopup => {
+            ComponentType::CommitComponent => {
                 self.commit_popup.focus(focus);
             }
-            ComponentType::PushPopup => {
+            ComponentType::PushComponent => {
                 self.push_popup.focus(focus);
             }
             ComponentType::None => {}
