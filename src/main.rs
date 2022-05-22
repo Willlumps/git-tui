@@ -92,7 +92,12 @@ fn run_app<B: Backend>(
     rx: Receiver<Event<crossterm::event::KeyEvent>>,
     event_rx: Receiver<ProgramEvent>,
 ) -> Result<()> {
+    let mut first_update = true;
     loop {
+        if first_update {
+            first_update = false;
+            app.hard_refresh()?;
+        }
         app.update()?;
 
         if let Ok(event) = event_rx.try_recv() {
@@ -101,7 +106,7 @@ fn run_app<B: Backend>(
                     app.focus(component);
                 }
                 ProgramEvent::GitEvent(git_event) => {
-                    app.handle_git_event(git_event);
+                    app.handle_git_event(git_event)?;
                 }
             }
         }
@@ -126,6 +131,9 @@ fn run_app<B: Backend>(
                         }
                         KeyCode::Char('4') => {
                             app.focus(ComponentType::DiffComponent);
+                        }
+                        KeyCode::Char('R') => {
+                            app.hard_refresh()?;
                         }
                         _ => {
                             // Do the stuff...poorly

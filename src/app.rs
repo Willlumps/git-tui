@@ -21,6 +21,7 @@ pub enum ProgramEvent {
 pub enum GitEvent {
     PushSuccess,
     PushFailure(String),
+    RefreshCommitLog,
 }
 
 pub struct App {
@@ -60,6 +61,14 @@ impl App {
     pub fn update(&mut self) -> Result<()> {
         self.branches.update()?;
         self.diff.update()?;
+        self.status.update()?;
+        self.files.update()?;
+        Ok(())
+    }
+
+    pub fn hard_refresh(&mut self) -> Result<()> {
+        self.branches.update()?;
+        self.diff.update()?;
         self.logs.update()?;
         self.status.update()?;
         self.files.update()?;
@@ -77,7 +86,7 @@ impl App {
         Ok(())
     }
 
-    pub fn handle_git_event(&mut self, ev: GitEvent) {
+    pub fn handle_git_event(&mut self, ev: GitEvent) -> Result<()> {
         match ev {
             GitEvent::PushSuccess => {
                 self.push_popup.set_message("Push Successfull!");
@@ -85,8 +94,11 @@ impl App {
             GitEvent::PushFailure(message) => {
                 self.push_popup.set_message(&format!("Push Failed: {}", message));
             }
-
+            GitEvent::RefreshCommitLog => {
+                self.logs.update()?;
+            }
         }
+        Ok(())
     }
 
     pub fn focus(&mut self, component: ComponentType) {

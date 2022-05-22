@@ -1,6 +1,6 @@
 use super::{centered_rect, Component, ComponentType};
+use crate::app::{ProgramEvent, GitEvent};
 use crate::git::commit::commit;
-use crate::app::ProgramEvent;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use std::path::PathBuf;
@@ -53,7 +53,9 @@ impl CommitPopup {
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)).expect("Focus event send failed.");
+        self.event_sender
+            .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
+            .expect("Focus event send failed.");
         self.visible = false;
         self.input.clear();
         Ok(())
@@ -85,6 +87,7 @@ impl Component for CommitPopup {
             KeyCode::Enter => {
                 self.commit()?;
                 self.reset()?;
+                self.event_sender.send(ProgramEvent::GitEvent(GitEvent::RefreshCommitLog)).expect("Send failed");
             }
             KeyCode::Esc => {
                 self.reset()?;
