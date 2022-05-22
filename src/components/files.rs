@@ -57,7 +57,10 @@ impl FileComponent {
             .map(|item| {
                 let status_type = char::from(item.status_type.clone());
                 let style = ComponentTheme::file_status_style(item.status_loc.clone());
-                ListItem::new(Span::styled(format!("{} {}", status_type, item.path.clone()), style))
+                ListItem::new(Span::styled(
+                    format!("{} {}", status_type, item.path.clone()),
+                    style,
+                ))
             })
             .collect();
         let list = TuiList::new(list_items)
@@ -92,7 +95,9 @@ impl FileComponent {
     }
 
     fn has_files_staged(&self) -> bool {
-        self.files.iter().any(|file| file.status_type == StatusType::IndexModified)
+        self.files
+            .iter()
+            .any(|file| file.status_type == StatusType::IndexModified)
     }
 }
 
@@ -139,7 +144,8 @@ impl Component for FileComponent {
             }
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
-                    self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::CommitPopup))?;
+                    self.event_sender
+                        .send(ProgramEvent::FocusEvent(ComponentType::CommitPopup))?;
                 }
             }
             KeyCode::Char('p') => {
@@ -148,19 +154,21 @@ impl Component for FileComponent {
                 let event_sender = self.event_sender.clone();
 
                 thread::spawn(move || {
-                    if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::PushPopup)) {
-                        eprintln!("Focus event send error: {err}");
-                    }
+                    event_sender
+                        .send(ProgramEvent::FocusEvent(ComponentType::PushPopup))
+                        .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
                         // Maybe it is time for custom error types?
                         event_sender
-                            .send(ProgramEvent::GitEvent(GitEvent::PushFailure(err.to_string())))
-                            .unwrap();
+                            .send(ProgramEvent::GitEvent(GitEvent::PushFailure(
+                                err.to_string(),
+                            )))
+                            .expect("Push failure event send failed.");
                         thread::sleep(Duration::from_millis(2000));
-                        if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)) {
-                            eprintln!("Focus event send error: {err}");
-                        }
+                        event_sender
+                            .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
+                            .expect("Focus event send failed.");
                         return;
                     }
 
@@ -174,12 +182,11 @@ impl Component for FileComponent {
                     // For now we will treat getting here as a success unless it hits the fan
                     event_sender
                         .send(ProgramEvent::GitEvent(GitEvent::PushSuccess))
-                        .unwrap();
+                        .expect("Push success event send failed.");
                     thread::sleep(Duration::from_millis(1000));
-
-                    if let Err(err) = event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)) {
-                        eprintln!("Focus event send error: {err}");
-                    }
+                    event_sender
+                        .send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))
+                        .expect("Focus event send failed.");
                 });
             }
 

@@ -53,7 +53,7 @@ impl CommitPopup {
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent))?;
+        self.event_sender.send(ProgramEvent::FocusEvent(ComponentType::FilesComponent)).expect("Focus event send failed.");
         self.visible = false;
         self.input.clear();
         Ok(())

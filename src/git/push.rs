@@ -20,12 +20,8 @@ pub fn push(
     callbacks.credentials(|_url, username_from_url, allowed_types| {
         if allowed_types.is_ssh_key() {
             match username_from_url {
-                Some(username) => {
-                    Cred::ssh_key_from_agent(username)
-                }
-                None => {
-                    Err(git2::Error::from_str("Where da username??"))
-                }
+                Some(username) => Cred::ssh_key_from_agent(username),
+                None => Err(git2::Error::from_str("Where da username??")),
             }
         } else if allowed_types.is_user_pass_plaintext() {
             // Do people actually use plaintext user/pass ??
@@ -36,17 +32,17 @@ pub fn push(
     });
     callbacks.push_transfer_progress(|_current, _total, _bytes| {
         // TODO: Progress bar in the future?
-        if let Err(err) = progress_sender.send(true) {
-            eprintln!("Progress send failed: {err}");
-        }
+        progress_sender
+            .send(true)
+            .expect("Push progress send failed.");
     });
     callbacks.push_update_reference(|_remote, status| {
         if let Some(message) = status {
-            if let Err(err) = event_sender.send(ProgramEvent::GitEvent(GitEvent::PushFailure(
-                message.to_string(),
-            ))) {
-                eprintln!("Event send failure: {err}");
-            }
+            event_sender
+                .send(ProgramEvent::GitEvent(GitEvent::PushFailure(
+                    message.to_string(),
+                )))
+                .expect("Push failure event send failed.");
         }
         Ok(())
     });
@@ -58,6 +54,6 @@ pub fn push(
     options.remote_callbacks(callbacks);
     remote.push(&[refspec], Some(&mut options))?;
 
-    progress_sender.send(false)?;
+    progress_sender.send(false).expect("Push progress send failed.");
     Ok(())
 }
