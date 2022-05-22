@@ -17,13 +17,22 @@ pub fn push(
     let mut remote = repo.find_remote("origin")?;
     let mut callbacks = RemoteCallbacks::new();
 
-    callbacks.credentials(|_url, username_from_url, _allowed_types| {
-        Cred::ssh_key(
-            username_from_url.unwrap(),
-            None,
-            std::path::Path::new(&format!("{}/.ssh/id_ed25519", std::env::var("HOME").unwrap())),
-            None,
-        )
+    callbacks.credentials(|_url, username_from_url, allowed_types| {
+        if allowed_types.is_ssh_key() {
+            match username_from_url {
+                Some(username) => {
+                    Cred::ssh_key_from_agent(username)
+                }
+                None => {
+                    Err(git2::Error::from_str("Where da username??"))
+                }
+            }
+        } else if allowed_types.is_user_pass_plaintext() {
+            // Do people actually use plaintext user/pass ??
+            unimplemented!();
+        } else {
+            Cred::default()
+        }
     });
     callbacks.push_transfer_progress(|_current, _total, _bytes| {
         // TODO: Progress bar in the future?
