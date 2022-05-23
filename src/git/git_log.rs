@@ -5,10 +5,10 @@ use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct Commit {
-    pub id: String,
-    pub author: String,
-    pub email: String,
-    pub message: String,
+    id: String,
+    author: String,
+    email: String,
+    message: String,
 }
 
 impl Commit {
@@ -16,6 +16,7 @@ impl Commit {
         &self.id
     }
 
+    #[allow(dead_code)]
     pub fn get_author(&self) -> &String {
         &self.author
     }

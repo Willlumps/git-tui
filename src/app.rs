@@ -17,12 +17,17 @@ use std::sync::mpsc::Sender;
 pub enum ProgramEvent {
     Git(GitEvent),
     Focus(ComponentType),
-    Error(String),
+    Error(ErrorType),
 }
 
 pub enum GitEvent {
     PushSuccess,
     RefreshCommitLog,
+}
+
+pub enum ErrorType {
+    GitError(git2::Error),
+    Unknown(String),
 }
 
 pub struct App {
@@ -103,8 +108,15 @@ impl App {
         Ok(())
     }
 
-    pub fn display_error(&mut self, message: String) {
-        self.error_popup.set_message(message);
+    pub fn display_error(&mut self, error: ErrorType) {
+        match error {
+            ErrorType::GitError(err) => {
+                self.error_popup.set_git_error(err);
+            },
+            ErrorType::Unknown(message) => {
+                self.error_popup.set_message(message);
+            }
+        }
         self.focus(ComponentType::ErrorComponent);
     }
 

@@ -1,4 +1,4 @@
-use crate::app::ProgramEvent;
+use crate::app::{ProgramEvent, ErrorType};
 use anyhow::Result;
 use git2::{Cred, PushOptions, RemoteCallbacks};
 use std::path::Path;
@@ -11,7 +11,7 @@ pub fn push(
     repo_path: &Path,
     progress_sender: Sender<bool>,
     event_sender: Sender<ProgramEvent>,
-) -> Result<()> {
+) -> Result<(), git2::Error> {
     let repo = repo(repo_path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -39,7 +39,7 @@ pub fn push(
     callbacks.push_update_reference(|_remote, status| {
         if let Some(message) = status {
             event_sender
-                .send(ProgramEvent::Error(message.to_string()))
+                .send(ProgramEvent::Error(ErrorType::Unknown(message.to_string())))
                 .expect("Push failure event send failed.");
         }
         Ok(())

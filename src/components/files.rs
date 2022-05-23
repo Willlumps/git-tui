@@ -1,4 +1,4 @@
-use crate::app::{GitEvent, ProgramEvent};
+use crate::app::{GitEvent, ProgramEvent, ErrorType};
 use crate::component_style::ComponentTheme;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
@@ -161,7 +161,7 @@ impl Component for FileComponent {
                     if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
                         // Maybe it is time for custom error types?
                         event_sender
-                            .send(ProgramEvent::Error(err.to_string()))
+                            .send(ProgramEvent::Error(ErrorType::GitError(err)))
                             .expect("Push failure event send failed.");
                         return;
                     }

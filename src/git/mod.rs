@@ -10,7 +10,7 @@ pub mod git_status;
 pub mod stage;
 pub mod push;
 
-pub fn repo(repo_path: &Path) -> Result<Repository> {
+pub fn repo(repo_path: &Path) -> Result<Repository, git2::Error> {
     let repo = Repository::open(repo_path)?;
     Ok(repo)
 }

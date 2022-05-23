@@ -8,7 +8,7 @@ use components::{Component, ComponentType};
 
 use anyhow::Result;
 use crossterm::{
-    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyModifiers},
+    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
 };
@@ -89,7 +89,7 @@ fn main() -> Result<()> {
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
-    rx: Receiver<Event<crossterm::event::KeyEvent>>,
+    rx: Receiver<Event<KeyEvent>>,
     event_rx: Receiver<ProgramEvent>,
 ) -> Result<()> {
     let mut first_update = true;
@@ -108,8 +108,8 @@ fn run_app<B: Backend>(
                 ProgramEvent::Git(git_event) => {
                     app.handle_git_event(git_event)?;
                 }
-                ProgramEvent::Error(message) => {
-                    app.display_error(message);
+                ProgramEvent::Error(error) => {
+                    app.display_error(error);
                 }
             }
         }
