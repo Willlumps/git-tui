@@ -1,7 +1,9 @@
 use std::path::PathBuf;
+use std::sync::mpsc::Sender;
 
+use crate::app::{ErrorType, ProgramEvent};
 use crate::component_style::ComponentTheme;
-use crate::git::git_branch::{branches, Branch};
+use crate::git::git_branch::{get_branches, Branch};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -24,10 +26,11 @@ pub struct BranchComponent {
     style: ComponentTheme,
     input: String,
     repo_path: PathBuf,
+    event_sender: Sender<ProgramEvent>,
 }
 
 impl BranchComponent {
-    pub fn new(repo_path: PathBuf) -> BranchComponent {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> BranchComponent {
         let mut state = ListState::default();
         state.select(Some(0));
 
@@ -40,6 +43,7 @@ impl BranchComponent {
             style: ComponentTheme::default(),
             input: String::new(),
             repo_path,
+            event_sender,
         }
     }
 
@@ -111,7 +115,7 @@ impl BranchComponent {
 
 impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
-        self.branches = branches(&self.repo_path)?;
+        self.branches = get_branches(&self.repo_path)?;
         Ok(())
     }
 
@@ -126,6 +130,17 @@ impl Component for BranchComponent {
             }
             KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.increment_position();
+            }
+            KeyCode::Char('c') => {
+                if let Some(branch) = self.branches.get(self.position) {
+                    if let Err(err) =
+                        branch.checkout_branch(&self.repo_path, self.event_sender.clone())
+                    {
+                        self.event_sender
+                            .send(ProgramEvent::Error(ErrorType::GitError(err)))
+                            .expect("Failed to send");
+                    }
+                }
             }
             // KeyCode::Char(c) => {
             //     self.input.push(c);

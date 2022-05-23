@@ -47,7 +47,7 @@ pub struct App {
 impl App {
     pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> App {
         Self {
-            branches: BranchComponent::new(repo_path.clone()),
+            branches: BranchComponent::new(repo_path.clone(), event_sender.clone()),
             logs: LogComponent::new(repo_path.clone()),
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
             error_popup: ErrorComponent::new(event_sender.clone()),
