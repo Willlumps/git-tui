@@ -2,6 +2,8 @@ use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 
+use crate::error::Error;
+
 pub mod branchlist;
 pub mod commit_popup;
 pub mod diff;
@@ -26,7 +28,7 @@ pub enum ComponentType {
 pub trait Component {
     fn update(&mut self) -> Result<()>;
     fn focus(&mut self, focus: bool);
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()>;
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error>;
 }
 
 fn centered_rect(x: u16, y: u16, r: Rect) -> Rect {

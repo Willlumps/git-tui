@@ -1,4 +1,5 @@
 use crate::component_style::ComponentTheme;
+use crate::error::Error;
 use crate::git::git_diff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
 
@@ -125,7 +126,7 @@ impl Component for DiffComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if !self.focused {
             return Ok(());
         }

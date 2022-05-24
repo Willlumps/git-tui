@@ -1,3 +1,5 @@
+use crate::error::Error;
+
 use super::{centered_rect, Component};
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -51,7 +53,7 @@ impl PushPopup {
 }
 
 impl Component for PushPopup {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         match ev.code {
             KeyCode::Char('q') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.focus(false);

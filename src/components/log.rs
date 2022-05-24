@@ -1,5 +1,6 @@
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
+use crate::error::Error;
 use crate::git::git_log::{fetch_history, Commit};
 
 use anyhow::Result;
@@ -86,7 +87,7 @@ impl Component for LogComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if !self.focused {
             return Ok(());
         }

@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::git::git_diff::{get_diff_stats, DiffWindow};
 
 use anyhow::Result;
@@ -76,7 +77,7 @@ impl Component for StatusComponent {
     }
 
     // no-op
-    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, _ev: KeyEvent) -> Result<(), Error> {
         Ok(())
     }
     fn focus(&mut self, _focus: bool) {}

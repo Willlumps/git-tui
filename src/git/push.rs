@@ -1,4 +1,5 @@
-use crate::app::{ProgramEvent, ErrorType};
+use crate::app::ProgramEvent;
+use crate::error::Error;
 use anyhow::Result;
 use git2::{Cred, PushOptions, RemoteCallbacks};
 use std::path::Path;
@@ -39,7 +40,7 @@ pub fn push(
     callbacks.push_update_reference(|_remote, status| {
         if let Some(message) = status {
             event_sender
-                .send(ProgramEvent::Error(ErrorType::Unknown(message.to_string())))
+                .send(ProgramEvent::Error(Error::Unknown(message.to_string())))
                 .expect("Push failure event send failed.");
         }
         Ok(())

@@ -3,8 +3,9 @@ mod component_style;
 mod components;
 mod git;
 mod list_window;
+mod error;
 use crate::app::{App, ProgramEvent};
-use components::{Component, ComponentType};
+use components::ComponentType;
 
 use anyhow::Result;
 use crossterm::{
@@ -67,6 +68,7 @@ fn main() -> Result<()> {
     // replaced with a passed argument or the current dir where the program
     // is executed from.
     let repo_path = current_dir()?;
+    //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
     let mut app = App::new(repo_path, &ev_tx);
     let res = run_app(&mut terminal, &mut app, rx, ev_rx);
 
@@ -116,7 +118,7 @@ fn run_app<B: Backend>(
 
         if let Ok(input_event) = rx.try_recv() {
             if app.is_popup_visible() {
-                app.handle_popup_event(input_event)?;
+                app.handle_popup_input(input_event);
             } else {
                 match input_event {
                     Event::Input(input) => match input.code {
@@ -139,11 +141,7 @@ fn run_app<B: Backend>(
                             app.hard_refresh()?;
                         }
                         _ => {
-                            // Do the stuff...poorly
-                            app.branches.handle_event(input)?;
-                            app.logs.handle_event(input)?;
-                            app.diff.handle_event(input)?;
-                            app.files.handle_event(input)?;
+                            app.handle_input(input);
                         }
                     },
                     Event::Tick => {}

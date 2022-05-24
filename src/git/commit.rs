@@ -2,9 +2,9 @@ use anyhow::Result;
 use git2::{Config, Signature};
 use std::path::Path;
 
-use crate::git::repo;
+use crate::{git::repo, error::Error};
 
-pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
+pub fn commit(repo_path: &Path, message: &str) -> Result<(), Error> {
     // TODO: Make this work for an initial commit
     let repo = repo(repo_path)?;
     let signature = signature()?;
@@ -28,7 +28,7 @@ pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
     Ok(())
 }
 
-fn signature() -> Result<Signature<'static>> {
+fn signature() -> Result<Signature<'static>, Error> {
     // Is there a better way to do this?
     let config = Config::open_default()?;
     if let Some(name) = config.get_entry("user.name")?.value() {

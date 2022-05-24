@@ -8,6 +8,7 @@ use crate::components::push_popup::PushPopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::Event;
+use crate::error::Error;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -17,17 +18,12 @@ use std::sync::mpsc::Sender;
 pub enum ProgramEvent {
     Git(GitEvent),
     Focus(ComponentType),
-    Error(ErrorType),
+    Error(Error),
 }
 
 pub enum GitEvent {
     PushSuccess,
     RefreshCommitLog,
-}
-
-pub enum ErrorType {
-    GitError(git2::Error),
-    Unknown(String),
 }
 
 pub struct App {
@@ -84,15 +80,35 @@ impl App {
         Ok(())
     }
 
-    pub fn handle_popup_event(&mut self, ev: Event<KeyEvent>) -> Result<()> {
+    pub fn handle_popup_input(&mut self, ev: Event<KeyEvent>) {
         match ev {
             Event::Input(input) => {
-                self.commit_popup.handle_event(input)?;
-                self.push_popup.handle_event(input)?;
-                self.error_popup.handle_event(input)?;
+                if let Err(err) = self._handle_popup_input(input) {
+                    self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+                }
             }
             Event::Tick => {}
         }
+    }
+
+    fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
+        self.commit_popup.handle_event(ev)?;
+        self.push_popup.handle_event(ev)?;
+        self.error_popup.handle_event(ev)?;
+        Ok(())
+    }
+
+    pub fn handle_input(&mut self, ev: KeyEvent) {
+        if let Err(err) = self._handle_input(ev) {
+            self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+        }
+    }
+
+    fn _handle_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
+        self.branches.handle_event(ev)?;
+        self.logs.handle_event(ev)?;
+        self.diff.handle_event(ev)?;
+        self.files.handle_event(ev)?;
         Ok(())
     }
 
@@ -108,14 +124,15 @@ impl App {
         Ok(())
     }
 
-    pub fn display_error(&mut self, error: ErrorType) {
+    pub fn display_error(&mut self, error: Error) {
         match error {
-            ErrorType::GitError(err) => {
+            Error::Git(err) => {
                 self.error_popup.set_git_error(err);
             },
-            ErrorType::Unknown(message) => {
+            Error::Unknown(message) => {
                 self.error_popup.set_message(message);
             }
+            _ => {}
         }
         self.focus(ComponentType::ErrorComponent);
     }

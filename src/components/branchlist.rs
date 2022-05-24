@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 use std::sync::mpsc::Sender;
 
-use crate::app::{ErrorType, ProgramEvent};
+use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
+use crate::error::Error;
 use crate::git::git_branch::{get_branches, Branch};
 
 use anyhow::Result;
@@ -119,7 +120,7 @@ impl Component for BranchComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if !self.focused {
             return Ok(());
         }
@@ -137,7 +138,7 @@ impl Component for BranchComponent {
                         branch.checkout_branch(&self.repo_path, self.event_sender.clone())
                     {
                         self.event_sender
-                            .send(ProgramEvent::Error(ErrorType::GitError(err)))
+                            .send(ProgramEvent::Error(Error::Git(err)))
                             .expect("Failed to send");
                     }
                 }

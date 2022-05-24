@@ -2,6 +2,7 @@ use std::sync::mpsc::Sender;
 
 use crate::app::ProgramEvent;
 use crate::components::ComponentType;
+use crate::error::Error;
 
 use super::{centered_rect, Component};
 use anyhow::Result;
@@ -99,7 +100,7 @@ impl ErrorComponent {
         self.message = error.message().to_string();
     }
 
-    fn reset(&mut self) -> Result<()> {
+    fn reset(&mut self) {
         self.event_sender
             .send(ProgramEvent::Focus(ComponentType::FilesComponent))
             .expect("Focus event send failed.");
@@ -107,14 +108,13 @@ impl ErrorComponent {
         self.message.clear();
         self.code = ErrorCode::GenericError;
         self.class = ErrorClass::None;
-        Ok(())
     }
 }
 
 impl Component for ErrorComponent {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if ev.code == KeyCode::Esc {
-            self.reset()?;
+            self.reset();
         }
         Ok(())
     }

@@ -1,8 +1,10 @@
+use crate::error::Error;
+
 use super::repo;
 use anyhow::Result;
 use std::path::Path;
 
-pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<()> {
+pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     let path = Path::new(file_path);
     let mut index = repo.index()?;
@@ -13,7 +15,7 @@ pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn unstage_file(repo_path: &Path, file_path: &str) -> Result<()> {
+pub fn unstage_file(repo_path: &Path, file_path: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     let path = Path::new(file_path);
 
@@ -24,7 +26,7 @@ pub fn unstage_file(repo_path: &Path, file_path: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn stage_all(repo_path: &Path) -> Result<()> {
+pub fn stage_all(repo_path: &Path) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     let mut index = repo.index()?;
     index.add_all(["*"].iter(), git2::IndexAddOption::DEFAULT, None)?;
@@ -32,7 +34,7 @@ pub fn stage_all(repo_path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn unstage_all(repo_path: &Path) -> Result<()> {
+pub fn unstage_all(repo_path: &Path) -> Result<(), Error> {
     let repo = repo(repo_path)?;
 
     if let Some(head) = repo.head()?.target() {

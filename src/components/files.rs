@@ -1,5 +1,6 @@
-use crate::app::{GitEvent, ProgramEvent, ErrorType};
+use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
+use crate::error::Error;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
@@ -114,7 +115,7 @@ impl Component for FileComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if !self.focused {
             return Ok(());
         }
@@ -145,7 +146,7 @@ impl Component for FileComponent {
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
                     self.event_sender
-                        .send(ProgramEvent::Focus(ComponentType::CommitComponent))?;
+                        .send(ProgramEvent::Focus(ComponentType::CommitComponent)).expect("Send Failed");
                 }
             }
             KeyCode::Char('p') => {
@@ -161,7 +162,7 @@ impl Component for FileComponent {
                     if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
                         // Maybe it is time for custom error types?
                         event_sender
-                            .send(ProgramEvent::Error(ErrorType::GitError(err)))
+                            .send(ProgramEvent::Error(Error::from(err)))
                             .expect("Push failure event send failed.");
                         return;
                     }
