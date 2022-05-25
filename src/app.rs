@@ -80,6 +80,7 @@ impl App {
         Ok(())
     }
 
+    // TODO: I don't like how I did this, clean it up later
     pub fn handle_popup_input(&mut self, ev: Event<KeyEvent>) {
         match ev {
             Event::Input(input) => {

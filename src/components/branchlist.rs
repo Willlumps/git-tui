@@ -4,7 +4,7 @@ use std::sync::mpsc::Sender;
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::error::Error;
-use crate::git::git_branch::{get_branches, Branch};
+use crate::git::git_branch::{get_branches, Branch, new_branch};
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};

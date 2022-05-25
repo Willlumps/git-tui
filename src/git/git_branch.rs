@@ -1,4 +1,5 @@
-use crate::app::{ProgramEvent, ErrorType};
+use crate::app::ProgramEvent;
+use crate::error::Error;
 
 use super::repo;
 use anyhow::Result;
@@ -11,22 +12,29 @@ pub struct Branch {
 }
 
 impl Branch {
-    pub fn checkout_branch(&self, repo_path: &Path, event_sender: Sender<ProgramEvent>) -> Result<(), git2::Error> {
+    pub fn checkout_branch(
+        &self,
+        repo_path: &Path,
+        event_sender: Sender<ProgramEvent>,
+    ) -> Result<(), git2::Error> {
         let repo = repo(repo_path)?;
         // Need to change the files in the working directory as well as set the HEAD
         let (object, reference) = repo.revparse_ext(&self.name).expect("Object not found");
+
         if let Err(err) = repo.checkout_tree(&object, None) {
-            event_sender.send(ProgramEvent::Error(ErrorType::GitError(err))).expect("Failed to send");
-            return Ok(());
+            event_sender
+                .send(ProgramEvent::Error(Error::Git(err)))
+                .expect("Failed to send");
+        } else {
+            match reference {
+                // gref is an actual reference like branches or tags
+                Some(gref) => repo.set_head(gref.name().unwrap()),
+                // this is a commit, not a reference
+                None => repo.set_head_detached(object.id()),
+            }
+            .expect("Failed to set HEAD");
         }
 
-        match reference {
-            // gref is an actual reference like branches or tags
-            Some(gref) => repo.set_head(gref.name().unwrap()),
-            // this is a commit, not a reference
-            None => repo.set_head_detached(object.id()),
-        }
-        .expect("Failed to set HEAD");
         Ok(())
     }
 }
@@ -47,3 +55,22 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
     Ok(branches)
 }
 
+pub fn new_branch(
+    repo_path: &Path,
+    refname: String,
+    new_branch_name: String,
+) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    let (object, _reference) = repo.revparse_ext(&refname).expect("Revspec not found");
+    match object.as_commit() {
+        Some(commit) => {
+            if let Err(err) = repo.branch(&new_branch_name, commit, false) {
+                return Err(Error::Git(err));
+            }
+        }
+        None => {
+            return Err(Error::Unknown("Object is not a commit".to_string()));
+        }
+    }
+    Ok(())
+}
