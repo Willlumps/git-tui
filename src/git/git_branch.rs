@@ -1,7 +1,7 @@
 use crate::app::ProgramEvent;
 use crate::error::Error;
 
-use super::repo;
+use super::{git_diff::head, repo};
 use anyhow::Result;
 use std::{path::Path, sync::mpsc::Sender};
 
@@ -55,16 +55,13 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
     Ok(branches)
 }
 
-pub fn new_branch(
-    repo_path: &Path,
-    refname: String,
-    new_branch_name: String,
-) -> Result<(), Error> {
+pub fn create_branch(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
-    let (object, _reference) = repo.revparse_ext(&refname).expect("Revspec not found");
+    let head = head(repo_path)?;
+    let (object, _reference) = repo.revparse_ext(&head).expect("Revspec not found");
     match object.as_commit() {
         Some(commit) => {
-            if let Err(err) = repo.branch(&new_branch_name, commit, false) {
+            if let Err(err) = repo.branch(new_branch_name, commit, false) {
                 return Err(Error::Git(err));
             }
         }

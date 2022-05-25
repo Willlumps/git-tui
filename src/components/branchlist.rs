@@ -4,7 +4,8 @@ use std::sync::mpsc::Sender;
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::error::Error;
-use crate::git::git_branch::{get_branches, Branch, new_branch};
+use crate::git::git_branch::{get_branches, Branch};
+use crate::ComponentType;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -142,6 +143,11 @@ impl Component for BranchComponent {
                             .expect("Failed to send");
                     }
                 }
+            }
+            KeyCode::Char('n') => {
+                self.event_sender
+                    .send(ProgramEvent::Focus(ComponentType::BranchPopupComponent))
+                    .expect("Send failed.");
             }
             // KeyCode::Char(c) => {
             //     self.input.push(c);

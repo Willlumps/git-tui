@@ -1,3 +1,4 @@
+use crate::components::branch_popup::BranchPopup;
 use crate::components::branchlist::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
@@ -24,6 +25,7 @@ pub enum ProgramEvent {
 pub enum GitEvent {
     PushSuccess,
     RefreshCommitLog,
+    RefreshBranchList,
 }
 
 pub struct App {
@@ -36,6 +38,7 @@ pub struct App {
     pub status: StatusComponent,
     pub commit_popup: CommitPopup,
     pub push_popup: PushPopup,
+    pub branch_popup: BranchPopup,
     pub focused_component: ComponentType,
     pub event_sender: Sender<ProgramEvent>,
 }
@@ -51,6 +54,7 @@ impl App {
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
             push_popup: PushPopup::new(),
+            branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
@@ -61,10 +65,10 @@ impl App {
         self.commit_popup.visible()
             || self.push_popup.visible()
             || self.error_popup.visible()
+            || self.branch_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<()> {
-        self.branches.update()?;
         self.diff.update()?;
         self.status.update()?;
         self.files.update()?;
@@ -96,6 +100,7 @@ impl App {
         self.commit_popup.handle_event(ev)?;
         self.push_popup.handle_event(ev)?;
         self.error_popup.handle_event(ev)?;
+        self.branch_popup.handle_event(ev)?;
         Ok(())
     }
 
@@ -120,6 +125,9 @@ impl App {
             }
             GitEvent::RefreshCommitLog => {
                 self.logs.update()?;
+            }
+            GitEvent::RefreshBranchList => {
+                self.branches.update()?;
             }
         }
         Ok(())
@@ -166,6 +174,9 @@ impl App {
             }
             ComponentType::PushComponent => {
                 self.push_popup.focus(focus);
+            }
+            ComponentType::BranchPopupComponent => {
+                self.branch_popup.focus(focus);
             }
             ComponentType::None => {}
         }

@@ -189,6 +189,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
         app.commit_popup.draw(f, size)?;
         app.push_popup.draw(f, size)?;
         app.error_popup.draw(f, size)?;
+        app.branch_popup.draw(f, size)?;
     }
 
     Ok(())

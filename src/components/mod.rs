@@ -12,6 +12,7 @@ pub mod files;
 pub mod log;
 pub mod push_popup;
 pub mod status;
+pub mod branch_popup;
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {
@@ -21,6 +22,7 @@ pub enum ComponentType {
     ErrorComponent,
     FilesComponent,
     BranchComponent,
+    BranchPopupComponent,
     CommitComponent,
     PushComponent,
 }

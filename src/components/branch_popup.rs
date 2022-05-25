@@ -1,7 +1,7 @@
 use super::{centered_rect, Component, ComponentType};
 use crate::app::{GitEvent, ProgramEvent};
 use crate::error::Error;
-use crate::git::commit::commit;
+use crate::git::git_branch::create_branch;
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use std::path::PathBuf;
@@ -12,14 +12,14 @@ use tui::style::Style;
 use tui::widgets::{Block, Borders, Clear, Paragraph};
 use tui::Frame;
 
-pub struct CommitPopup {
+pub struct BranchPopup {
     input: String,
     visible: bool,
     event_sender: Sender<ProgramEvent>,
     repo_path: PathBuf,
 }
 
-impl CommitPopup {
+impl BranchPopup {
     pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         Self {
             input: String::new(),
@@ -40,7 +40,7 @@ impl CommitPopup {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .title(" Commit ")
+                    .title(" Create Branch ")
                     .title_alignment(Alignment::Left),
             );
 
@@ -55,23 +55,24 @@ impl CommitPopup {
 
     fn reset(&mut self) {
         self.event_sender
-            .send(ProgramEvent::Focus(ComponentType::FilesComponent))
+            .send(ProgramEvent::Focus(ComponentType::BranchComponent))
             .expect("Focus event send failed.");
         self.visible = false;
         self.input.clear();
     }
 
-    fn commit(&mut self) -> Result<(), Error> {
+    #[allow(clippy::single_char_pattern)]
+    fn create_branch(&mut self) -> Result<(), Error> {
         if self.input.is_empty() {
             return Ok(());
         }
-
-        commit(&self.repo_path, &self.input)?;
+        self.input = self.input.replace(" ", "-");
+        create_branch(&self.repo_path, &self.input)?;
         Ok(())
     }
 }
 
-impl Component for CommitPopup {
+impl Component for BranchPopup {
     fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         if !self.visible {
             return Ok(());
@@ -85,10 +86,10 @@ impl Component for CommitPopup {
                 self.input.pop();
             }
             KeyCode::Enter => {
-                self.commit()?;
                 self.reset();
+                self.create_branch()?;
                 self.event_sender
-                    .send(ProgramEvent::Git(GitEvent::RefreshCommitLog))
+                    .send(ProgramEvent::Git(GitEvent::RefreshBranchList))
                     .expect("Send failed");
             }
             KeyCode::Esc => {
