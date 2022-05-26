@@ -4,7 +4,7 @@ use std::sync::mpsc::Sender;
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::error::Error;
-use crate::git::git_branch::{get_branches, Branch};
+use crate::git::git_branch::{checkout_branch, get_branches, Branch};
 use crate::ComponentType;
 
 use anyhow::Result;
@@ -135,13 +135,7 @@ impl Component for BranchComponent {
             }
             KeyCode::Char('c') => {
                 if let Some(branch) = self.branches.get(self.position) {
-                    if let Err(err) =
-                        branch.checkout_branch(&self.repo_path, self.event_sender.clone())
-                    {
-                        self.event_sender
-                            .send(ProgramEvent::Error(Error::Git(err)))
-                            .expect("Failed to send");
-                    }
+                    checkout_branch(&self.repo_path, &branch.name)?;
                 }
             }
             KeyCode::Char('n') => {

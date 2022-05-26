@@ -34,7 +34,7 @@ pub enum Event<I> {
 fn main() -> Result<()> {
     let (tx, rx) = mpsc::channel();
     let (ev_tx, ev_rx) = mpsc::channel();
-    let tick_rate = Duration::from_millis(500);
+    let tick_rate = Duration::from_millis(2000);
 
     thread::spawn(move || {
         let mut last_tick = Instant::now();

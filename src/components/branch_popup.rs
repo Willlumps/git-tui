@@ -1,7 +1,7 @@
 use super::{centered_rect, Component, ComponentType};
 use crate::app::{GitEvent, ProgramEvent};
 use crate::error::Error;
-use crate::git::git_branch::create_branch;
+use crate::git::git_branch::{create_branch, checkout_branch};
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use std::path::PathBuf;
@@ -62,11 +62,12 @@ impl BranchPopup {
     }
 
     #[allow(clippy::single_char_pattern)]
-    fn create_branch(&mut self) -> Result<(), Error> {
-        if self.input.is_empty() {
+    fn create_branch(&mut self, input: &str) -> Result<(), Error> {
+        if input.is_empty() {
             return Ok(());
         }
-        create_branch(&self.repo_path, &self.input)?;
+        create_branch(&self.repo_path, input)?;
+        checkout_branch(&self.repo_path, input)?;
         Ok(())
     }
 }
@@ -85,8 +86,9 @@ impl Component for BranchPopup {
                 self.input.pop();
             }
             KeyCode::Enter => {
+                let input = self.input.clone();
                 self.reset();
-                self.create_branch()?;
+                self.create_branch(&input)?;
                 self.event_sender
                     .send(ProgramEvent::Git(GitEvent::RefreshBranchList))
                     .expect("Send failed");

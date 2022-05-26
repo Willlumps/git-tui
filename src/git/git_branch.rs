@@ -1,10 +1,9 @@
-use crate::app::ProgramEvent;
 use crate::error::Error;
 
 use super::{git_diff::head, repo};
 use anyhow::Result;
 use git2::Oid;
-use std::{path::Path, sync::mpsc::Sender};
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct Branch {
@@ -14,32 +13,24 @@ pub struct Branch {
     // pub branch_type??
 }
 
-impl Branch {
-    pub fn checkout_branch(
-        &self,
-        repo_path: &Path,
-        event_sender: Sender<ProgramEvent>,
-    ) -> Result<(), git2::Error> {
-        let repo = repo(repo_path)?;
-        // Need to change the files in the working directory as well as set the HEAD
-        let (object, reference) = repo.revparse_ext(&self.name).expect("Object not found");
+pub fn checkout_branch(
+    repo_path: &Path,
+    branch_name: &str,
+) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    // Need to change the files in the working directory as well as set the HEAD
+    let (object, reference) = repo.revparse_ext(branch_name).expect("Object not found");
 
-        if let Err(err) = repo.checkout_tree(&object, None) {
-            event_sender
-                .send(ProgramEvent::Error(Error::Git(err)))
-                .expect("Failed to send");
-        } else {
-            match reference {
-                // gref is an actual reference like branches or tags
-                Some(gref) => repo.set_head(gref.name().unwrap()),
-                // this is a commit, not a reference
-                None => repo.set_head_detached(object.id()),
-            }
-            .expect("Failed to set HEAD");
-        }
-
-        Ok(())
+    repo.checkout_tree(&object, None)?;
+    match reference {
+        // gref is an actual reference like branches or tags
+        Some(gref) => repo.set_head(gref.name().unwrap()),
+        // this is a commit, not a reference
+        None => repo.set_head_detached(object.id()),
     }
+    .expect("Failed to set HEAD");
+
+    Ok(())
 }
 
 pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
