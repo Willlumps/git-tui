@@ -66,7 +66,6 @@ impl BranchPopup {
         if self.input.is_empty() {
             return Ok(());
         }
-        self.input = self.input.replace(" ", "-");
         create_branch(&self.repo_path, &self.input)?;
         Ok(())
     }

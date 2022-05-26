@@ -3,12 +3,15 @@ use crate::error::Error;
 
 use super::{git_diff::head, repo};
 use anyhow::Result;
+use git2::Oid;
 use std::{path::Path, sync::mpsc::Sender};
 
+#[derive(Debug)]
 pub struct Branch {
-    // This will probably need more fields, though as of now I don't know
-    // what those would be.
     pub name: String,
+    pub last_commit: Oid,
+    // pub last_commit_time: String? Time?
+    // pub branch_type??
 }
 
 impl Branch {
@@ -46,11 +49,17 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
 
     for git_branch in git_branches {
         let branch = git_branch?.0;
-        if let Some(name) = branch.name()? {
-            branches.push(Branch {
-                name: name.to_string(),
-            });
-        }
+        let reference = branch.get();
+
+        let name = reference
+            .shorthand()
+            .expect("Branch name is not valid UTF-8");
+        let commit = reference.peel_to_commit()?;
+
+        branches.push(Branch {
+            name: name.to_string(),
+            last_commit: commit.id(),
+        });
     }
     Ok(branches)
 }
