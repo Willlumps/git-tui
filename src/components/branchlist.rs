@@ -1,10 +1,11 @@
-use std::path::PathBuf;
-
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
+use crate::components::Component;
 use crate::error::Error;
 use crate::git::git_branch::{checkout_branch, get_branches, Branch};
 use crate::ComponentType;
+
+use std::path::PathBuf;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -16,8 +17,6 @@ use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
-
-use super::Component;
 
 pub struct BranchComponent {
     branches: Vec<Branch>,

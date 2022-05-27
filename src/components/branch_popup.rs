@@ -1,11 +1,13 @@
-use super::{centered_rect, Component, ComponentType};
 use crate::app::{GitEvent, ProgramEvent};
+use crate::components::{centered_rect, Component, ComponentType};
 use crate::error::Error;
-use crate::git::git_branch::{create_branch, checkout_branch};
+use crate::git::git_branch::{checkout_branch, create_branch};
+
+use std::path::PathBuf;
+
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
-use std::path::PathBuf;
 use tui::backend::Backend;
 use tui::layout::{Alignment, Rect};
 use tui::style::Style;

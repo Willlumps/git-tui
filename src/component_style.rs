@@ -1,6 +1,6 @@
-use tui::style::{Color, Modifier, Style};
-
 use crate::git::git_status::StatusLoc;
+
+use tui::style::{Color, Modifier, Style};
 
 pub struct ComponentTheme {
     style: Style,

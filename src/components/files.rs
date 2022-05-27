@@ -1,13 +1,17 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
+use crate::components::{Component, ComponentType};
 use crate::error::Error;
 use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 
+use std::path::PathBuf;
+use std::thread;
+
 use anyhow::Result;
 use core::time::Duration;
-use crossbeam::channel::{Sender, unbounded};
+use crossbeam::channel::{unbounded, Sender};
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -15,10 +19,6 @@ use tui::style::{Modifier, Style};
 use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use super::{Component, ComponentType};
-use std::path::PathBuf;
-use std::thread;
 
 pub struct FileComponent {
     files: Vec<FileStatus>,
@@ -146,7 +146,8 @@ impl Component for FileComponent {
             KeyCode::Char('c') => {
                 if self.has_files_staged() {
                     self.event_sender
-                        .send(ProgramEvent::Focus(ComponentType::CommitComponent)).expect("Send Failed");
+                        .send(ProgramEvent::Focus(ComponentType::CommitComponent))
+                        .expect("Send Failed");
                 }
             }
             KeyCode::Char('p') => {

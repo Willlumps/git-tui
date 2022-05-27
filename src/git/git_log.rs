@@ -1,7 +1,9 @@
-use super::repo;
+use crate::git::repo;
+
+use std::path::Path;
+
 use anyhow::Result;
 use git2::Oid;
-use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub struct Commit {

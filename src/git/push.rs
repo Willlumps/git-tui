@@ -1,16 +1,14 @@
 use crate::error::Error;
-use crossbeam::channel::Sender;
-use anyhow::Result;
-use git2::{Cred, PushOptions, RemoteCallbacks};
+use crate::git::git_diff::head;
+use crate::git::repo;
+
 use std::path::Path;
 
-use super::git_diff::head;
-use super::repo;
+use anyhow::Result;
+use crossbeam::channel::Sender;
+use git2::{Cred, PushOptions, RemoteCallbacks};
 
-pub fn push(
-    repo_path: &Path,
-    progress_sender: Sender<bool>,
-) -> Result<(), Error> {
+pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<(), Error> {
     let repo = repo(repo_path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -37,7 +35,7 @@ pub fn push(
     });
     callbacks.push_update_reference(|_remote, status| {
         if let Some(message) = status {
-            return Err(git2::Error::from_str(&message.to_string()));
+            return Err(git2::Error::from_str(message));
         }
         Ok(())
     });

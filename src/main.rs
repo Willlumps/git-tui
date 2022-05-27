@@ -1,29 +1,28 @@
 mod app;
 mod component_style;
 mod components;
+mod error;
 mod git;
 mod list_window;
-mod error;
+
 use crate::app::{App, ProgramEvent};
-use components::ComponentType;
+use crate::components::ComponentType;
+
+use std::env::current_dir;
+use std::io;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use crossbeam::channel::{Receiver, Select, unbounded};
-use crossterm::{
-    event::{poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyEvent, KeyModifiers},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen},
+use crossbeam::channel::{unbounded, Receiver, Select};
+use crossterm::event::{
+    poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyEvent, KeyModifiers,
 };
-use std::env::current_dir;
-use std::{
-    io, thread,
-    time::{Duration, Instant},
-};
-use tui::{
-    backend::{Backend, CrosstermBackend},
-    layout::{Constraint, Direction, Layout},
-    Frame, Terminal,
-};
+use crossterm::execute;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
+use tui::backend::{Backend, CrosstermBackend};
+use tui::layout::{Constraint, Direction, Layout};
+use tui::{Frame, Terminal};
 
 pub enum Event<I> {
     Input(I),
@@ -114,7 +113,7 @@ fn run_app<B: Backend>(
         let oper = select.select();
         match oper.index() {
             0 => {
-            let event = oper.recv(&event_rx).expect("Receive failed");
+                let event = oper.recv(&event_rx).expect("Receive failed");
                 match event {
                     ProgramEvent::Focus(component) => {
                         app.focus(component);
@@ -160,9 +159,10 @@ fn run_app<B: Backend>(
                     }
                 }
             }
-            _ => { unreachable!(); }
+            _ => {
+                unreachable!();
+            }
         }
-
     }
 }
 

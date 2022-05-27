@@ -1,9 +1,11 @@
 use crate::error::Error;
+use crate::git::git_diff::head;
+use crate::git::repo;
 
-use super::{git_diff::head, repo};
+use std::path::Path;
+
 use anyhow::Result;
 use git2::Oid;
-use std::path::Path;
 
 #[derive(Debug)]
 pub struct Branch {
@@ -13,10 +15,7 @@ pub struct Branch {
     // pub branch_type??
 }
 
-pub fn checkout_branch(
-    repo_path: &Path,
-    branch_name: &str,
-) -> Result<(), Error> {
+pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     // Need to change the files in the working directory as well as set the HEAD
     let (object, reference) = repo.revparse_ext(branch_name).expect("Object not found");

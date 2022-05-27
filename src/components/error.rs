@@ -1,8 +1,7 @@
 use crate::app::ProgramEvent;
-use crate::components::ComponentType;
+use crate::components::{centered_rect, Component, ComponentType};
 use crate::error::Error;
 
-use super::{centered_rect, Component};
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};

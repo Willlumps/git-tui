@@ -1,8 +1,9 @@
 use crate::error::Error;
+use crate::git::repo;
 
-use super::repo;
-use anyhow::Result;
 use std::path::Path;
+
+use anyhow::Result;
 
 pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;

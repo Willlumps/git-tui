@@ -3,6 +3,8 @@ use crate::components::Component;
 use crate::error::Error;
 use crate::git::git_log::{fetch_history, Commit};
 
+use std::path::PathBuf;
+
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
@@ -11,8 +13,6 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use std::path::PathBuf;
 
 pub struct LogComponent {
     logs: Vec<Commit>,

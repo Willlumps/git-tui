@@ -1,8 +1,10 @@
-use anyhow::Result;
-use git2::{Config, Signature};
+use crate::error::Error;
+use crate::git::repo;
+
 use std::path::Path;
 
-use crate::{git::repo, error::Error};
+use anyhow::Result;
+use git2::{Config, Signature};
 
 pub fn commit(repo_path: &Path, message: &str) -> Result<(), Error> {
     // TODO: Make this work for an initial commit

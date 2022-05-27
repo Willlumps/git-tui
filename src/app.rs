@@ -8,13 +8,14 @@ use crate::components::log::LogComponent;
 use crate::components::push_popup::PushPopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
-use crate::Event;
 use crate::error::Error;
+use crate::Event;
+
+use std::path::PathBuf;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::KeyEvent;
-use std::path::PathBuf;
 
 pub enum ProgramEvent {
     Git(GitEvent),
@@ -89,7 +90,9 @@ impl App {
         match ev {
             Event::Input(input) => {
                 if let Err(err) = self._handle_popup_input(input) {
-                    self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+                    self.event_sender
+                        .send(ProgramEvent::Error(err))
+                        .expect("Send Failed");
                 }
             }
             Event::Tick => {}
@@ -106,7 +109,9 @@ impl App {
 
     pub fn handle_input(&mut self, ev: KeyEvent) {
         if let Err(err) = self._handle_input(ev) {
-            self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+            self.event_sender
+                .send(ProgramEvent::Error(err))
+                .expect("Send Failed");
         }
     }
 
@@ -137,7 +142,7 @@ impl App {
         match error {
             Error::Git(err) => {
                 self.error_popup.set_git_error(err);
-            },
+            }
             Error::Unknown(message) => {
                 self.error_popup.set_message(message);
             }

@@ -1,9 +1,4 @@
-use anyhow::Result;
-use crossterm::event::KeyEvent;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-
-use crate::error::Error;
-
+pub mod branch_popup;
 pub mod branchlist;
 pub mod commit_popup;
 pub mod diff;
@@ -12,7 +7,12 @@ pub mod files;
 pub mod log;
 pub mod push_popup;
 pub mod status;
-pub mod branch_popup;
+
+use crate::error::Error;
+
+use anyhow::Result;
+use crossterm::event::KeyEvent;
+use tui::layout::{Constraint, Direction, Layout, Rect};
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {

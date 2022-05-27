@@ -1,9 +1,10 @@
-use super::repo;
+use crate::git::repo;
+
+use std::path::Path;
+
 use anyhow::Result;
 use git2::Status;
 use git2::StatusOptions;
-
-use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum StatusType {

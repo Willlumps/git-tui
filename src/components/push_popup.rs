@@ -1,12 +1,12 @@
+use crate::components::{centered_rect, Component};
 use crate::error::Error;
 
-use super::{centered_rect, Component};
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
-use tui::style::{Style, Color};
-use tui::widgets::{Block, Borders, BorderType, Clear, Paragraph};
+use tui::style::{Color, Style};
+use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
 
 pub struct PushPopup {
@@ -34,7 +34,7 @@ impl PushPopup {
                 Block::default()
                     .style(Style::default())
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
+                    .border_type(BorderType::Rounded),
             )
             .alignment(tui::layout::Alignment::Center);
 

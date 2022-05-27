@@ -1,7 +1,10 @@
 use crate::component_style::ComponentTheme;
+use crate::components::Component;
 use crate::error::Error;
 use crate::git::git_diff::get_diff;
 use crate::list_window::{ListWindow, ScrollDirection};
+
+use std::path::PathBuf;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -11,10 +14,6 @@ use tui::style::Style;
 use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
-
-use std::path::PathBuf;
-
-use super::Component;
 
 pub struct DiffComponent {
     pub diffs: Vec<DiffLine>,

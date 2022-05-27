@@ -1,8 +1,10 @@
-use super::repo;
 use crate::components::diff::DiffLine;
+use crate::git::repo;
+
+use std::path::Path;
+
 use anyhow::Result;
 use git2::DiffFormat;
-use std::path::Path;
 use tui::style::{Color, Style};
 
 #[derive(Default)]
