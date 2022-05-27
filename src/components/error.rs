@@ -1,11 +1,10 @@
-use std::sync::mpsc::Sender;
-
 use crate::app::ProgramEvent;
 use crate::components::ComponentType;
 use crate::error::Error;
 
 use super::{centered_rect, Component};
 use anyhow::Result;
+use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
 use git2::{ErrorClass, ErrorCode};
 use tui::backend::Backend;

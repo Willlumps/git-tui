@@ -1,5 +1,4 @@
 use std::path::PathBuf;
-use std::sync::mpsc::Sender;
 
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
@@ -8,6 +7,7 @@ use crate::git::git_branch::{checkout_branch, get_branches, Branch};
 use crate::ComponentType;
 
 use anyhow::Result;
+use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;

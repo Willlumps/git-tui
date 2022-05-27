@@ -7,6 +7,7 @@ use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 
 use anyhow::Result;
 use core::time::Duration;
+use crossbeam::channel::{Sender, unbounded};
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -17,7 +18,6 @@ use tui::Frame;
 
 use super::{Component, ComponentType};
 use std::path::PathBuf;
-use std::sync::mpsc::{self, Sender};
 use std::thread;
 
 pub struct FileComponent {
@@ -150,7 +150,7 @@ impl Component for FileComponent {
                 }
             }
             KeyCode::Char('p') => {
-                let (progress_sender, progress_receiver) = mpsc::channel();
+                let (progress_sender, progress_receiver) = unbounded(); //mpsc::channel();
                 let repo_path = self.repo_path.clone();
                 let event_sender = self.event_sender.clone();
 
@@ -159,7 +159,7 @@ impl Component for FileComponent {
                         .send(ProgramEvent::Focus(ComponentType::PushComponent))
                         .expect("Focus event send failed.");
 
-                    if let Err(err) = push(&repo_path, progress_sender, event_sender.clone()) {
+                    if let Err(err) = push(&repo_path, progress_sender) {
                         // Maybe it is time for custom error types?
                         event_sender
                             .send(ProgramEvent::Error(Error::from(err)))

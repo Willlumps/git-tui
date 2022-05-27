@@ -12,9 +12,9 @@ use crate::Event;
 use crate::error::Error;
 
 use anyhow::Result;
+use crossbeam::channel::Sender;
 use crossterm::event::KeyEvent;
 use std::path::PathBuf;
-use std::sync::mpsc::Sender;
 
 pub enum ProgramEvent {
     Git(GitEvent),

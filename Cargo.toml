@@ -11,6 +11,7 @@ debug=true
 [dependencies]
 tui = "0.17"
 crossterm = "0.23"
+crossbeam = "0.8.1"
 git2 = "0.14"
 fuzzy-matcher = "*"
 anyhow = "1.0"
