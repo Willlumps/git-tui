@@ -134,7 +134,7 @@ impl BranchComponent {
 }
 
 impl Component for BranchComponent {
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         self.branches = get_branches(&self.repo_path)?
             .into_iter()
             .filter(|branch| match self.focused_tab {
@@ -160,11 +160,11 @@ impl Component for BranchComponent {
             }
             KeyCode::Char('h') => {
                 self.tab_left();
-                self.update();
+                self.update()?;
             }
             KeyCode::Char('l') => {
                 self.tab_right();
-                self.update();
+                self.update()?;
             }
             KeyCode::Char('c') => {
                 if let Some(branch) = self.branches.get(self.position) {

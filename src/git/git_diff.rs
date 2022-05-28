@@ -1,4 +1,5 @@
 use crate::components::diff::DiffLine;
+use crate::error::Error;
 use crate::git::repo;
 
 use std::path::Path;
@@ -15,7 +16,7 @@ pub struct DiffWindow {
     pub branch: String,
 }
 
-pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
+pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>, Error> {
     let repo = repo(repo_path)?;
 
     let mut diff_lines: Vec<DiffLine> = Vec::new();
@@ -44,7 +45,7 @@ pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>> {
     Ok(diff_lines)
 }
 
-pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow> {
+pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow, Error> {
     let repo = repo(repo_path)?;
 
     let mut opt = git2::DiffOptions::new();
@@ -60,7 +61,7 @@ pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow> {
     Ok(status)
 }
 
-pub fn head(repo_path: &Path) -> Result<String, git2::Error> {
+pub fn head(repo_path: &Path) -> Result<String, Error> {
     let repo = repo(repo_path)?;
     let head_ref = repo.head()?;
     if let Some(branch_name) = head_ref.shorthand() {

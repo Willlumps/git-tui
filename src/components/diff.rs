@@ -109,7 +109,7 @@ impl DiffComponent {
 }
 
 impl Component for DiffComponent {
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         if self.first_update && self.window.height() > 0 {
             self.first_update = false;
             self.window.reset();

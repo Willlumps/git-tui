@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub enum Error {
     // crossterm?
     Git(git2::Error),

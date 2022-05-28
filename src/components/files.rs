@@ -103,7 +103,7 @@ impl FileComponent {
 }
 
 impl Component for FileComponent {
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         self.files = get_file_status(&self.repo_path)?;
         if self.files.is_empty() {
             self.files.push(FileStatus {

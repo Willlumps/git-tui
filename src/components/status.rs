@@ -70,7 +70,7 @@ impl StatusComponent {
 }
 
 impl Component for StatusComponent {
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         self.status = get_diff_stats(&self.repo_path)?;
         Ok(())
     }

@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::git::repo;
 
 use std::path::Path;
@@ -33,7 +34,7 @@ impl Commit {
     }
 }
 
-pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>> {
+pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     let repo = repo(repo_path)?;
 
     let mut history: Vec<Commit> = Vec::new();

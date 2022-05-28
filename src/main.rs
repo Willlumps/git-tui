@@ -7,6 +7,7 @@ mod list_window;
 
 use crate::app::{App, ProgramEvent};
 use crate::components::ComponentType;
+use crate::error::Error;
 
 use std::env::current_dir;
 use std::io;
@@ -91,13 +92,8 @@ fn run_app<B: Backend>(
     app: &mut App,
     rx: Receiver<Event<KeyEvent>>,
     event_rx: Receiver<ProgramEvent>,
-) -> Result<()> {
-    let mut first_update = true;
+) -> Result<(), Error> {
     loop {
-        if first_update {
-            first_update = false;
-            app.hard_refresh()?;
-        }
         app.update()?;
 
         terminal.draw(|f| {
@@ -147,9 +143,6 @@ fn run_app<B: Backend>(
                             }
                             KeyCode::Char('4') => {
                                 app.focus(ComponentType::DiffComponent);
-                            }
-                            KeyCode::Char('R') => {
-                                app.hard_refresh()?;
                             }
                             _ => {
                                 app.handle_input(input);

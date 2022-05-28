@@ -82,7 +82,7 @@ impl LogComponent {
 }
 
 impl Component for LogComponent {
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         self.logs = fetch_history(&self.repo_path)?;
         Ok(())
     }

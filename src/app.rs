@@ -69,14 +69,7 @@ impl App {
             || self.branch_popup.visible()
     }
 
-    pub fn update(&mut self) -> Result<()> {
-        self.diff.update()?;
-        self.status.update()?;
-        self.files.update()?;
-        Ok(())
-    }
-
-    pub fn hard_refresh(&mut self) -> Result<()> {
+    pub fn update(&mut self) -> Result<(), Error> {
         self.branches.update()?;
         self.diff.update()?;
         self.logs.update()?;
@@ -123,7 +116,7 @@ impl App {
         Ok(())
     }
 
-    pub fn handle_git_event(&mut self, ev: GitEvent) -> Result<()> {
+    pub fn handle_git_event(&mut self, ev: GitEvent) -> Result<(), Error> {
         match ev {
             GitEvent::PushSuccess => {
                 self.push_popup.set_message("Push Successfull!");

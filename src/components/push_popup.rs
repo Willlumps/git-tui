@@ -69,7 +69,7 @@ impl Component for PushPopup {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<()> {
+    fn update(&mut self) -> Result<(), Error> {
         Ok(())
     }
 }

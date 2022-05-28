@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crate::git::repo;
 
 use std::path::Path;
@@ -33,7 +34,7 @@ pub enum StatusLoc {
     WorkingDirectoryAndIndex,
 }
 
-pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>> {
+pub fn get_file_status(repo_path: &Path) -> Result<Vec<FileStatus>, Error> {
     let repo = repo(repo_path)?;
     let mut files: Vec<FileStatus> = Vec::new();
 

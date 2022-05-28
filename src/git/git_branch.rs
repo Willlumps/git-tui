@@ -32,7 +32,7 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error>
     Ok(())
 }
 
-pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
+pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     let repo = repo(repo_path)?;
     let mut git_branches = repo.branches(Some(git2::BranchType::Local))?.collect::<Vec<_>>();
     let mut remote_branches = repo.branches(Some(git2::BranchType::Remote))?.collect::<Vec<_>>();
