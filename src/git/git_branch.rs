@@ -5,17 +5,17 @@ use crate::git::repo;
 use std::path::Path;
 
 use anyhow::Result;
-use git2::Oid;
+use git2::{BranchType, Oid};
 
 #[derive(Debug)]
 pub struct Branch {
     pub name: String,
     pub last_commit: Oid,
-    // pub last_commit_time: String? Time?
-    // pub branch_type??
+    pub branch_type: BranchType,
 }
 
 pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
+    // TODO: Handle remote branch checkout
     let repo = repo(repo_path)?;
     // Need to change the files in the working directory as well as set the HEAD
     let (object, reference) = repo.revparse_ext(branch_name).expect("Object not found");
@@ -34,11 +34,13 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error>
 
 pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
     let repo = repo(repo_path)?;
-    let git_branches = repo.branches(Some(git2::BranchType::Local))?;
-    let mut branches = Vec::new();
+    let mut git_branches = repo.branches(Some(git2::BranchType::Local))?.collect::<Vec<_>>();
+    let mut remote_branches = repo.branches(Some(git2::BranchType::Remote))?.collect::<Vec<_>>();
+    let mut branch_list = Vec::new();
+    git_branches.append(&mut remote_branches);
 
     for git_branch in git_branches {
-        let branch = git_branch?.0;
+        let (branch, branch_type) = git_branch?;
         let reference = branch.get();
 
         let name = reference
@@ -46,12 +48,13 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
             .expect("Branch name is not valid UTF-8");
         let commit = reference.peel_to_commit()?;
 
-        branches.push(Branch {
+        branch_list.push(Branch {
             name: name.to_string(),
             last_commit: commit.id(),
+            branch_type,
         });
     }
-    Ok(branches)
+    Ok(branch_list)
 }
 
 pub fn create_branch(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {

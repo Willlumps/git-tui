@@ -9,23 +9,25 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent};
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
+use tui::text::Spans;
+use tui::widgets::{
+    Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs,
+};
 use tui::Frame;
 
 pub struct BranchComponent {
     branches: Vec<Branch>,
-    filtered_branches: Vec<Branch>,
     state: ListState,
     focused: bool,
+    focused_tab: usize,
     position: usize,
     style: ComponentTheme,
-    input: String,
     repo_path: PathBuf,
     event_sender: Sender<ProgramEvent>,
 }
@@ -37,12 +39,11 @@ impl BranchComponent {
 
         Self {
             branches: Vec::new(),
-            filtered_branches: Vec::new(),
             state,
             focused: false,
+            focused_tab: 0,
             position: 0,
             style: ComponentTheme::default(),
-            input: String::new(),
             repo_path,
             event_sender,
         }
@@ -63,20 +64,24 @@ impl BranchComponent {
             .constraints([Constraint::Length(3), Constraint::Min(2)].as_ref())
             .split(rect);
 
-        let input = Paragraph::new(self.input.as_ref())
-            .style(Style::default())
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .title(" Search ")
-                    .title_alignment(Alignment::Center),
-            );
+        let titles = ["Local", "Remote"]
+            .iter()
+            .cloned()
+            .map(Spans::from)
+            .collect();
+
+        let tabs = Tabs::new(titles)
+            .block(Block::default().borders(Borders::ALL))
+            .style(Style::default().fg(Color::White))
+            .select(self.focused_tab)
+            .highlight_style(Style::default().fg(Color::Yellow));
 
         let list_items: Vec<ListItem> = self
             .branches
             .iter()
             .map(|item| ListItem::new(&*item.name))
             .collect();
+
         let list = TuiList::new(list_items)
             .block(
                 Block::default()
@@ -90,7 +95,7 @@ impl BranchComponent {
             )
             .highlight_symbol("> ");
 
-        f.render_widget(input, branch_container[0]);
+        f.render_widget(tabs, branch_container[0]);
         f.render_stateful_widget(list, branch_container[1], &mut self.state);
 
         Ok(())
@@ -108,15 +113,36 @@ impl BranchComponent {
         }
     }
 
-    // fn reset_state(&mut self) {
-    //     self.position = 0;
-    //     self.state.select(Some(0));
-    // }
+    fn tab_left(&mut self) {
+        if self.focused_tab > 0 {
+            self.focused_tab -= 1;
+        }
+        self.reset_state();
+    }
+
+    fn tab_right(&mut self) {
+        if self.focused_tab < 1 {
+            self.focused_tab += 1;
+        }
+        self.reset_state();
+    }
+
+    fn reset_state(&mut self) {
+        self.position = 0;
+        self.state.select(Some(0));
+    }
 }
 
 impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
-        self.branches = get_branches(&self.repo_path)?;
+        self.branches = get_branches(&self.repo_path)?
+            .into_iter()
+            .filter(|branch| match self.focused_tab {
+                0 => branch.branch_type == git2::BranchType::Local,
+                1 => branch.branch_type == git2::BranchType::Remote,
+                _ => unimplemented!(),
+            })
+            .collect::<Vec<_>>();
         Ok(())
     }
 
@@ -126,11 +152,19 @@ impl Component for BranchComponent {
         }
 
         match ev.code {
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('j') => {
                 self.decrement_position();
             }
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
+            KeyCode::Char('k') => {
                 self.increment_position();
+            }
+            KeyCode::Char('h') => {
+                self.tab_left();
+                self.update();
+            }
+            KeyCode::Char('l') => {
+                self.tab_right();
+                self.update();
             }
             KeyCode::Char('c') => {
                 if let Some(branch) = self.branches.get(self.position) {
@@ -142,16 +176,6 @@ impl Component for BranchComponent {
                     .send(ProgramEvent::Focus(ComponentType::BranchPopupComponent))
                     .expect("Send failed.");
             }
-            // KeyCode::Char(c) => {
-            //     self.input.push(c);
-            //     self.filtered_branches = fuzzy_find(&self.branches, &self.input);
-            //     self.reset_state();
-            // }
-            // KeyCode::Backspace => {
-            //     self.input.pop();
-            //     self.filtered_branches = fuzzy_find(&self.branches, &self.input);
-            //     self.reset_state();
-            // }
             _ => {}
         }
         Ok(())
