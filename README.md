@@ -4,10 +4,15 @@ gitbuddy is a simple terminal UI written in Rust using [tui-rs](https://github.c
 # Keymaps
 ## Universal Keymaps
 * `C-q`:  Quit the application
-* `R`:  Hard refresh components
 * `1-4`:  Navigate the four main component panes
-* `j`: Scroll down through a list or window (`C-j` for scrolling through branches)
-* `k`: Scroll up through a list or window (`C-k` for scrolling through branches)
+* `j`: Scroll down through a list or window
+* `k`: Scroll up through a list or window
+
+## Branch Component
+* `c`: Checkout selected branch
+* `h`: Cycle tabs left
+* `l`: Cycle tabs right
+* `n`: Create new branch off of the current branch pointed at by `HEAD`
 
 ## Files Component
 * `c`: Commit
