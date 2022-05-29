@@ -2,7 +2,7 @@ use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
-use crate::git::git_status::{get_file_status, FileStatus, StatusLoc, StatusType};
+use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 

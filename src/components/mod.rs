@@ -1,8 +1,8 @@
 pub mod branch_popup;
-pub mod branchlist;
+pub mod branches;
 pub mod commit_popup;
 pub mod diff;
-pub mod error;
+pub mod error_popup;
 pub mod files;
 pub mod log;
 pub mod push_popup;

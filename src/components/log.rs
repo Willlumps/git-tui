@@ -1,7 +1,7 @@
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::git_log::{fetch_history, Commit};
+use crate::git::log::{fetch_history, Commit};
 
 use std::path::PathBuf;
 

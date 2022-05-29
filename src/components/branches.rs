@@ -2,7 +2,7 @@ use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::git_branch::{checkout_local_branch, get_branches, Branch, checkout_remote_branch};
+use crate::git::branch::{checkout_local_branch, get_branches, Branch, checkout_remote_branch};
 use crate::ComponentType;
 
 use std::path::PathBuf;

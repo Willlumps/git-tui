@@ -1,7 +1,7 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::components::{centered_rect, Component, ComponentType};
 use crate::error::Error;
-use crate::git::git_branch::{checkout_local_branch, branch_from_head};
+use crate::git::branch::{checkout_local_branch, branch_from_head};
 
 use std::path::PathBuf;
 

@@ -1,8 +1,8 @@
 use crate::components::branch_popup::BranchPopup;
-use crate::components::branchlist::BranchComponent;
+use crate::components::branches::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
-use crate::components::error::ErrorComponent;
+use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::push_popup::PushPopup;

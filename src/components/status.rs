@@ -1,6 +1,6 @@
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::git_diff::{get_diff_stats, DiffWindow};
+use crate::git::diff::{get_diff_stats, DiffWindow};
 
 use std::path::PathBuf;
 

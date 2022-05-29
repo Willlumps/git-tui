@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::git::git_diff::head;
+use crate::git::diff::head;
 use crate::git::repo;
 
 use std::path::Path;

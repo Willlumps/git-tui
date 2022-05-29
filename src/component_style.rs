@@ -1,4 +1,4 @@
-use crate::git::git_status::StatusLoc;
+use crate::git::status::StatusLoc;
 
 use tui::style::{Color, Modifier, Style};
 
