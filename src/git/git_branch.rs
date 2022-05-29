@@ -14,9 +14,9 @@ pub struct Branch {
     pub branch_type: BranchType,
 }
 
-pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
-    // TODO: Handle remote branch checkout
+pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
+
     // Need to change the files in the working directory as well as set the HEAD
     let (object, reference) = repo.revparse_ext(branch_name).expect("Object not found");
 
@@ -32,10 +32,42 @@ pub fn checkout_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error>
     Ok(())
 }
 
+pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    let name = remote_branch_name
+        .split('/')
+        .skip(1)
+        .collect::<Vec<&str>>()
+        .join("");
+    let (object, _reference) = repo
+        .revparse_ext(remote_branch_name)
+        .expect("Object not found");
+    let commit = object.as_commit().unwrap();
+    repo.branch(&name, commit, false)?;
+
+    // Need to change the files in the working directory as well as set the HEAD
+    let (object, reference) = repo.revparse_ext(&name).expect("Object not found");
+
+    repo.checkout_tree(&object, None)?;
+    match reference {
+        // gref is an actual reference like branches or tags
+        Some(gref) => repo.set_head(gref.name().unwrap()),
+        // this is a commit, not a reference
+        None => repo.set_head_detached(object.id()),
+    }
+    .expect("Failed to set HEAD");
+
+    Ok(())
+}
+
 pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     let repo = repo(repo_path)?;
-    let mut git_branches = repo.branches(Some(git2::BranchType::Local))?.collect::<Vec<_>>();
-    let mut remote_branches = repo.branches(Some(git2::BranchType::Remote))?.collect::<Vec<_>>();
+    let mut git_branches = repo
+        .branches(Some(git2::BranchType::Local))?
+        .collect::<Vec<_>>();
+    let mut remote_branches = repo
+        .branches(Some(git2::BranchType::Remote))?
+        .collect::<Vec<_>>();
     let mut branch_list = Vec::new();
     git_branches.append(&mut remote_branches);
 
@@ -57,7 +89,7 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     Ok(branch_list)
 }
 
-pub fn create_branch(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {
+pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     let head = head(repo_path)?;
     let (object, _reference) = repo.revparse_ext(&head).expect("Revspec not found");

@@ -1,7 +1,7 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::components::{centered_rect, Component, ComponentType};
 use crate::error::Error;
-use crate::git::git_branch::{checkout_branch, create_branch};
+use crate::git::git_branch::{checkout_local_branch, branch_from_head};
 
 use std::path::PathBuf;
 
@@ -68,8 +68,8 @@ impl BranchPopup {
         if input.is_empty() {
             return Ok(());
         }
-        create_branch(&self.repo_path, input)?;
-        checkout_branch(&self.repo_path, input)?;
+        branch_from_head(&self.repo_path, input)?;
+        checkout_local_branch(&self.repo_path, input)?;
         Ok(())
     }
 }

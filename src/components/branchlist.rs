@@ -2,7 +2,7 @@ use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::git_branch::{checkout_branch, get_branches, Branch};
+use crate::git::git_branch::{checkout_local_branch, get_branches, Branch, checkout_remote_branch};
 use crate::ComponentType;
 
 use std::path::PathBuf;
@@ -168,7 +168,11 @@ impl Component for BranchComponent {
             }
             KeyCode::Char('c') => {
                 if let Some(branch) = self.branches.get(self.position) {
-                    checkout_branch(&self.repo_path, &branch.name)?;
+                    if branch.branch_type == git2::BranchType::Local {
+                        checkout_local_branch(&self.repo_path, &branch.name)?;
+                    } else {
+                        checkout_remote_branch(&self.repo_path, &branch.name)?;
+                    }
                 }
             }
             KeyCode::Char('n') => {
