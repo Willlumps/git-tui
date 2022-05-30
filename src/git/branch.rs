@@ -7,7 +7,7 @@ use std::path::Path;
 use anyhow::Result;
 use git2::{BranchType, Oid};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Branch {
     pub name: String,
     pub last_commit: Oid,

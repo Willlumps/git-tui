@@ -1,14 +1,17 @@
-use crate::app::ProgramEvent;
+use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::branch::{checkout_local_branch, get_branches, Branch, checkout_remote_branch};
+use crate::git::branch::{checkout_local_branch, checkout_remote_branch, get_branches, Branch};
+use crate::git::fetch::fetch;
 use crate::ComponentType;
 
 use std::path::PathBuf;
+use std::thread;
+use std::time::Duration;
 
 use anyhow::Result;
-use crossbeam::channel::Sender;
+use crossbeam::channel::{unbounded, Sender};
 use crossterm::event::{KeyCode, KeyEvent};
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
@@ -16,9 +19,7 @@ use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::Spans;
-use tui::widgets::{
-    Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs,
-};
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs};
 use tui::Frame;
 
 pub struct BranchComponent {
@@ -179,6 +180,40 @@ impl Component for BranchComponent {
                 self.event_sender
                     .send(ProgramEvent::Focus(ComponentType::BranchPopupComponent))
                     .expect("Send failed.");
+            }
+            KeyCode::Char('f') => {
+                let (progress_sender, _progress_receiver) = unbounded(); //mpsc::channel();
+                let repo_path = self.repo_path.clone();
+                let event_sender = self.event_sender.clone();
+                let branch = self.branches.clone();
+                let name = branch
+                    .get(self.position)
+                    .expect("Position out of bounds")
+                    .name
+                    .clone(); // TODO: what in tarnation
+
+                thread::spawn(move || {
+                    event_sender
+                        .send(ProgramEvent::Focus(ComponentType::FetchComponent))
+                        .expect("Focus event send failed.");
+
+                    if let Err(err) = fetch(&repo_path, &name, progress_sender) {
+                        // Maybe it is time for custom error types?
+                        event_sender
+                            .send(ProgramEvent::Error(err))
+                            .expect("Push failure event send failed.");
+                        return;
+                    }
+
+                    thread::sleep(Duration::from_millis(500));
+                    event_sender
+                        .send(ProgramEvent::Git(GitEvent::FetchSuccess))
+                        .expect("Push success event send failed.");
+                    thread::sleep(Duration::from_millis(1000));
+                    event_sender
+                        .send(ProgramEvent::Focus(ComponentType::BranchComponent))
+                        .expect("Focus event send failed.");
+                });
             }
             _ => {}
         }

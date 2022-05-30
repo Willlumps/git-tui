@@ -7,6 +7,7 @@ pub mod files;
 pub mod log;
 pub mod push_popup;
 pub mod status;
+pub mod fetch_popup;
 
 use crate::error::Error;
 
@@ -20,6 +21,7 @@ pub enum ComponentType {
     LogComponent,
     DiffComponent,
     ErrorComponent,
+    FetchComponent,
     FilesComponent,
     BranchComponent,
     BranchPopupComponent,

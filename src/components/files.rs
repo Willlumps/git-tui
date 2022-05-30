@@ -163,7 +163,7 @@ impl Component for FileComponent {
                     if let Err(err) = push(&repo_path, progress_sender) {
                         // Maybe it is time for custom error types?
                         event_sender
-                            .send(ProgramEvent::Error(Error::from(err)))
+                            .send(ProgramEvent::Error(err))
                             .expect("Push failure event send failed.");
                         return;
                     }

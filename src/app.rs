@@ -6,6 +6,7 @@ use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::push_popup::PushPopup;
+use crate::components::fetch_popup::FetchPopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
@@ -24,6 +25,7 @@ pub enum ProgramEvent {
 }
 
 pub enum GitEvent {
+    FetchSuccess,
     PushSuccess,
     RefreshCommitLog,
     RefreshBranchList,
@@ -40,6 +42,7 @@ pub struct App {
     pub commit_popup: CommitPopup,
     pub push_popup: PushPopup,
     pub branch_popup: BranchPopup,
+    pub fetch_popup: FetchPopup,
     pub focused_component: ComponentType,
     pub event_sender: Sender<ProgramEvent>,
 }
@@ -56,6 +59,7 @@ impl App {
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
             push_popup: PushPopup::new(),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
+            fetch_popup: FetchPopup::new(),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
@@ -67,6 +71,7 @@ impl App {
             || self.push_popup.visible()
             || self.error_popup.visible()
             || self.branch_popup.visible()
+            || self.fetch_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<(), Error> {
@@ -97,6 +102,7 @@ impl App {
         self.push_popup.handle_event(ev)?;
         self.error_popup.handle_event(ev)?;
         self.branch_popup.handle_event(ev)?;
+        self.fetch_popup.handle_event(ev)?;
         Ok(())
     }
 
@@ -120,6 +126,9 @@ impl App {
         match ev {
             GitEvent::PushSuccess => {
                 self.push_popup.set_message("Push Successfull!");
+            }
+            GitEvent::FetchSuccess => {
+                self.fetch_popup.set_message("Fetch Successfull!");
             }
             GitEvent::RefreshCommitLog => {
                 self.logs.update()?;
@@ -175,6 +184,9 @@ impl App {
             }
             ComponentType::BranchPopupComponent => {
                 self.branch_popup.focus(focus);
+            }
+            ComponentType::FetchComponent => {
+                self.fetch_popup.focus(focus);
             }
             ComponentType::None => {}
         }

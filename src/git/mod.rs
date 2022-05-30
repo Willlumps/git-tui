@@ -3,6 +3,7 @@ pub mod branch;
 pub mod diff;
 pub mod log;
 pub mod status;
+pub mod fetch;
 pub mod push;
 pub mod stage;
 
