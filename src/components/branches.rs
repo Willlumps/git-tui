@@ -182,23 +182,16 @@ impl Component for BranchComponent {
                     .expect("Send failed.");
             }
             KeyCode::Char('f') => {
-                let (progress_sender, _progress_receiver) = unbounded(); //mpsc::channel();
+                let (progress_sender, _progress_receiver) = unbounded();
                 let repo_path = self.repo_path.clone();
                 let event_sender = self.event_sender.clone();
-                let branch = self.branches.clone();
-                let name = branch
-                    .get(self.position)
-                    .expect("Position out of bounds")
-                    .name
-                    .clone(); // TODO: what in tarnation
 
                 thread::spawn(move || {
                     event_sender
                         .send(ProgramEvent::Focus(ComponentType::FetchComponent))
                         .expect("Focus event send failed.");
 
-                    if let Err(err) = fetch(&repo_path, &name, progress_sender) {
-                        // Maybe it is time for custom error types?
+                    if let Err(err) = fetch(&repo_path, progress_sender) {
                         event_sender
                             .send(ProgramEvent::Error(err))
                             .expect("Push failure event send failed.");

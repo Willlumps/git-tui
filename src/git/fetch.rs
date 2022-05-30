@@ -6,7 +6,8 @@ use std::path::Path;
 use crossbeam::channel::Sender;
 use git2::{Cred, FetchOptions, RemoteCallbacks};
 
-pub fn fetch(repo_path: &Path, branch: &str, _progress_sender: Sender<bool>) -> Result<(), Error> {
+pub fn fetch(repo_path: &Path, _progress_sender: Sender<bool>) -> Result<(), Error> {
+    // TODO: Fetch from all/multiple remotes if available
     let repo = repo(repo_path)?;
 
     let mut callbacks = RemoteCallbacks::new();
@@ -24,10 +25,11 @@ pub fn fetch(repo_path: &Path, branch: &str, _progress_sender: Sender<bool>) -> 
         }
     });
 
-    // TODO: How to get progress without callback?
     let mut options = FetchOptions::new();
+    options.download_tags(git2::AutotagOption::All);
     options.remote_callbacks(callbacks);
-    repo.find_remote("origin")?.fetch(&[branch], Some(&mut options), None)?;
+    repo.find_remote("origin")?
+        .fetch(&[] as &[&str], Some(&mut options), None)?;
 
     Ok(())
 }

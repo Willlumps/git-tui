@@ -151,7 +151,7 @@ impl Component for FileComponent {
                 }
             }
             KeyCode::Char('p') => {
-                let (progress_sender, progress_receiver) = unbounded(); //mpsc::channel();
+                let (progress_sender, progress_receiver) = unbounded();
                 let repo_path = self.repo_path.clone();
                 let event_sender = self.event_sender.clone();
 
@@ -161,7 +161,6 @@ impl Component for FileComponent {
                         .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender) {
-                        // Maybe it is time for custom error types?
                         event_sender
                             .send(ProgramEvent::Error(err))
                             .expect("Push failure event send failed.");
