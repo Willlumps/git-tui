@@ -34,19 +34,15 @@ pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), 
 
 pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
-
     let name = remote_branch_name
         .split('/')
         .skip(1)
         .collect::<Vec<&str>>()
         .join("");
-
     let (object, _reference) = repo
         .revparse_ext(remote_branch_name)
         .expect("Object not found");
-
     let commit = object.as_commit().unwrap();
-
     repo.branch(&name, commit, false)?;
 
     // Need to change the files in the working directory as well as set the HEAD

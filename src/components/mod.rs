@@ -1,13 +1,12 @@
-pub mod branch_popup;
 pub mod branches;
+pub mod branch_popup;
 pub mod commit_popup;
 pub mod diff;
 pub mod error_popup;
 pub mod files;
 pub mod log;
-pub mod push_popup;
+pub mod message_popup;
 pub mod status;
-pub mod fetch_popup;
 
 use crate::error::Error;
 
@@ -18,15 +17,14 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 #[derive(Clone, Debug)]
 pub enum ComponentType {
     None,
-    LogComponent,
-    DiffComponent,
-    ErrorComponent,
-    FetchComponent,
-    FilesComponent,
     BranchComponent,
     BranchPopupComponent,
     CommitComponent,
-    PushComponent,
+    DiffComponent,
+    ErrorComponent,
+    FilesComponent,
+    LogComponent,
+    MessageComponent(String),
 }
 
 pub trait Component {

@@ -9,16 +9,16 @@ use tui::style::{Color, Style};
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
 
-pub struct FetchPopup {
+pub struct MessagePopup {
     visible: bool,
     message: String,
 }
 
-impl FetchPopup {
+impl MessagePopup {
     pub fn new() -> Self {
         Self {
             visible: false,
-            message: String::from("Fetching..."),
+            message: String::new(),
         }
     }
 
@@ -52,7 +52,7 @@ impl FetchPopup {
     }
 }
 
-impl Component for FetchPopup {
+impl Component for MessagePopup {
     fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
         match ev.code {
             KeyCode::Char('q') if ev.modifiers == KeyModifiers::CONTROL => {
@@ -65,7 +65,7 @@ impl Component for FetchPopup {
     }
 
     fn focus(&mut self, focus: bool) {
-        self.message = String::from("Fetching...");
+        // self.message = String::from("Fetching...");
         self.visible = focus;
     }
 

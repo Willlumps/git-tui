@@ -105,5 +105,5 @@ fn ff_merge(repo: &Repository, lb: &mut git2::Reference, rc: &git2::AnnotatedCom
 }
 
 fn normal_merge() -> Result<(), Error> {
-    unimplemented!();
+    Err(Error::Unknown("Normal merge unimplemented".to_string()))
 }

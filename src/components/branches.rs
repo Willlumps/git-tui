@@ -190,7 +190,9 @@ impl Component for BranchComponent {
                     // TODO: This is a fugly mess, come up with a better way to handle transfer
                     //       progress other than sleeping like a dummy
                     event_sender
-                        .send(ProgramEvent::Focus(ComponentType::FetchComponent))
+                        .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                            "Fetching...".to_string(),
+                        )))
                         .expect("Focus event send failed.");
 
                     if let Err(err) = fetch(&repo_path, progress_sender) {
@@ -213,7 +215,8 @@ impl Component for BranchComponent {
             KeyCode::Char('P') => {
                 let (progress_sender, _progress_receiver) = unbounded();
                 if let Some(branch) = self.branches.get(self.position) {
-                    if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender) {
+                    if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender)
+                    {
                         self.event_sender
                             .send(ProgramEvent::Error(err))
                             .expect("Push failure event send failed.");

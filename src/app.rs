@@ -5,8 +5,7 @@ use crate::components::diff::DiffComponent;
 use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
-use crate::components::push_popup::PushPopup;
-use crate::components::fetch_popup::FetchPopup;
+use crate::components::message_popup::MessagePopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
@@ -40,9 +39,8 @@ pub struct App {
     pub diff: DiffComponent,
     pub status: StatusComponent,
     pub commit_popup: CommitPopup,
-    pub push_popup: PushPopup,
     pub branch_popup: BranchPopup,
-    pub fetch_popup: FetchPopup,
+    pub message_popup: MessagePopup,
     pub focused_component: ComponentType,
     pub event_sender: Sender<ProgramEvent>,
 }
@@ -57,9 +55,8 @@ impl App {
             diff: DiffComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
-            push_popup: PushPopup::new(),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
-            fetch_popup: FetchPopup::new(),
+            message_popup: MessagePopup::new(),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
@@ -68,10 +65,9 @@ impl App {
 
     pub fn is_popup_visible(&self) -> bool {
         self.commit_popup.visible()
-            || self.push_popup.visible()
             || self.error_popup.visible()
             || self.branch_popup.visible()
-            || self.fetch_popup.visible()
+            || self.message_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<(), Error> {
@@ -99,10 +95,9 @@ impl App {
 
     fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
         self.commit_popup.handle_event(ev)?;
-        self.push_popup.handle_event(ev)?;
         self.error_popup.handle_event(ev)?;
         self.branch_popup.handle_event(ev)?;
-        self.fetch_popup.handle_event(ev)?;
+        self.message_popup.handle_event(ev)?;
         Ok(())
     }
 
@@ -125,10 +120,10 @@ impl App {
     pub fn handle_git_event(&mut self, ev: GitEvent) -> Result<(), Error> {
         match ev {
             GitEvent::PushSuccess => {
-                self.push_popup.set_message("Push Successfull!");
+                self.message_popup.set_message("Push Successfull!");
             }
             GitEvent::FetchSuccess => {
-                self.fetch_popup.set_message("Fetch Successfull!");
+                self.message_popup.set_message("Fetch Successfull!");
             }
             GitEvent::RefreshCommitLog => {
                 self.logs.update()?;
@@ -160,7 +155,7 @@ impl App {
     }
 
     fn _focus(&mut self, component: ComponentType, focus: bool) {
-        match component {
+        match component.clone() {
             ComponentType::LogComponent => {
                 self.logs.focus(focus);
             }
@@ -179,14 +174,15 @@ impl App {
             ComponentType::CommitComponent => {
                 self.commit_popup.focus(focus);
             }
-            ComponentType::PushComponent => {
-                self.push_popup.focus(focus);
-            }
+            // ComponentType::PushComponent => {
+            //     self.push_popup.focus(focus);
+            // }
             ComponentType::BranchPopupComponent => {
                 self.branch_popup.focus(focus);
             }
-            ComponentType::FetchComponent => {
-                self.fetch_popup.focus(focus);
+            ComponentType::MessageComponent(message) => {
+                self.message_popup.set_message(&message);
+                self.message_popup.focus(focus);
             }
             ComponentType::None => {}
         }

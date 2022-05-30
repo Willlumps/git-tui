@@ -157,7 +157,7 @@ impl Component for FileComponent {
 
                 thread::spawn(move || {
                     event_sender
-                        .send(ProgramEvent::Focus(ComponentType::PushComponent))
+                        .send(ProgramEvent::Focus(ComponentType::MessageComponent("Pushing...".to_string())))
                         .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender) {
@@ -168,7 +168,7 @@ impl Component for FileComponent {
                     }
 
                     while progress_receiver.recv().unwrap() {
-                        //thread::sleep(Duration::from_millis(500));
+                        thread::sleep(Duration::from_millis(500));
                     }
 
                     thread::sleep(Duration::from_millis(500));
