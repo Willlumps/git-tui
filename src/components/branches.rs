@@ -3,7 +3,7 @@ use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
 use crate::git::branch::{checkout_local_branch, checkout_remote_branch, get_branches, Branch};
-use crate::git::fetch::fetch;
+use crate::git::fetch::{fetch, pull_head, pull_selected};
 use crate::ComponentType;
 
 use std::path::PathBuf;
@@ -187,6 +187,8 @@ impl Component for BranchComponent {
                 let event_sender = self.event_sender.clone();
 
                 thread::spawn(move || {
+                    // TODO: This is a fugly mess, come up with a better way to handle transfer
+                    //       progress other than sleeping like a dummy
                     event_sender
                         .send(ProgramEvent::Focus(ComponentType::FetchComponent))
                         .expect("Focus event send failed.");
@@ -207,6 +209,24 @@ impl Component for BranchComponent {
                         .send(ProgramEvent::Focus(ComponentType::BranchComponent))
                         .expect("Focus event send failed.");
                 });
+            }
+            KeyCode::Char('P') => {
+                let (progress_sender, _progress_receiver) = unbounded();
+                if let Some(branch) = self.branches.get(self.position) {
+                    if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender) {
+                        self.event_sender
+                            .send(ProgramEvent::Error(err))
+                            .expect("Push failure event send failed.");
+                    }
+                }
+            }
+            KeyCode::Char('p') => {
+                let (progress_sender, _progress_receiver) = unbounded();
+                if let Err(err) = pull_head(&self.repo_path, progress_sender) {
+                    self.event_sender
+                        .send(ProgramEvent::Error(err))
+                        .expect("Push failure event send failed.");
+                }
             }
             _ => {}
         }

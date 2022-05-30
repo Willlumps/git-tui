@@ -168,7 +168,7 @@ impl Component for FileComponent {
                     }
 
                     while progress_receiver.recv().unwrap() {
-                        thread::sleep(Duration::from_millis(500));
+                        //thread::sleep(Duration::from_millis(500));
                     }
 
                     thread::sleep(Duration::from_millis(500));
