@@ -5,7 +5,7 @@ use crate::git::repo;
 use std::path::Path;
 
 use anyhow::Result;
-use git2::{BranchType, Oid};
+use git2::{BranchType, Oid, Repository};
 
 #[derive(Clone, Debug)]
 pub struct Branch {
@@ -39,10 +39,16 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
         .skip(1)
         .collect::<Vec<&str>>()
         .join("");
+
+    if does_local_branch_exist(&repo, &name) {
+        return Err(Error::Git(git2::Error::from_str("Local branch already exists")));
+    }
+
     let (object, _reference) = repo
         .revparse_ext(remote_branch_name)
         .expect("Object not found");
     let commit = object.as_commit().unwrap();
+
     repo.branch(&name, commit, false)?;
 
     // Need to change the files in the working directory as well as set the HEAD
@@ -55,6 +61,8 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
         None => repo.set_head_detached(object.id()),
     }
     .expect("Failed to set HEAD");
+
+    set_upstream_branch(&repo, &name)?;
 
     Ok(())
 }
@@ -103,4 +111,16 @@ pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), E
         }
     }
     Ok(())
+}
+
+fn set_upstream_branch(repo: &Repository, branch_name: &str) -> Result<(), Error> {
+    let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
+    if branch.upstream().is_err() {
+        branch.set_upstream(Some(format!("origin/{}", branch_name).as_str()))?;
+    }
+    Ok(())
+}
+
+fn does_local_branch_exist(repo: &Repository, branch_name: &str) -> bool {
+    repo.find_branch(branch_name, BranchType::Local).is_ok()
 }
