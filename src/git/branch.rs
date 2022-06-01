@@ -67,6 +67,13 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
     Ok(())
 }
 
+pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
+    branch.delete()?;
+    Ok(())
+}
+
 pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     let repo = repo(repo_path)?;
     let mut git_branches = repo

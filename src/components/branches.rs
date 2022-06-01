@@ -2,7 +2,7 @@ use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::branch::{checkout_local_branch, checkout_remote_branch, get_branches, Branch};
+use crate::git::branch::{checkout_local_branch, checkout_remote_branch, get_branches, Branch, delete_branch};
 use crate::git::fetch::{fetch, pull_head, pull_selected};
 use crate::ComponentType;
 
@@ -174,6 +174,14 @@ impl Component for BranchComponent {
                     } else {
                         checkout_remote_branch(&self.repo_path, &branch.name)?;
                     }
+                }
+            }
+            KeyCode::Char('d') => {
+                // TODO: Get this working for deleting a remote branch.
+                //       In testing (using push), the program seems to hang
+                //       for a reason unknown to me currently
+                if let Some(branch) = self.branches.get(self.position) {
+                    delete_branch(&self.repo_path, &branch.name)?;
                 }
             }
             KeyCode::Char('n') => {
