@@ -2,7 +2,9 @@ use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::branch::{checkout_local_branch, checkout_remote_branch, get_branches, Branch, delete_branch};
+use crate::git::branch::{
+    checkout_local_branch, checkout_remote_branch, delete_branch, get_branches, Branch,
+};
 use crate::git::fetch::{fetch, pull_head, pull_selected};
 use crate::ComponentType;
 
@@ -18,7 +20,7 @@ use fuzzy_matcher::FuzzyMatcher;
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::text::Spans;
+use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs};
 use tui::Frame;
 
@@ -80,7 +82,16 @@ impl BranchComponent {
         let list_items: Vec<ListItem> = self
             .branches
             .iter()
-            .map(|item| ListItem::new(&*item.name))
+            .map(|branch| {
+                let branch = branch.clone();
+                let time = String::from(branch.time_since_commit);
+
+                ListItem::new(Spans::from(vec![
+                    Span::raw(branch.name),
+                    Span::raw(" "),
+                    Span::styled(format!("({})", time), Style::default().fg(Color::Yellow)),
+                ]))
+            })
             .collect();
 
         let list = TuiList::new(list_items)
@@ -144,6 +155,10 @@ impl Component for BranchComponent {
                 _ => unimplemented!(),
             })
             .collect::<Vec<_>>();
+
+        self.branches
+            .sort_by(|a, b| a.time_since_commit.cmp(&b.time_since_commit));
+
         Ok(())
     }
 
