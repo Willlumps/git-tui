@@ -6,7 +6,7 @@ use std::path::Path;
 use anyhow::Result;
 use git2::Oid;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Commit {
     id: String,
     author: String,
@@ -32,6 +32,10 @@ impl Commit {
     pub fn get_message(&self) -> &String {
         &self.message
     }
+
+    pub fn shorthand_id(&self) -> String {
+        self.id[0..8].to_string()
+    }
 }
 
 pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
@@ -46,12 +50,20 @@ pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     for oid in oids {
         if oid.is_ok() {
             let commit = repo.find_commit(oid.unwrap())?;
-            // TODO: Better error handling to avoid unwrapping these options
-            //       and fix whatever the hell is going on down here.
-            let id = commit.id().to_string()[0..8].to_string();
-            let author = commit.author().name().unwrap().to_string();
-            let email = commit.author().email().unwrap().to_string();
-            let message = commit.summary().unwrap().to_string();
+            let id = commit.id().to_string();
+
+            let author = match commit.author().name() {
+                Some(author) => author.to_string(),
+                None => String::new()
+            };
+            let email = match commit.author().email() {
+                Some(email) => email.to_string(),
+                None => String::new()
+            };
+            let message = match commit.summary() {
+                Some(summary) => summary.to_string(),
+                None => String::new()
+            };
 
             history.push(Commit {
                 id,

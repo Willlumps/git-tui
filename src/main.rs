@@ -192,6 +192,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
         app.error_popup.draw(f, size)?;
         app.branch_popup.draw(f, size)?;
         app.message_popup.draw(f, size)?;
+        app.log_popup.draw(f, size)?;
     }
 
     Ok(())

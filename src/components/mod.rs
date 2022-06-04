@@ -6,9 +6,11 @@ pub mod error_popup;
 pub mod files;
 pub mod log;
 pub mod message_popup;
+pub mod log_popup;
 pub mod status;
 
 use crate::error::Error;
+use crate::git::log::Commit;
 
 use anyhow::Result;
 use crossterm::event::KeyEvent;
@@ -24,6 +26,7 @@ pub enum ComponentType {
     ErrorComponent,
     FilesComponent,
     LogComponent,
+    FullLogComponent(Commit),
     MessageComponent(String),
 }
 

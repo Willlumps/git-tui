@@ -1,3 +1,4 @@
+use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
@@ -6,6 +7,7 @@ use crate::git::log::{fetch_history, Commit};
 use std::path::PathBuf;
 
 use anyhow::Result;
+use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -14,6 +16,8 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
+use super::ComponentType;
+
 pub struct LogComponent {
     logs: Vec<Commit>,
     state: ListState,
@@ -21,10 +25,11 @@ pub struct LogComponent {
     position: usize,
     repo_path: PathBuf,
     style: ComponentTheme,
+    event_sender: Sender<ProgramEvent>,
 }
 
 impl LogComponent {
-    pub fn new(repo_path: PathBuf) -> Self {
+    pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         let mut state = ListState::default();
         state.select(Some(0));
 
@@ -35,6 +40,7 @@ impl LogComponent {
             position: 0,
             style: ComponentTheme::default(),
             repo_path,
+            event_sender,
         }
     }
 
@@ -44,7 +50,7 @@ impl LogComponent {
             .iter()
             .map(|item| {
                 let text = Spans::from(vec![
-                    Span::styled(item.get_id(), Style::default().fg(Color::Green)),
+                    Span::styled(item.shorthand_id(), Style::default().fg(Color::Green)),
                     Span::raw(" "),
                     Span::raw(item.get_message()),
                 ]);
@@ -97,6 +103,15 @@ impl Component for LogComponent {
             }
             KeyCode::Char('k') => {
                 self.increment_position();
+            }
+            KeyCode::Enter => {
+                if let Some(commit) = self.logs.get(self.position) {
+                    self.event_sender
+                        .send(ProgramEvent::Focus(ComponentType::FullLogComponent(
+                            commit.clone(),
+                        )))
+                        .expect("Send Failed");
+                }
             }
             _ => {}
         }

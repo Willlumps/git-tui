@@ -1,4 +1,5 @@
 use crate::components::branch_popup::BranchPopup;
+use crate::components::log_popup::LogPopup;
 use crate::components::branches::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
@@ -41,6 +42,7 @@ pub struct App {
     pub commit_popup: CommitPopup,
     pub branch_popup: BranchPopup,
     pub message_popup: MessagePopup,
+    pub log_popup: LogPopup,
     pub focused_component: ComponentType,
     pub event_sender: Sender<ProgramEvent>,
 }
@@ -49,7 +51,7 @@ impl App {
     pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> App {
         Self {
             branches: BranchComponent::new(repo_path.clone(), event_sender.clone()),
-            logs: LogComponent::new(repo_path.clone()),
+            logs: LogComponent::new(repo_path.clone(), event_sender.clone()),
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
             error_popup: ErrorComponent::new(event_sender.clone()),
             diff: DiffComponent::new(repo_path.clone()),
@@ -57,6 +59,7 @@ impl App {
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
             message_popup: MessagePopup::new(),
+            log_popup: LogPopup::new(event_sender.clone()),
             focused_component: ComponentType::None,
             event_sender: event_sender.clone(),
             repo_path,
@@ -68,6 +71,7 @@ impl App {
             || self.error_popup.visible()
             || self.branch_popup.visible()
             || self.message_popup.visible()
+            || self.log_popup.visible()
     }
 
     pub fn update(&mut self) -> Result<(), Error> {
@@ -94,10 +98,14 @@ impl App {
     }
 
     fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
+        // TODO: Single out which popup to send events to.
+        //       It will currently try to focus multiple components and cause
+        //       UI glitches
         self.commit_popup.handle_event(ev)?;
         self.error_popup.handle_event(ev)?;
         self.branch_popup.handle_event(ev)?;
         self.message_popup.handle_event(ev)?;
+        self.log_popup.handle_event(ev)?;
         Ok(())
     }
 
@@ -159,6 +167,10 @@ impl App {
             ComponentType::LogComponent => {
                 self.logs.focus(focus);
             }
+            ComponentType::FullLogComponent(commit) => {
+                self.log_popup.set_commit(commit);
+                self.log_popup.focus(focus);
+            }
             ComponentType::DiffComponent => {
                 self.diff.focus(focus);
             }
@@ -174,9 +186,6 @@ impl App {
             ComponentType::CommitComponent => {
                 self.commit_popup.focus(focus);
             }
-            // ComponentType::PushComponent => {
-            //     self.push_popup.focus(focus);
-            // }
             ComponentType::BranchPopupComponent => {
                 self.branch_popup.focus(focus);
             }
