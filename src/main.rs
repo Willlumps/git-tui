@@ -31,8 +31,8 @@ pub enum Event<I> {
 }
 
 fn main() -> Result<()> {
-    let (tx, rx) = unbounded(); // mpsc::channel();
-    let (ev_tx, ev_rx) = unbounded(); // mpsc::channel();
+    let (tx, rx) = unbounded();
+    let (ev_tx, ev_rx) = unbounded();
     let tick_rate = Duration::from_millis(2000);
 
     thread::spawn(move || {
@@ -50,8 +50,6 @@ fn main() -> Result<()> {
                 } else if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
                     last_tick = Instant::now();
                 }
-            } else {
-                // TODO: Handle Err
             }
         }
     });

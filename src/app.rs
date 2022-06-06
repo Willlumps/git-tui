@@ -1,11 +1,11 @@
 use crate::components::branch_popup::BranchPopup;
-use crate::components::log_popup::LogPopup;
 use crate::components::branches::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
 use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
+use crate::components::log_popup::LogPopup;
 use crate::components::message_popup::MessagePopup;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
@@ -98,14 +98,14 @@ impl App {
     }
 
     fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
-        // TODO: Single out which popup to send events to.
-        //       It will currently try to focus multiple components and cause
-        //       UI glitches
-        self.commit_popup.handle_event(ev)?;
-        self.error_popup.handle_event(ev)?;
-        self.branch_popup.handle_event(ev)?;
-        self.message_popup.handle_event(ev)?;
-        self.log_popup.handle_event(ev)?;
+        match self.focused_component {
+            ComponentType::BranchPopupComponent => self.branch_popup.handle_event(ev)?,
+            ComponentType::CommitComponent => self.commit_popup.handle_event(ev)?,
+            ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
+            ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
+            ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
+            _ => unreachable!(),
+        }
         Ok(())
     }
 
