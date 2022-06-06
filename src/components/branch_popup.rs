@@ -19,6 +19,8 @@ pub struct BranchPopup {
     visible: bool,
     event_sender: Sender<ProgramEvent>,
     repo_path: PathBuf,
+    cursor_visible: bool,
+    cursor_position: (u16, u16),
 }
 
 impl BranchPopup {
@@ -28,6 +30,8 @@ impl BranchPopup {
             visible: false,
             event_sender,
             repo_path,
+            cursor_visible: false,
+            cursor_position: (0, 0),
         }
     }
 
@@ -37,6 +41,15 @@ impl BranchPopup {
         }
 
         let area = centered_rect(80, 3, rect);
+
+        if !self.cursor_visible {
+            f.set_cursor(area.x + 1, area.y + 1);
+            self.cursor_position = (area.x + 1, area.y + 1);
+            self.cursor_visible = true;
+        } else {
+            f.set_cursor(self.cursor_position.0, self.cursor_position.1);
+        }
+
         let input = Paragraph::new(self.input.as_ref())
             .style(Style::default())
             .block(
@@ -59,6 +72,7 @@ impl BranchPopup {
         self.event_sender
             .send(ProgramEvent::Focus(ComponentType::BranchComponent))
             .expect("Focus event send failed.");
+        self.cursor_visible = false;
         self.visible = false;
         self.input.clear();
     }
@@ -82,10 +96,14 @@ impl Component for BranchPopup {
 
         match ev.code {
             KeyCode::Char(c) => {
+                self.cursor_position.0 += 1;
                 self.input.push(c);
             }
             KeyCode::Backspace => {
-                self.input.pop();
+                if !self.input.is_empty() {
+                    self.cursor_position.0 -= 1;
+                    self.input.pop();
+                }
             }
             KeyCode::Enter => {
                 let input = self.input.clone();

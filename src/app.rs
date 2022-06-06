@@ -19,9 +19,9 @@ use crossbeam::channel::Sender;
 use crossterm::event::KeyEvent;
 
 pub enum ProgramEvent {
-    Git(GitEvent),
-    Focus(ComponentType),
     Error(Error),
+    Focus(ComponentType),
+    Git(GitEvent),
 }
 
 pub enum GitEvent {

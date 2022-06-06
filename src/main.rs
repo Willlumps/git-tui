@@ -109,14 +109,14 @@ fn run_app<B: Backend>(
             0 => {
                 let event = oper.recv(&event_rx).expect("Receive failed");
                 match event {
+                    ProgramEvent::Error(error) => {
+                        app.display_error(error);
+                    }
                     ProgramEvent::Focus(component) => {
                         app.focus(component);
                     }
                     ProgramEvent::Git(git_event) => {
                         app.handle_git_event(git_event)?;
-                    }
-                    ProgramEvent::Error(error) => {
-                        app.display_error(error);
                     }
                 }
             }
