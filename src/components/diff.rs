@@ -72,7 +72,7 @@ impl DiffComponent {
                 let content = match item.origin() {
                     '-' => format!("-{}", item.content()),
                     '+' => format!("+{}", item.content()),
-                    _ => item.content().to_string(),
+                    _ => format!(" {}", item.content()),
                 };
                 let text = Span::styled(content, item.style());
                 ListItem::new(text)

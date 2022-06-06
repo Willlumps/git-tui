@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::{Alignment, Rect};
 use tui::style::Style;
@@ -95,9 +95,26 @@ impl Component for BranchPopup {
         }
 
         match ev.code {
+            KeyCode::Char('w') if ev.modifiers == KeyModifiers::CONTROL => {
+                let input_ref = self.input.as_str().trim();
+                let last_space_index = input_ref.rfind(' ');
+                match last_space_index {
+                    Some(index) => {
+                        let cursor_index = self.cursor_position.0 - (self.input.len() - index) as u16;
+                        self.input = self.input[0..index].to_string();
+                        self.cursor_position.0 = cursor_index;
+                    }
+                    None => {
+                        self.cursor_position.0 -= self.input.len() as u16;
+                        self.input.clear();
+                    }
+                }
+            }
             KeyCode::Char(c) => {
-                self.cursor_position.0 += 1;
-                self.input.push(c);
+                if self.input.len() < 75 {
+                    self.cursor_position.0 += 1;
+                    self.input.push(c);
+                }
             }
             KeyCode::Backspace => {
                 if !self.input.is_empty() {
