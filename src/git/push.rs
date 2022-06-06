@@ -8,7 +8,7 @@ use anyhow::Result;
 use crossbeam::channel::Sender;
 use git2::{Cred, PushOptions, RemoteCallbacks};
 
-pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<(), Error> {
+pub fn push(repo_path: &Path, progress_sender: Sender<usize>) -> Result<(), Error> {
     let repo = repo(repo_path)?;
 
     let mut remote = repo.find_remote("origin")?;
@@ -27,16 +27,14 @@ pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<(), Error
             Cred::default()
         }
     });
-    callbacks.push_transfer_progress(|_current, _total, _bytes| {
-        // TODO: Progress bar in the future?
-        progress_sender
-            .send(true)
-            .expect("Push progress send failed.");
+
+    callbacks.push_transfer_progress(|current, total, _bytes| {
+        let percentage = (current / total) * 100;
+        progress_sender.send(percentage).expect("Send failed");
     });
-    callbacks.push_update_reference(|_remote, status| {
-        if let Some(message) = status {
-            return Err(git2::Error::from_str(message));
-        }
+
+    callbacks.push_update_reference(|_remote, _status| {
+        // TODO
         Ok(())
     });
 
@@ -47,8 +45,5 @@ pub fn push(repo_path: &Path, progress_sender: Sender<bool>) -> Result<(), Error
     options.remote_callbacks(callbacks);
     remote.push(&[refspec], Some(&mut options))?;
 
-    progress_sender
-        .send(false)
-        .expect("Push progress send failed.");
     Ok(())
 }

@@ -157,7 +157,7 @@ impl Component for FileComponent {
 
                 thread::spawn(move || {
                     event_sender
-                        .send(ProgramEvent::Focus(ComponentType::MessageComponent("Pushing...".to_string())))
+                        .send(ProgramEvent::Focus(ComponentType::MessageComponent("Pushing - 0%".to_string())))
                         .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender) {
@@ -167,17 +167,19 @@ impl Component for FileComponent {
                         return;
                     }
 
-                    while progress_receiver.recv().unwrap() {
-                        thread::sleep(Duration::from_millis(500));
+                    loop {
+                        let progress = progress_receiver.recv().expect("Receive failed");
+                        event_sender
+                            .send(ProgramEvent::Focus(ComponentType::MessageComponent(format!("Pushing - {}%", progress))))
+                            .expect("Focus event send failed.");
+                        if progress >= 100 {
+                            break;
+                        }
                     }
 
-                    thread::sleep(Duration::from_millis(500));
                     // Not sure if getting here will fully indicate success, I think we may need to
                     // use the `push_update_reference` callback.
                     // For now we will treat getting here as a success unless it hits the fan
-                    event_sender
-                        .send(ProgramEvent::Git(GitEvent::PushSuccess))
-                        .expect("Push success event send failed.");
                     thread::sleep(Duration::from_millis(1000));
                     event_sender
                         .send(ProgramEvent::Focus(ComponentType::FilesComponent))
