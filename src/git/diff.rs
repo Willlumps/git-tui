@@ -51,11 +51,20 @@ pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow, Error> {
     let mut opt = git2::DiffOptions::new();
     let diff = repo.diff_index_to_workdir(None, Some(&mut opt))?;
     let stats = diff.stats()?;
+    let head_ref = repo.head()?;
+
+    let branch = if !head_ref.is_branch() && !head_ref.is_remote() {
+        let commit = head_ref.peel_to_commit()?;
+        commit.id().to_string()[0..8].to_string()
+    } else {
+        head(repo_path)?
+    };
+
     let status = DiffWindow {
         files_changed: stats.files_changed(),
         insertions: stats.insertions(),
         deletions: stats.deletions(),
-        branch: head(repo_path)?,
+        branch,
     };
 
     Ok(status)

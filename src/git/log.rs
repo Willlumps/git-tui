@@ -15,21 +15,21 @@ pub struct Commit {
 }
 
 impl Commit {
-    pub fn get_id(&self) -> &String {
+    pub fn id(&self) -> &String {
         &self.id
     }
 
     #[allow(dead_code)]
-    pub fn get_author(&self) -> &String {
+    pub fn author(&self) -> &String {
         &self.author
     }
 
     #[allow(dead_code)]
-    pub fn get_email(&self) -> &String {
+    pub fn email(&self) -> &String {
         &self.email
     }
 
-    pub fn get_message(&self) -> &String {
+    pub fn message(&self) -> &String {
         &self.message
     }
 

@@ -35,16 +35,16 @@ impl LogPopup {
         let area = centered_rect(80, 7, rect);
 
         let mut log = Text::styled(
-            format!(" commit: {}", self.commit.get_id()),
+            format!(" commit: {}", self.commit.id()),
             Style::default().fg(Color::Yellow),
         );
         log.extend(Text::raw(format!(
             " Author: {} <{}>",
-            self.commit.get_author(),
-            self.commit.get_email()
+            self.commit.author(),
+            self.commit.email()
         )));
         log.extend(Text::raw(format!(" Date: {}", "TODO")));
-        log.extend(Text::raw(format!("\n     {}\n", self.commit.get_message())));
+        log.extend(Text::raw(format!("\n     {}\n", self.commit.message())));
 
         let input = Paragraph::new(log)
             .style(Style::default().fg(Color::White))

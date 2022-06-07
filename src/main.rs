@@ -64,8 +64,8 @@ fn main() -> Result<()> {
     // Grab the project root for dev purposes, this will eventually want to be
     // replaced with a passed argument or the current dir where the program
     // is executed from.
-    //let repo_path = current_dir()?;
-    let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
+    let repo_path = current_dir()?;
+    //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
     let mut app = App::new(repo_path, &ev_tx);
     let res = run_app(&mut terminal, &mut app, rx, ev_rx);
 

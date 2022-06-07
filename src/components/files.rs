@@ -1,4 +1,4 @@
-use crate::app::{GitEvent, ProgramEvent};
+use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;

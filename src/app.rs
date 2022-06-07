@@ -24,6 +24,7 @@ pub enum ProgramEvent {
     Git(GitEvent),
 }
 
+#[allow(dead_code)]
 pub enum GitEvent {
     FetchSuccess,
     PushSuccess,

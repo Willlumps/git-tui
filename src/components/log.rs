@@ -2,6 +2,7 @@ use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
+use crate::git::branch::checkout_local_branch;
 use crate::git::log::{fetch_history, Commit};
 
 use std::path::PathBuf;
@@ -52,7 +53,7 @@ impl LogComponent {
                 let text = Spans::from(vec![
                     Span::styled(item.shorthand_id(), Style::default().fg(Color::Green)),
                     Span::raw(" "),
-                    Span::raw(item.get_message()),
+                    Span::raw(item.message()),
                 ]);
                 ListItem::new(text)
             })
@@ -102,6 +103,12 @@ impl Component for LogComponent {
                 self.decrement_position();
             }
             KeyCode::Char('k') => {
+                self.increment_position();
+            }
+            KeyCode::Char('c') => {
+                if let Some(commit) = self.logs.get(self.position) {
+                    checkout_local_branch(&self.repo_path, commit.id())?;
+                }
                 self.increment_position();
             }
             KeyCode::Enter => {
