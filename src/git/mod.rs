@@ -6,6 +6,7 @@ pub mod status;
 pub mod fetch;
 pub mod push;
 pub mod stage;
+pub mod time;
 
 use std::path::Path;
 

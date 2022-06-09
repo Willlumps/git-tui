@@ -1,34 +1,19 @@
 use crate::error::Error;
 use crate::git::diff::head;
+use crate::git::log::Commit;
 use crate::git::repo;
 
 use std::path::Path;
 
 use anyhow::Result;
-use git2::{BranchType, Oid, Repository};
+use git2::{BranchType, Repository};
 
 #[derive(Clone, Debug)]
 pub struct Branch {
     pub name: String,
-    pub last_commit: Oid,
     pub branch_type: BranchType,
-    pub time_since_commit: TimeSinceCommit,
-}
+    pub last_commit: Commit,
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TimeSinceCommit(pub u64);
-
-impl From<TimeSinceCommit> for String {
-    fn from(time: TimeSinceCommit) -> Self {
-        match time.0 {
-            x if x < 3600 => format!("{}{}", (x / 60), "m"),
-            x if x < 86400 => format!("{}{}", (x / 3600), "hr"),
-            x if x < 604_800 => format!("{}{}", (x / 86400), "d"),
-            x if x < 2_419_200 => format!("{}{}", (x / 604_800), "wk"),
-            x if x < 31_536_000 => format!("{}{}", (x / 2_419_200), "mo"),
-            x => format!("{}{}", (x / 31_536_000), "yr"),
-        }
-    }
 }
 
 pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
@@ -113,27 +98,13 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
             .expect("Branch name is not valid UTF-8");
         let commit = reference.peel_to_commit()?;
 
-        let time_since_commit = time_since_commit(commit.time().seconds() as u64);
-
         branch_list.push(Branch {
             name: name.to_string(),
-            last_commit: commit.id(),
             branch_type,
-            time_since_commit,
+            last_commit: Commit::from_git_commit(commit),
         });
     }
     Ok(branch_list)
-}
-
-fn time_since_commit(seconds: u64) -> TimeSinceCommit {
-    let commit_time = std::time::Duration::new(seconds, 0);
-    let start = std::time::SystemTime::now();
-    let since_epoch = start
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("Time went backwards");
-    let diff = since_epoch.saturating_sub(commit_time);
-
-    TimeSinceCommit(diff.as_secs())
 }
 
 pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {

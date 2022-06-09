@@ -84,7 +84,7 @@ impl BranchComponent {
             .iter()
             .map(|branch| {
                 let branch = branch.clone();
-                let time = String::from(branch.time_since_commit);
+                let time = String::from(*branch.last_commit.time().time_since_commit());
 
                 ListItem::new(Spans::from(vec![
                     Span::raw(branch.name),
@@ -156,8 +156,13 @@ impl Component for BranchComponent {
             })
             .collect::<Vec<_>>();
 
-        self.branches
-            .sort_by(|a, b| a.time_since_commit.cmp(&b.time_since_commit));
+        // Ehh
+        self.branches.sort_by(|a, b| {
+            a.last_commit
+                .time()
+                .time_since_commit()
+                .cmp(b.last_commit.time().time_since_commit())
+        });
 
         Ok(())
     }

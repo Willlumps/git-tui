@@ -23,7 +23,7 @@ impl LogPopup {
     pub fn new(event_sender: Sender<ProgramEvent>) -> Self {
         Self {
             visible: false,
-            commit: Commit::default(),
+            commit: Commit::new(),
             event_sender,
         }
     }
@@ -43,7 +43,7 @@ impl LogPopup {
             self.commit.author(),
             self.commit.email()
         )));
-        log.extend(Text::raw(format!(" Date: {}", "TODO")));
+        log.extend(Text::raw(format!(" Date:   {}", self.commit.time())));
         log.extend(Text::raw(format!("\n     {}\n", self.commit.message())));
 
         let input = Paragraph::new(log)
