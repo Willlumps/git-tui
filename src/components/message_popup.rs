@@ -23,10 +23,6 @@ impl MessagePopup {
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        if !self.visible {
-            return Ok(());
-        }
-
         let area = centered_rect(40, 3, rect);
         let input = Paragraph::new(self.message.as_ref())
             .style(Style::default().fg(Color::White))

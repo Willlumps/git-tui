@@ -17,6 +17,9 @@ use std::path::PathBuf;
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::KeyEvent;
+use tui::backend::Backend;
+use tui::layout::Rect;
+use tui::Frame;
 
 pub enum ProgramEvent {
     Error(Error),
@@ -75,6 +78,22 @@ impl App {
             || self.log_popup.visible()
     }
 
+    pub fn draw_popup<B: Backend>(&mut self, f: &mut Frame<B>, size: Rect) -> Result<()> {
+        match self.focused_component {
+            ComponentType::CommitComponent => self.commit_popup.draw(f, size)?,
+            ComponentType::BranchPopupComponent => self.branch_popup.draw(f, size)?,
+            ComponentType::ErrorComponent => self.error_popup.draw(f, size)?,
+            ComponentType::FullLogComponent(_) => self.log_popup.draw(f, size)?,
+            ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
+            ComponentType::BranchComponent
+            | ComponentType::DiffComponent
+            | ComponentType::FilesComponent
+            | ComponentType::LogComponent
+            | ComponentType::None => unreachable!(),
+        }
+        Ok(())
+    }
+
     pub fn update(&mut self) -> Result<(), Error> {
         self.branches.update()?;
         self.diff.update()?;
@@ -105,7 +124,11 @@ impl App {
             ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
             ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
             ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
-            _ => unreachable!(),
+            ComponentType::BranchComponent
+            | ComponentType::DiffComponent
+            | ComponentType::FilesComponent
+            | ComponentType::LogComponent
+            | ComponentType::None => unreachable!(),
         }
         Ok(())
     }

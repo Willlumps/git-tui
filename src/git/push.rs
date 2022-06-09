@@ -29,8 +29,11 @@ pub fn push(repo_path: &Path, progress_sender: Sender<usize>) -> Result<(), Erro
     });
 
     callbacks.push_transfer_progress(|current, total, _bytes| {
-        let percentage = (current / total) * 100;
-        progress_sender.send(percentage).expect("Send failed");
+        if let Some(percentage) = current.checked_div(total) {
+            progress_sender.send(percentage).expect("Send failed");
+        } else {
+            progress_sender.send(100).expect("Send failed");
+        }
     });
 
     callbacks.push_update_reference(|_remote, _status| {

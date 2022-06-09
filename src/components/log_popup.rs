@@ -29,9 +29,6 @@ impl LogPopup {
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        if !self.visible {
-            return Ok(());
-        }
         let area = centered_rect(80, 7, rect);
 
         let mut log = Text::styled(

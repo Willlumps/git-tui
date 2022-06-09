@@ -186,11 +186,7 @@ fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     app.diff.draw(f, container[1])?;
 
     if app.is_popup_visible() {
-        app.commit_popup.draw(f, size)?;
-        app.error_popup.draw(f, size)?;
-        app.branch_popup.draw(f, size)?;
-        app.message_popup.draw(f, size)?;
-        app.log_popup.draw(f, size)?;
+        app.draw_popup(f, size)?;
     }
 
     Ok(())

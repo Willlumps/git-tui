@@ -36,10 +36,6 @@ impl BranchPopup {
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        if !self.visible {
-            return Ok(());
-        }
-
         let area = centered_rect(80, 3, rect);
 
         if !self.cursor_visible {

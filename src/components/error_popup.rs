@@ -35,9 +35,6 @@ impl ErrorComponent {
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        if !self.visible {
-            return Ok(());
-        }
         let area = centered_rect(40, 10, rect);
 
         let block = Block::default()
