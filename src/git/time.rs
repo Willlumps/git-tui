@@ -4,6 +4,15 @@ use chrono::{Datelike, Month, NaiveDateTime, Timelike};
 use git2::Time as GitTime;
 use num_traits::FromPrimitive;
 
+// Larger values are rough estimates, they don't need
+// to be super exact.
+const SECONDS_IN_MINTUE: u64 = 60;
+const SECONDS_IN_HOUR: u64 = 3600;
+const SECONDS_IN_DAY: u64 = 86400;
+const SECONDS_IN_WEEK: u64 = 604_800;
+const SECONDS_IN_MONTH: u64 = 2_419_200;
+const SECONDS_IN_YEAR: u64 = 31_536_000;
+
 #[derive(Clone, Debug)]
 pub struct CommitDate {
     date: NaiveDateTime,
@@ -52,12 +61,12 @@ pub struct TimeSinceCommit(pub u64);
 impl From<TimeSinceCommit> for String {
     fn from(time: TimeSinceCommit) -> Self {
         match time.0 {
-            x if x < 3600 => format!("{}{}", (x / 60), "m"),
-            x if x < 86400 => format!("{}{}", (x / 3600), "hr"),
-            x if x < 604_800 => format!("{}{}", (x / 86400), "d"),
-            x if x < 2_419_200 => format!("{}{}", (x / 604_800), "wk"),
-            x if x < 31_536_000 => format!("{}{}", (x / 2_419_200), "mo"),
-            x => format!("{}{}", (x / 31_536_000), "yr"),
+            x if x < SECONDS_IN_HOUR => format!("{}{}", (x / SECONDS_IN_MINTUE), "m"),
+            x if x < SECONDS_IN_DAY => format!("{}{}", (x / SECONDS_IN_HOUR), "hr"),
+            x if x < SECONDS_IN_WEEK => format!("{}{}", (x / SECONDS_IN_DAY), "d"),
+            x if x < SECONDS_IN_MONTH => format!("{}{}", (x / SECONDS_IN_WEEK), "wk"),
+            x if x < SECONDS_IN_YEAR => format!("{}{}", (x / SECONDS_IN_MONTH), "mo"),
+            x => format!("{}{}", (x / SECONDS_IN_YEAR), "yr"),
         }
     }
 }
