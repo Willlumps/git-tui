@@ -6,8 +6,26 @@ use std::path::Path;
 use anyhow::Result;
 use git2::{Config, Signature};
 
+pub fn create_initial_commit(repo_path: &Path) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    let signature = signature()?;
+
+    let mut index = repo.index()?;
+    let id = index.write_tree()?;
+    let tree = repo.find_tree(id)?;
+
+    repo.commit(
+        Some("HEAD"),
+        &signature,
+        &signature,
+        "Initial commit",
+        &tree,
+        &[],
+    )?;
+    Ok(())
+}
+
 pub fn commit(repo_path: &Path, message: &str) -> Result<(), Error> {
-    // TODO: Make this work for an initial commit
     let repo = repo(repo_path)?;
     let signature = signature()?;
 

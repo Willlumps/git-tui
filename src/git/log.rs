@@ -81,10 +81,6 @@ impl Commit {
 pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     let repo = repo(repo_path)?;
 
-    if repo.is_empty()? {
-        return Ok(Vec::new());
-    }
-
     let mut history: Vec<Commit> = Vec::new();
     let mut revwalk = repo.revwalk()?;
 

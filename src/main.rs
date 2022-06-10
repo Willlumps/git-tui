@@ -8,6 +8,7 @@ mod list_window;
 use crate::app::{App, ProgramEvent};
 use crate::components::ComponentType;
 use crate::error::Error;
+use crate::git::{init_empty_repo, is_empty_repo};
 
 use std::env::current_dir;
 use std::io;
@@ -54,6 +55,20 @@ fn main() -> Result<()> {
         }
     });
 
+    // Grab the project root for dev purposes, this will eventually want to be
+    // replaced with a passed argument or the current dir where the program
+    // is executed from.
+    //let repo_path = current_dir()?;
+    //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
+    let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/nocap");
+
+    if is_empty_repo(&repo_path)? {
+        if let Err(err) = init_empty_repo(&repo_path) {
+            eprintln!("Failed to initialize empty repository: {err:?}");
+            return Ok(())
+        }
+    }
+
     // setup terminal
     enable_raw_mode()?;
     let stdout = io::stdout();
@@ -61,11 +76,7 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    // Grab the project root for dev purposes, this will eventually want to be
-    // replaced with a passed argument or the current dir where the program
-    // is executed from.
-    let repo_path = current_dir()?;
-    //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
+    // Initialize and run
     let mut app = App::new(repo_path, &ev_tx);
     let res = run_app(&mut terminal, &mut app, rx, ev_rx);
 
