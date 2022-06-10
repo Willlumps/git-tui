@@ -48,6 +48,10 @@ pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>, Error> {
 pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow, Error> {
     let repo = repo(repo_path)?;
 
+    if repo.is_empty()? {
+        return Ok(DiffWindow::default())
+    }
+
     let mut opt = git2::DiffOptions::new();
     let diff = repo.diff_index_to_workdir(None, Some(&mut opt))?;
     let stats = diff.stats()?;
