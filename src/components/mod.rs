@@ -36,7 +36,7 @@ pub trait Component {
     fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error>;
 }
 
-fn centered_rect(x: u16, y: u16, r: Rect) -> Rect {
+pub fn centered_rect(x: u16, y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
