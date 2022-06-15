@@ -8,7 +8,7 @@ mod list_window;
 use crate::app::{App, ProgramEvent};
 use crate::components::ComponentType;
 use crate::error::Error;
-use crate::git::{init_empty_repo, is_empty_repo};
+use crate::git::{is_repo, init_new_repo, is_empty_repo};
 
 use std::env::current_dir;
 use std::io;
@@ -22,6 +22,7 @@ use crossterm::event::{
 };
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
+use git::commit::create_initial_commit;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::layout::{Constraint, Direction, Layout};
 use tui::{Frame, Terminal};
@@ -60,11 +61,36 @@ fn main() -> Result<()> {
     // is executed from.
     //let repo_path = current_dir()?;
     //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
-    let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/nocap");
+    let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
+
+    if !is_repo(&repo_path) {
+        eprintln!("Repository not found at {:?}", repo_path);
+        eprintln!("Initialize new repository? [Y]es | [N]o");
+        let mut buf = String::new();
+        loop {
+            if let Err(err) = std::io::stdin().read_line(&mut buf) {
+                eprintln!("Error: {err}");
+                break;
+            }
+
+            match buf.as_str().trim() {
+                "y" | "Y" => {
+                    if let Err(err) = init_new_repo(&repo_path) {
+                        eprintln!("Error: {err:?}");
+                    }
+                    break;
+                },
+                "n" | "N" => {
+                    return Ok(())
+                } ,
+                _ => { continue; }
+            }
+        }
+    }
 
     if is_empty_repo(&repo_path)? {
-        if let Err(err) = init_empty_repo(&repo_path) {
-            eprintln!("Failed to initialize empty repository: {err:?}");
+        if let Err(err) = create_initial_commit(&repo_path) {
+            eprintln!("Failed to make initial commit: {err:?}");
             return Ok(())
         }
     }
