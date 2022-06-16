@@ -4,15 +4,16 @@ mod components;
 mod error;
 mod git;
 mod list_window;
+mod ui;
 
 use crate::app::{App, ProgramEvent};
 use crate::components::{centered_rect, ComponentType};
 use crate::error::Error;
 use crate::git::{init_new_repo, is_empty_repo, is_repo};
+use crate::ui::{main_ui, prompt_new_repo};
 
 use std::env::current_dir;
 use std::io;
-use std::path::Path;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -25,11 +26,7 @@ use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScree
 use crossterm::ExecutableCommand;
 use git::commit::create_initial_commit;
 use tui::backend::{Backend, CrosstermBackend};
-use tui::layout::{Constraint, Direction, Layout};
-use tui::style::{Color, Modifier, Style};
-use tui::text::Text;
-use tui::widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph};
-use tui::{Frame, Terminal};
+use tui::Terminal;
 
 pub enum Event<I> {
     Input(I),
@@ -70,9 +67,9 @@ fn main() -> Result<()> {
     // Grab the project root for dev purposes, this will eventually want to be
     // replaced with a passed argument or the current dir where the program
     // is executed from.
-    //let repo_path = current_dir()?;
+    let repo_path = current_dir()?;
     //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
-    let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
+    //let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
 
     #[allow(clippy::collapsible_if)]
     if !is_repo(&repo_path) {
@@ -110,87 +107,6 @@ fn restore_terminal<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
     Ok(())
 }
 
-fn prompt_new_repo<B: Backend>(
-    repo_path: &Path,
-    terminal: &mut Terminal<B>,
-    rx: Receiver<Event<KeyEvent>>,
-) -> Result<(), Error> {
-    let mut state = ListState::default();
-    state.select(Some(0));
-
-    loop {
-        terminal.draw(|f| {
-            let area = centered_rect(40, 8, f.size());
-
-            let border = Block::default()
-                .style(Style::default())
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded);
-
-            let container = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints([Constraint::Length(4), Constraint::Length(4)].as_ref())
-                .split(area);
-
-            let mut prompt = Text::raw("!! Directory is not a repository !!");
-            prompt.extend(Text::raw("Initialize new repo at\n"));
-            prompt.extend(Text::styled(format!("{:?}?", repo_path), Style::default().fg(Color::Yellow)));
-
-            let init_prompt = Paragraph::new(prompt)
-                .alignment(tui::layout::Alignment::Center)
-                .style(Style::default().fg(Color::White));
-
-            let options = vec![ListItem::new("Yes"), ListItem::new("No")];
-
-            let list = List::new(options)
-                .highlight_style(
-                    Style::default()
-                        .fg(Color::Blue)
-                        .add_modifier(Modifier::BOLD),
-                )
-                .highlight_symbol("> ");
-
-            f.render_widget(Clear, area);
-            f.render_widget(border, area);
-            f.render_widget(init_prompt, container[0]);
-            f.render_stateful_widget(list, container[1], &mut state);
-        })?;
-
-        let input_event = rx.recv().expect("Failed to receive");
-        match input_event {
-            Event::Input(input) => {
-                match input.code {
-                    KeyCode::Char('j') => {
-                        if state.selected() == Some(0) {
-                            state.select(Some(1))
-                        }
-                    }
-                    KeyCode::Char('k') => {
-                        if state.selected() == Some(1) {
-                            state.select(Some(0))
-                        }
-                    }
-                    KeyCode::Enter => {
-                        if let Some(selection) = state.selected() {
-                            if selection == 0 {
-                                // init repo
-                                init_new_repo(repo_path)?;
-                                break;
-                            } else {
-                                return Err(Error::Unknown("NO".to_string()));
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            Event::Tick => {}
-        }
-    }
-    Ok(())
-}
-
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
@@ -201,7 +117,7 @@ fn run_app<B: Backend>(
         app.update()?;
 
         terminal.draw(|f| {
-            if let Err(e) = ui(f, app) {
+            if let Err(e) = main_ui(f, app) {
                 eprintln!("Draw error: {}", e);
             }
         })?;
@@ -263,37 +179,3 @@ fn run_app<B: Backend>(
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
-    let size = f.size();
-    let container = Layout::default()
-        .direction(Direction::Horizontal)
-        .margin(1)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .split(size);
-
-    // Status, Files, Branches, Logs?
-    let left_container = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(4),
-                Constraint::Length(8),
-                Constraint::Length(15),
-                Constraint::Length(8),
-            ]
-            .as_ref(),
-        )
-        .split(container[0]);
-
-    app.status.draw(f, left_container[0])?;
-    app.branches.draw(f, left_container[2])?;
-    app.logs.draw(f, left_container[3])?;
-    app.files.draw(f, left_container[1])?;
-    app.diff.draw(f, container[1])?;
-
-    if app.is_popup_visible() {
-        app.draw_popup(f, size)?;
-    }
-
-    Ok(())
-}
