@@ -64,6 +64,10 @@ impl ListWindow {
     }
 
     fn scroll_down(&mut self, distance: usize) {
+        if self.size == 0 {
+            return;
+        }
+
         self.position = self.max;
         self.position += distance;
 
