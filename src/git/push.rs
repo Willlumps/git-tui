@@ -30,7 +30,7 @@ pub fn push(repo_path: &Path, progress_sender: Sender<usize>) -> Result<(), Erro
 
     callbacks.push_transfer_progress(|current, total, _bytes| {
         if let Some(percentage) = current.checked_div(total) {
-            progress_sender.send(percentage).expect("Send failed");
+            progress_sender.send(percentage * 100).expect("Send failed");
         } else {
             progress_sender.send(100).expect("Send failed");
         }
