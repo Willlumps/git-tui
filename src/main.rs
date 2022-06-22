@@ -164,6 +164,9 @@ fn run_app<B: Backend>(
                             KeyCode::Char('4') => {
                                 app.focus(ComponentType::DiffComponent);
                             }
+                            KeyCode::Char('5') => {
+                                app.focus(ComponentType::DiffStagedComponent);
+                            }
                             _ => {
                                 app.handle_input(input);
                             }

@@ -18,7 +18,6 @@ pub fn main_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     let size = f.size();
     let container = Layout::default()
         .direction(Direction::Horizontal)
-        .margin(1)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(size);
 
@@ -35,11 +34,23 @@ pub fn main_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
         )
         .split(container[0]);
 
+    let right_container = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(50),
+                Constraint::Percentage(50),
+            ]
+            .as_ref(),
+        )
+        .split(container[1]);
+
     app.status.draw(f, left_container[0])?;
+    app.files.draw(f, left_container[1])?;
     app.branches.draw(f, left_container[2])?;
     app.logs.draw(f, left_container[3])?;
-    app.files.draw(f, left_container[1])?;
-    app.diff.draw(f, container[1])?;
+    app.diff.draw(f, right_container[0])?;
+    app.diff_staged.draw(f, right_container[1])?;
 
     if app.is_popup_visible() {
         app.draw_popup(f, size)?;

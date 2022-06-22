@@ -1,4 +1,3 @@
-use crate::components::diff::DiffLine;
 use crate::error::Error;
 use crate::git::repo;
 
@@ -16,6 +15,27 @@ pub struct DiffWindow {
     pub branch: String,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct DiffLine {
+    pub content: String,
+    pub origin: char,
+    pub style: Style,
+}
+
+impl DiffLine {
+    pub fn origin(&self) -> char {
+        self.origin
+    }
+
+    pub fn style(&self) -> Style {
+        self.style
+    }
+
+    pub fn content(&self) -> &String {
+        &self.content
+    }
+}
+
 pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>, Error> {
     let repo = repo(repo_path)?;
 
@@ -23,6 +43,36 @@ pub fn get_diff(repo_path: &Path) -> Result<Vec<DiffLine>, Error> {
 
     let mut opt = git2::DiffOptions::new();
     let diff = repo.diff_index_to_workdir(None, Some(&mut opt))?;
+
+    diff.print(DiffFormat::Patch, |_d, _h, l| {
+        if let Ok(diff_line) = std::str::from_utf8(l.content()) {
+            let line_style = match l.origin() {
+                '-' => Style::default().fg(Color::Red),
+                '+' => Style::default().fg(Color::Green),
+                'H' => Style::default().fg(Color::Cyan),
+                _ => Style::default(),
+            };
+
+            diff_lines.push(DiffLine {
+                content: diff_line.to_string(),
+                origin: l.origin(),
+                style: line_style,
+            });
+        };
+        true
+    })?;
+
+    Ok(diff_lines)
+}
+
+pub fn get_staged(repo_path: &Path) -> Result<Vec<DiffLine>, Error> {
+    let repo = repo(repo_path)?;
+
+    let mut diff_lines: Vec<DiffLine> = Vec::new();
+    let mut opt = git2::DiffOptions::new();
+
+    let tree = repo.head()?.peel_to_tree()?;
+    let diff = repo.diff_tree_to_index(Some(&tree), None, Some(&mut opt))?;
 
     diff.print(DiffFormat::Patch, |_d, _h, l| {
         if let Ok(diff_line) = std::str::from_utf8(l.content()) {

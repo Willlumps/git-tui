@@ -2,6 +2,7 @@ pub mod branches;
 pub mod branch_popup;
 pub mod commit_popup;
 pub mod diff;
+pub mod diff_staged;
 pub mod error_popup;
 pub mod files;
 pub mod log;
@@ -23,6 +24,7 @@ pub enum ComponentType {
     BranchPopupComponent,
     CommitComponent,
     DiffComponent,
+    DiffStagedComponent,
     ErrorComponent,
     FilesComponent,
     LogComponent,

@@ -2,6 +2,7 @@ use crate::components::branch_popup::BranchPopup;
 use crate::components::branches::BranchComponent;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
+use crate::components::diff_staged::DiffStagedComponent;
 use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
@@ -42,6 +43,7 @@ pub struct App {
     pub files: FileComponent,
     pub error_popup: ErrorComponent,
     pub diff: DiffComponent,
+    pub diff_staged: DiffStagedComponent,
     pub status: StatusComponent,
     pub commit_popup: CommitPopup,
     pub branch_popup: BranchPopup,
@@ -59,6 +61,7 @@ impl App {
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
             error_popup: ErrorComponent::new(event_sender.clone()),
             diff: DiffComponent::new(repo_path.clone()),
+            diff_staged: DiffStagedComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
@@ -87,6 +90,7 @@ impl App {
             ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
             ComponentType::BranchComponent
             | ComponentType::DiffComponent
+            | ComponentType::DiffStagedComponent
             | ComponentType::FilesComponent
             | ComponentType::LogComponent
             | ComponentType::None => unreachable!(),
@@ -97,6 +101,7 @@ impl App {
     pub fn update(&mut self) -> Result<(), Error> {
         self.branches.update()?;
         self.diff.update()?;
+        self.diff_staged.update()?;
         self.logs.update()?;
         self.status.update()?;
         self.files.update()?;
@@ -126,6 +131,7 @@ impl App {
             ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
             ComponentType::BranchComponent
             | ComponentType::DiffComponent
+            | ComponentType::DiffStagedComponent
             | ComponentType::FilesComponent
             | ComponentType::LogComponent
             | ComponentType::None => unreachable!(),
@@ -145,6 +151,7 @@ impl App {
         self.branches.handle_event(ev)?;
         self.logs.handle_event(ev)?;
         self.diff.handle_event(ev)?;
+        self.diff_staged.handle_event(ev)?;
         self.files.handle_event(ev)?;
         Ok(())
     }
@@ -197,6 +204,9 @@ impl App {
             }
             ComponentType::DiffComponent => {
                 self.diff.focus(focus);
+            }
+            ComponentType::DiffStagedComponent => {
+                self.diff_staged.focus(focus);
             }
             ComponentType::ErrorComponent => {
                 self.error_popup.focus(focus);

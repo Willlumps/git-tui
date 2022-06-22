@@ -1,7 +1,7 @@
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::diff::{DiffLine, get_diff};
+use crate::git::diff::{DiffLine, get_staged};
 use crate::list_window::{ListWindow, ScrollDirection};
 
 use std::path::PathBuf;
@@ -14,7 +14,7 @@ use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
-pub struct DiffComponent {
+pub struct DiffStagedComponent {
     pub diffs: Vec<DiffLine>,
     pub state: ListState,
     pub focused: bool,
@@ -24,9 +24,9 @@ pub struct DiffComponent {
     first_update: bool,
 }
 
-impl DiffComponent {
+impl DiffStagedComponent {
     pub fn new(repo_path: PathBuf) -> Self {
-        let diffs = get_diff(&repo_path).unwrap();
+        let diffs = get_staged(&repo_path).unwrap();
         let len = diffs.len();
 
         Self {
@@ -59,7 +59,7 @@ impl DiffComponent {
 
         let list = TuiList::new(list_items).block(
             Block::default()
-                .title(" Diff ")
+                .title(" Staged ")
                 .style(self.style.style())
                 .borders(Borders::ALL)
                 .border_style(self.style.border_style())
@@ -87,7 +87,7 @@ impl DiffComponent {
     }
 }
 
-impl Component for DiffComponent {
+impl Component for DiffStagedComponent {
     fn update(&mut self) -> Result<(), Error> {
         if self.first_update && self.window.height() > 0 {
             self.first_update = false;
@@ -95,7 +95,7 @@ impl Component for DiffComponent {
         }
 
         let path = &self.repo_path;
-        let diff = get_diff(path)?;
+        let diff = get_staged(path)?;
         if diff.len() != self.diffs.len() {
             self.render_diff();
             self.diffs = diff;
