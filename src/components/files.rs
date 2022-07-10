@@ -21,13 +21,13 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 pub struct FileComponent {
+    event_sender: Sender<ProgramEvent>,
     files: Vec<FileStatus>,
-    state: ListState,
     focused: bool,
     position: usize,
-    style: ComponentTheme,
-    event_sender: Sender<ProgramEvent>,
     repo_path: PathBuf,
+    state: ListState,
+    style: ComponentTheme,
 }
 
 // TODO:
@@ -41,13 +41,13 @@ impl FileComponent {
         state.select(Some(0));
 
         Self {
+            event_sender,
             files: Vec::new(),
-            state,
             focused: false,
             position: 0,
-            style: ComponentTheme::default(),
-            event_sender,
             repo_path,
+            state,
+            style: ComponentTheme::default(),
         }
     }
 

@@ -38,6 +38,9 @@ pub fn push(repo_path: &Path, progress_sender: Sender<usize>) -> Result<(), Erro
 
     callbacks.push_update_reference(|_remote, _status| {
         // TODO
+        if _status.is_some() {
+            panic!("oh no {}", _status.unwrap());
+        }
         Ok(())
     });
 

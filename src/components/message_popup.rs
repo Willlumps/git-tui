@@ -10,15 +10,15 @@ use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
 
 pub struct MessagePopup {
-    visible: bool,
     message: String,
+    visible: bool,
 }
 
 impl MessagePopup {
     pub fn new() -> Self {
         Self {
-            visible: false,
             message: String::new(),
+            visible: false,
         }
     }
 
@@ -61,7 +61,6 @@ impl Component for MessagePopup {
     }
 
     fn focus(&mut self, focus: bool) {
-        // self.message = String::from("Fetching...");
         self.visible = focus;
     }
 

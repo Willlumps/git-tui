@@ -18,8 +18,8 @@ use tui::Frame;
 pub struct ErrorComponent {
     code: ErrorCode,
     class: ErrorClass,
-    message: String,
     event_sender: Sender<ProgramEvent>,
+    message: String,
     visible: bool,
 }
 
@@ -28,8 +28,8 @@ impl ErrorComponent {
         Self {
             code: ErrorCode::GenericError,
             class: ErrorClass::None,
-            message: String::new(),
             event_sender,
+            message: String::new(),
             visible: false,
         }
     }

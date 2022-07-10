@@ -26,13 +26,13 @@ use tui::Frame;
 
 pub struct BranchComponent {
     branches: Vec<Branch>,
-    state: ListState,
+    event_sender: Sender<ProgramEvent>,
     focused: bool,
     focused_tab: usize,
     position: usize,
-    style: ComponentTheme,
     repo_path: PathBuf,
-    event_sender: Sender<ProgramEvent>,
+    state: ListState,
+    style: ComponentTheme,
 }
 
 impl BranchComponent {
@@ -42,13 +42,13 @@ impl BranchComponent {
 
         Self {
             branches: Vec::new(),
-            state,
+            event_sender,
             focused: false,
             focused_tab: 0,
             position: 0,
-            style: ComponentTheme::default(),
             repo_path,
-            event_sender,
+            state,
+            style: ComponentTheme::default(),
         }
     }
 
@@ -113,12 +113,12 @@ impl BranchComponent {
         Ok(())
     }
 
-    fn increment_position(&mut self) {
+    fn scroll_up(&mut self) {
         self.position = self.position.saturating_sub(1);
         self.state.select(Some(self.position));
     }
 
-    fn decrement_position(&mut self) {
+    fn scroll_down(&mut self) {
         if self.position < self.branches.len() - 1 {
             self.position += 1;
             self.state.select(Some(self.position));
@@ -174,10 +174,10 @@ impl Component for BranchComponent {
 
         match ev.code {
             KeyCode::Char('j') => {
-                self.decrement_position();
+                self.scroll_down();
             }
             KeyCode::Char('k') => {
-                self.increment_position();
+                self.scroll_up();
             }
             KeyCode::Char('h') => {
                 self.tab_left();

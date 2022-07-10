@@ -15,13 +15,13 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 pub struct DiffStagedComponent {
-    pub diffs: Vec<DiffLine>,
-    pub state: ListState,
-    pub focused: bool,
-    style: ComponentTheme,
-    repo_path: PathBuf,
-    window: ListWindow,
+    diffs: Vec<DiffLine>,
     first_update: bool,
+    focused: bool,
+    repo_path: PathBuf,
+    state: ListState,
+    style: ComponentTheme,
+    window: ListWindow,
 }
 
 impl DiffStagedComponent {
@@ -31,12 +31,12 @@ impl DiffStagedComponent {
 
         Self {
             diffs,
-            state: ListState::default(),
-            focused: false,
-            style: ComponentTheme::default(),
-            repo_path,
-            window: ListWindow::new(0, 0, 0, len, 0),
             first_update: true,
+            focused: false,
+            repo_path,
+            state: ListState::default(),
+            style: ComponentTheme::default(),
+            window: ListWindow::new(0, 0, 0, len, 0),
         }
     }
 

@@ -20,13 +20,13 @@ use tui::Frame;
 use super::ComponentType;
 
 pub struct LogComponent {
-    logs: Vec<Commit>,
-    state: ListState,
+    event_sender: Sender<ProgramEvent>,
     focused: bool,
+    logs: Vec<Commit>,
     position: usize,
     repo_path: PathBuf,
+    state: ListState,
     style: ComponentTheme,
-    event_sender: Sender<ProgramEvent>,
 }
 
 impl LogComponent {
@@ -35,13 +35,13 @@ impl LogComponent {
         state.select(Some(0));
 
         Self {
-            logs: Vec::new(),
-            state,
-            focused: false,
-            position: 0,
-            style: ComponentTheme::default(),
-            repo_path,
             event_sender,
+            focused: false,
+            logs: Vec::new(),
+            position: 0,
+            repo_path,
+            state,
+            style: ComponentTheme::default(),
         }
     }
 
@@ -75,12 +75,12 @@ impl LogComponent {
         Ok(())
     }
 
-    fn increment_position(&mut self, amount: usize) {
+    fn scroll_up(&mut self, amount: usize) {
         self.position = self.position.saturating_sub(amount);
         self.state.select(Some(self.position));
     }
 
-    fn decrement_position(&mut self, amount: usize) {
+    fn scroll_down(&mut self, amount: usize) {
         if self.position < self.logs.len() - amount - 1 {
             self.position += amount;
         } else {
@@ -102,10 +102,10 @@ impl Component for LogComponent {
         }
         match ev.code {
             KeyCode::Char('j') => {
-                self.decrement_position(1);
+                self.scroll_down(1);
             }
             KeyCode::Char('k') => {
-                self.increment_position(1);
+                self.scroll_up(1);
             }
             KeyCode::Char('c') => {
                 if let Some(commit) = self.logs.get(self.position) {
@@ -113,10 +113,10 @@ impl Component for LogComponent {
                 }
             }
             KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.decrement_position(10);
+                self.scroll_down(10);
             }
             KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.increment_position(10);
+                self.scroll_up(10);
             }
             KeyCode::Enter => {
                 if let Some(commit) = self.logs.get(self.position) {

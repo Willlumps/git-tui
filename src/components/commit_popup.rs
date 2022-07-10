@@ -15,23 +15,23 @@ use tui::widgets::{Block, Borders, Clear, Paragraph};
 use tui::Frame;
 
 pub struct CommitPopup {
-    input: String,
-    visible: bool,
-    event_sender: Sender<ProgramEvent>,
-    repo_path: PathBuf,
-    cursor_visible: bool,
     cursor_position: (u16, u16),
+    cursor_visible: bool,
+    event_sender: Sender<ProgramEvent>,
+    input: String,
+    repo_path: PathBuf,
+    visible: bool,
 }
 
 impl CommitPopup {
     pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         Self {
-            input: String::new(),
-            visible: false,
-            event_sender,
-            repo_path,
-            cursor_visible: false,
             cursor_position: (0, 0),
+            cursor_visible: false,
+            event_sender,
+            input: String::new(),
+            repo_path,
+            visible: false,
         }
     }
 

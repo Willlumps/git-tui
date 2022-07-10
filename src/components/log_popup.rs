@@ -14,17 +14,17 @@ use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
 
 pub struct LogPopup {
-    visible: bool,
     commit: Commit,
     event_sender: Sender<ProgramEvent>,
+    visible: bool,
 }
 
 impl LogPopup {
     pub fn new(event_sender: Sender<ProgramEvent>) -> Self {
         Self {
-            visible: false,
             commit: Commit::new(),
             event_sender,
+            visible: false,
         }
     }
 

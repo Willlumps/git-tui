@@ -15,13 +15,13 @@ use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListSt
 use tui::Frame;
 
 pub struct DiffComponent {
-    pub diffs: Vec<DiffLine>,
-    pub state: ListState,
-    pub focused: bool,
-    style: ComponentTheme,
-    repo_path: PathBuf,
-    window: ListWindow,
+    diffs: Vec<DiffLine>,
     first_update: bool,
+    focused: bool,
+    repo_path: PathBuf,
+    state: ListState,
+    style: ComponentTheme,
+    window: ListWindow,
 }
 
 impl DiffComponent {
@@ -31,12 +31,12 @@ impl DiffComponent {
 
         Self {
             diffs,
-            state: ListState::default(),
-            focused: false,
-            style: ComponentTheme::default(),
-            repo_path,
-            window: ListWindow::new(0, 0, 0, len, 0),
             first_update: true,
+            focused: false,
+            repo_path,
+            state: ListState::default(),
+            style: ComponentTheme::default(),
+            window: ListWindow::new(0, 0, 0, len, 0),
         }
     }
 
@@ -76,13 +76,13 @@ impl DiffComponent {
         self.state.select(self.window.position());
     }
 
-    fn scroll_up(&mut self, i: usize) {
-        self.window.scroll(ScrollDirection::Up, i);
+    fn scroll_up(&mut self, amount: usize) {
+        self.window.scroll(ScrollDirection::Up, amount);
         self.state.select(self.window.position());
     }
 
-    fn scroll_down(&mut self, i: usize) {
-        self.window.scroll(ScrollDirection::Down, i);
+    fn scroll_down(&mut self, amount: usize) {
+        self.window.scroll(ScrollDirection::Down, amount);
         self.state.select(self.window.position());
     }
 }
