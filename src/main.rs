@@ -41,9 +41,7 @@ fn main() -> Result<()> {
     thread::spawn(move || {
         let mut last_tick = Instant::now();
         loop {
-            let timeout = tick_rate
-                .checked_sub(last_tick.elapsed())
-                .unwrap_or_else(|| Duration::from_secs(0));
+            let timeout = tick_rate.saturating_sub(last_tick.elapsed());
 
             if let Ok(poll) = poll(timeout) {
                 if poll {
@@ -181,4 +179,3 @@ fn run_app<B: Backend>(
         }
     }
 }
-

@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
 use tui::style::{Color, Modifier, Style};
@@ -75,16 +75,18 @@ impl LogComponent {
         Ok(())
     }
 
-    fn increment_position(&mut self) {
-        self.position = self.position.saturating_sub(1);
+    fn increment_position(&mut self, amount: usize) {
+        self.position = self.position.saturating_sub(amount);
         self.state.select(Some(self.position));
     }
 
-    fn decrement_position(&mut self) {
-        if self.position < self.logs.len() - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
+    fn decrement_position(&mut self, amount: usize) {
+        if self.position < self.logs.len() - amount - 1 {
+            self.position += amount;
+        } else {
+            self.position = self.logs.len() - 1;
         }
+        self.state.select(Some(self.position));
     }
 }
 
@@ -100,16 +102,21 @@ impl Component for LogComponent {
         }
         match ev.code {
             KeyCode::Char('j') => {
-                self.decrement_position();
+                self.decrement_position(1);
             }
             KeyCode::Char('k') => {
-                self.increment_position();
+                self.increment_position(1);
             }
             KeyCode::Char('c') => {
                 if let Some(commit) = self.logs.get(self.position) {
                     checkout_local_branch(&self.repo_path, commit.id())?;
                 }
-                self.increment_position();
+            }
+            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.decrement_position(10);
+            }
+            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
+                self.increment_position(10);
             }
             KeyCode::Enter => {
                 if let Some(commit) = self.logs.get(self.position) {

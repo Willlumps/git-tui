@@ -1,6 +1,6 @@
 ## Universal Keymaps
 * `C-q`:  Quit the application
-* `1-4`:  Navigate the four main component panes
+* `1-5`:  Navigate the four main component panes
 * `j`: Scroll down through a list or window
 * `k`: Scroll up through a list or window
 * `ESC`: Close popup
