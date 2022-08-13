@@ -40,15 +40,22 @@ impl Commit {
             Some(email) => email.to_string(),
             None => String::new(),
         };
-        let message_summary = match commit.summary() {
+        let mut message_summary = match commit.summary() {
             Some(summary) => summary.to_string(),
             None => String::new(),
         };
-        let message_body = match commit.body() {
+        let mut message_body = match commit.body() {
             Some(body) => body.split('\n').map(|line| line.to_string()).collect(),
             None => Vec::new(),
         };
         let time = CommitDate::new(commit.time());
+
+        if message_summary.len() > 70 {
+            let index = get_split_index(&message_summary);
+            let body = message_summary[index..].trim().to_string();
+            message_summary = message_summary[0..index].to_string();
+            message_body.insert(0, body);
+        }
 
         Self {
             id,
@@ -107,4 +114,22 @@ pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     }
 
     Ok(history)
+
+}
+
+fn get_split_index(message_summary: &str) -> usize {
+    // what in tarnation is this?
+    let (mut i, mut c) = message_summary.char_indices().nth(70).expect("I should just work");
+    if c != ' ' {
+        loop {
+            if i == 55 || c == ' ' {
+                break;
+            }
+
+            i -= 1;
+            c = message_summary.chars().nth(i).expect("I should work, too");
+        }
+    }
+
+    i
 }
