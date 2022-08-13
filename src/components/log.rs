@@ -3,6 +3,7 @@ use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
 use crate::git::branch::checkout_local_branch;
+use crate::git::commit::revert_commit;
 use crate::git::log::{fetch_history, Commit};
 
 use std::path::PathBuf;
@@ -12,7 +13,7 @@ use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
 use tui::layout::Rect;
-use tui::style::{Color, Modifier, Style};
+use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
@@ -58,6 +59,7 @@ impl LogComponent {
                 ListItem::new(text)
             })
             .collect();
+
         let list = TuiList::new(list_items)
             .block(
                 Block::default()
@@ -67,7 +69,7 @@ impl LogComponent {
                     .border_style(self.style.border_style())
                     .border_type(BorderType::Rounded),
             )
-            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+            .highlight_style(Style::default().bg(Color::Rgb(48, 48, 48)))
             .highlight_symbol("> ");
 
         f.render_stateful_widget(list, rect, &mut self.state);
@@ -110,6 +112,11 @@ impl Component for LogComponent {
             KeyCode::Char('c') => {
                 if let Some(commit) = self.logs.get(self.position) {
                     checkout_local_branch(&self.repo_path, commit.id())?;
+                }
+            }
+            KeyCode::Char('r') => {
+                if let Some(commit) = self.logs.get(self.position) {
+                    revert_commit(&self.repo_path, commit)?;
                 }
             }
             KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {

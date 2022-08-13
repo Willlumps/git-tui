@@ -29,3 +29,5 @@
 
 ## Log Component
 * `Enter`: View full log details
+* `c`: Checkout selected commit
+* `r`: Revert selected commit (with `--no-commit`)

@@ -88,12 +88,7 @@ impl App {
             ComponentType::ErrorComponent => self.error_popup.draw(f, size)?,
             ComponentType::FullLogComponent(_) => self.log_popup.draw(f, size)?,
             ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
-            ComponentType::BranchComponent
-            | ComponentType::DiffComponent
-            | ComponentType::DiffStagedComponent
-            | ComponentType::FilesComponent
-            | ComponentType::LogComponent
-            | ComponentType::None => unreachable!(),
+            _ => unreachable!(),
         }
         Ok(())
     }
@@ -129,12 +124,7 @@ impl App {
             ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
             ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
             ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
-            ComponentType::BranchComponent
-            | ComponentType::DiffComponent
-            | ComponentType::DiffStagedComponent
-            | ComponentType::FilesComponent
-            | ComponentType::LogComponent
-            | ComponentType::None => unreachable!(),
+            _ => unreachable!(),
         }
         Ok(())
     }
