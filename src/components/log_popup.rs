@@ -29,19 +29,27 @@ impl LogPopup {
     }
 
     pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
-        let area = centered_rect(80, 7, rect);
+        let message_body = self.commit.message_body();
+        let popup_height = message_body.len() + 8; // Normal commit info + number of lines in the commit body
+        let area = centered_rect(80, popup_height as u16, rect);
 
         let mut log = Text::styled(
             format!(" commit: {}", self.commit.id()),
             Style::default().fg(Color::Yellow),
         );
+
         log.extend(Text::raw(format!(
             " Author: {} <{}>",
             self.commit.author(),
             self.commit.email()
         )));
+
         log.extend(Text::raw(format!(" Date:   {}", self.commit.time())));
-        log.extend(Text::raw(format!("\n     {}\n", self.commit.message())));
+        log.extend(Text::raw(format!("\n     {}\n\n", self.commit.message_summary())));
+
+        for line in message_body {
+            log.extend(Text::raw(format!("     {}\n", line)));
+        }
 
         let input = Paragraph::new(log)
             .style(Style::default().fg(Color::White))

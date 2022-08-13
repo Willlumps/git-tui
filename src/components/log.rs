@@ -53,7 +53,7 @@ impl LogComponent {
                 let text = Spans::from(vec![
                     Span::styled(item.shorthand_id(), Style::default().fg(Color::Green)),
                     Span::raw(" "),
-                    Span::raw(item.message()),
+                    Span::raw(item.message_summary()),
                 ]);
                 ListItem::new(text)
             })

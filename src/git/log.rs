@@ -12,7 +12,8 @@ pub struct Commit {
     id: String,
     author: String,
     email: String,
-    message: String,
+    message_summary: String,
+    message_body: Vec<String>,
     time: CommitDate,
 }
 
@@ -22,7 +23,8 @@ impl Commit {
             id: String::new(),
             author: String::new(),
             email: String::new(),
-            message: String::new(),
+            message_summary: String::new(),
+            message_body: Vec::new(),
             time: CommitDate::new(git2::Time::new(0, 0)),
         }
     }
@@ -38,9 +40,13 @@ impl Commit {
             Some(email) => email.to_string(),
             None => String::new(),
         };
-        let message = match commit.summary() {
+        let message_summary = match commit.summary() {
             Some(summary) => summary.to_string(),
             None => String::new(),
+        };
+        let message_body = match commit.body() {
+            Some(body) => body.split('\n').map(|line| line.to_string()).collect(),
+            None => Vec::new(),
         };
         let time = CommitDate::new(commit.time());
 
@@ -48,7 +54,8 @@ impl Commit {
             id,
             author,
             email,
-            message,
+            message_summary,
+            message_body,
             time,
         }
     }
@@ -65,8 +72,12 @@ impl Commit {
         &self.email
     }
 
-    pub fn message(&self) -> &String {
-        &self.message
+    pub fn message_summary(&self) -> &String {
+        &self.message_summary
+    }
+
+    pub fn message_body(&self) -> &Vec<String> {
+        &self.message_body
     }
 
     pub fn shorthand_id(&self) -> String {
