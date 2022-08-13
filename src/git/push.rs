@@ -37,7 +37,9 @@ pub fn push(repo_path: &Path, progress_sender: Sender<i8>) -> Result<(), Error> 
 
     callbacks.push_transfer_progress(|current, total, _bytes| {
         if let Some(percentage) = current.checked_div(total) {
-            progress_sender.send((percentage * 100) as i8).expect("Send failed");
+            progress_sender
+                .send((percentage * 100) as i8)
+                .expect("Send failed");
         } else {
             progress_sender.send(100).expect("Send failed");
         }

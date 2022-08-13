@@ -1,6 +1,6 @@
 use crate::app::App;
+use crate::{centered_rect, init_new_repo};
 use crate::{Error, Event};
-use crate::{init_new_repo, centered_rect};
 
 use std::path::Path;
 
@@ -36,13 +36,7 @@ pub fn main_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
 
     let right_container = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage(50),
-                Constraint::Percentage(50),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(container[1]);
 
     app.status.draw(f, left_container[0])?;
@@ -72,7 +66,10 @@ pub fn prompt_new_repo<B: Backend>(
             let area = centered_rect(40, 8, f.size());
 
             let border = Block::default()
-                .title(Span::styled(" Repo Not Found ", Style::default().fg(Color::Red)))
+                .title(Span::styled(
+                    " Repo Not Found ",
+                    Style::default().fg(Color::Red),
+                ))
                 .style(Style::default())
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded);

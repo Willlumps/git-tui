@@ -114,12 +114,14 @@ pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     }
 
     Ok(history)
-
 }
 
 fn get_split_index(message_summary: &str) -> usize {
     // what in tarnation is this?
-    let (mut i, mut c) = message_summary.char_indices().nth(70).expect("I should just work");
+    let (mut i, mut c) = message_summary
+        .char_indices()
+        .nth(70)
+        .expect("I should just work");
     if c != ' ' {
         loop {
             if i == 55 || c == ' ' {

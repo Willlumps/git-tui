@@ -1,13 +1,13 @@
-pub mod branches;
 pub mod branch_popup;
+pub mod branches;
 pub mod commit_popup;
 pub mod diff;
 pub mod diff_staged;
 pub mod error_popup;
 pub mod files;
 pub mod log;
-pub mod message_popup;
 pub mod log_popup;
+pub mod message_popup;
 pub mod status;
 
 use crate::error::Error;

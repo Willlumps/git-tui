@@ -2,9 +2,9 @@ use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
-use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
 use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
+use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
 
 use std::path::PathBuf;
 use std::thread;
@@ -157,7 +157,9 @@ impl Component for FileComponent {
 
                 thread::spawn(move || {
                     event_sender
-                        .send(ProgramEvent::Focus(ComponentType::MessageComponent("Pushing - 0%".to_string())))
+                        .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                            "Pushing - 0%".to_string(),
+                        )))
                         .expect("Focus event send failed.");
 
                     if let Err(err) = push(&repo_path, progress_sender) {
@@ -170,11 +172,15 @@ impl Component for FileComponent {
                     loop {
                         let progress = progress_receiver.recv().expect("Receive failed");
                         event_sender
-                            .send(ProgramEvent::Focus(ComponentType::MessageComponent(format!("Pushing - {}%", progress))))
+                            .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                                format!("Pushing - {}%", progress),
+                            )))
                             .expect("Focus event send failed.");
                         if progress < 0 {
                             event_sender
-                                .send(ProgramEvent::Error(Error::from("Bad Credentials".to_string())))
+                                .send(ProgramEvent::Error(Error::from(
+                                    "Bad Credentials".to_string(),
+                                )))
                                 .expect("Send Failed");
                         } else if progress >= 100 {
                             break;

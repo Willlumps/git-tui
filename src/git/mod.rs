@@ -39,8 +39,5 @@ pub fn is_empty_repo(repo_path: &Path) -> Result<bool, git2::Error> {
 }
 
 pub fn is_repo(repo_path: &Path) -> bool {
-    Repository::open_ext(
-        repo_path,
-        RepositoryOpenFlags::empty(),
-        Vec::<&Path>::new()).is_ok()
+    Repository::open_ext(repo_path, RepositoryOpenFlags::empty(), Vec::<&Path>::new()).is_ok()
 }

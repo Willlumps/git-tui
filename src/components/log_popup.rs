@@ -1,7 +1,7 @@
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::ProgramEvent;
 use crate::error::Error;
 use crate::git::log::Commit;
+use crate::ProgramEvent;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -45,7 +45,10 @@ impl LogPopup {
         )));
 
         log.extend(Text::raw(format!(" Date:   {}", self.commit.time())));
-        log.extend(Text::raw(format!("\n     {}\n\n", self.commit.message_summary())));
+        log.extend(Text::raw(format!(
+            "\n     {}\n\n",
+            self.commit.message_summary()
+        )));
 
         for line in message_body {
             log.extend(Text::raw(format!("     {}\n", line)));

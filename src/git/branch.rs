@@ -13,7 +13,6 @@ pub struct Branch {
     pub name: String,
     pub branch_type: BranchType,
     pub last_commit: Commit,
-
 }
 
 pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
@@ -43,7 +42,9 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
         .join("");
 
     if does_local_branch_exist(&repo, &name) {
-        return Err(Error::Git(git2::Error::from_str("Local branch already exists")));
+        return Err(Error::Git(git2::Error::from_str(
+            "Local branch already exists",
+        )));
     }
 
     let (object, _reference) = repo

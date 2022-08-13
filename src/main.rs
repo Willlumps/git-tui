@@ -36,7 +36,7 @@ pub enum Event<I> {
 fn main() -> Result<()> {
     let (tx, rx) = unbounded();
     let (ev_tx, ev_rx) = unbounded();
-    let tick_rate = Duration::from_millis(2000);
+    let tick_rate = Duration::from_millis(1200);
 
     thread::spawn(move || {
         let mut last_tick = Instant::now();
@@ -124,10 +124,10 @@ fn run_app<B: Backend>(
         select.recv(&event_rx);
         select.recv(&rx);
 
-        let oper = select.select();
-        match oper.index() {
+        let operation = select.select();
+        match operation.index() {
             0 => {
-                let event = oper.recv(&event_rx).expect("Receive failed");
+                let event = operation.recv(&event_rx).expect("Receive failed");
                 match event {
                     ProgramEvent::Error(error) => {
                         app.display_error(error);
@@ -141,7 +141,7 @@ fn run_app<B: Backend>(
                 }
             }
             1 => {
-                let input_event = oper.recv(&rx).expect("Receive failed");
+                let input_event = operation.recv(&rx).expect("Receive failed");
                 if app.is_popup_visible() {
                     app.handle_popup_input(input_event);
                 } else {

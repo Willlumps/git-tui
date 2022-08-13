@@ -95,7 +95,8 @@ impl Component for CommitPopup {
                 let last_space_index = input_ref.rfind(' ');
                 match last_space_index {
                     Some(index) => {
-                        let cursor_index = self.cursor_position.0 - (self.input.len() - index) as u16;
+                        let cursor_index =
+                            self.cursor_position.0 - (self.input.len() - index) as u16;
                         self.input = self.input[0..index].to_string();
                         self.cursor_position.0 = cursor_index;
                     }

@@ -1,7 +1,7 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::components::{centered_rect, Component, ComponentType};
 use crate::error::Error;
-use crate::git::branch::{checkout_local_branch, branch_from_head};
+use crate::git::branch::{branch_from_head, checkout_local_branch};
 
 use std::path::PathBuf;
 
@@ -96,7 +96,8 @@ impl Component for BranchPopup {
                 let last_space_index = input_ref.rfind(' ');
                 match last_space_index {
                     Some(index) => {
-                        let cursor_index = self.cursor_position.0 - (self.input.len() - index) as u16;
+                        let cursor_index =
+                            self.cursor_position.0 - (self.input.len() - index) as u16;
                         self.input = self.input[0..index].to_string();
                         self.cursor_position.0 = cursor_index;
                     }
