@@ -31,3 +31,5 @@
 * `Enter`: View full log details
 * `c`: Checkout selected commit
 * `r`: Revert selected commit (with `--no-commit`)
+* `/`: Fuzzy find commits by summary
+* `ESC`: Close search
