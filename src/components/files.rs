@@ -1,6 +1,6 @@
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
-use crate::components::{Component, ComponentType};
+use crate::components::{Component, ComponentType, ScrollableComponent};
 use crate::error::Error;
 use crate::git::push::push;
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
@@ -81,20 +81,6 @@ impl FileComponent {
         Ok(())
     }
 
-    fn increment_position(&mut self) {
-        if self.position != 0 {
-            self.position -= 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
-    fn decrement_position(&mut self) {
-        if self.position < self.files.len() - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
     fn has_files_staged(&self) -> bool {
         self.files
             .iter()
@@ -122,10 +108,10 @@ impl Component for FileComponent {
 
         match ev.code {
             KeyCode::Char('j') => {
-                self.decrement_position();
+                self.scroll_down(1);
             }
             KeyCode::Char('k') => {
-                self.increment_position();
+                self.scroll_up(1);
             }
             KeyCode::Char('a') => {
                 stage_all(&self.repo_path)?;
@@ -210,5 +196,20 @@ impl Component for FileComponent {
             self.style = ComponentTheme::default();
         }
         self.focused = focus;
+    }
+}
+
+impl ScrollableComponent for FileComponent {
+    fn get_list_length(&self) -> usize {
+        self.files.len()
+    }
+    fn get_position(&self) -> usize {
+        self.position
+    }
+    fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+    fn set_state(&mut self, position: usize) {
+        self.state.select(Some(position));
     }
 }

@@ -40,6 +40,39 @@ pub trait Component {
     fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error>;
 }
 
+pub trait ScrollableComponent {
+    fn scroll_up(&mut self, amount: usize) {
+        let position = self.get_position().saturating_sub(amount);
+        self.set_position(position);
+        self.set_state(position)
+    }
+
+    fn scroll_down(&mut self, amount: usize) {
+        let len = self.get_list_length();
+        let position = max(self.get_position() + amount, len - 1);
+        self.set_position(position);
+        self.set_state(position);
+    }
+
+    fn reset_state(&mut self) {
+        self.set_position(0);
+        self.set_state(0);
+    }
+
+    fn get_list_length(&self) -> usize;
+    fn get_position(&self) -> usize;
+    fn set_position(&mut self, position: usize);
+    fn set_state(&mut self, position: usize);
+}
+
+fn max(amount: usize, max: usize) -> usize {
+    if amount > max {
+        max
+    } else {
+        amount
+    }
+}
+
 pub fn centered_rect(x: u16, y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)

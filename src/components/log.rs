@@ -1,6 +1,6 @@
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
-use crate::components::Component;
+use crate::components::{Component, ScrollableComponent};
 use crate::error::Error;
 use crate::git::branch::checkout_local_branch;
 use crate::git::commit::revert_commit;
@@ -103,25 +103,6 @@ impl LogComponent {
 
         Ok(())
     }
-
-    fn scroll_up(&mut self, amount: usize) {
-        self.position = self.position.saturating_sub(amount);
-        self.state.select(Some(self.position));
-    }
-
-    fn scroll_down(&mut self, amount: usize) {
-        if self.position < self.filtered_commits.len() - amount - 1 {
-            self.position += amount;
-        } else {
-            self.position = self.filtered_commits.len() - 1;
-        }
-        self.state.select(Some(self.position));
-    }
-
-    fn reset_state(&mut self) {
-        self.position = 0;
-        self.state.select(Some(0));
-    }
 }
 
 impl Component for LogComponent {
@@ -219,6 +200,21 @@ impl Component for LogComponent {
             self.style = ComponentTheme::default();
         }
         self.focused = focus;
+    }
+}
+
+impl ScrollableComponent for LogComponent {
+    fn get_list_length(&self) -> usize {
+        self.filtered_commits.len()
+    }
+    fn get_position(&self) -> usize {
+        self.position
+    }
+    fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+    fn set_state(&mut self, position: usize) {
+        self.state.select(Some(position));
     }
 }
 

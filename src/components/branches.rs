@@ -14,7 +14,7 @@ use tui::Frame;
 
 use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
-use crate::components::Component;
+use crate::components::{Component, ScrollableComponent};
 use crate::error::Error;
 use crate::git::branch::{
     checkout_local_branch, checkout_remote_branch, delete_branch, get_branches, Branch,
@@ -112,18 +112,6 @@ impl BranchComponent {
         Ok(())
     }
 
-    fn scroll_up(&mut self) {
-        self.position = self.position.saturating_sub(1);
-        self.state.select(Some(self.position));
-    }
-
-    fn scroll_down(&mut self) {
-        if self.position < self.branches.len() - 1 {
-            self.position += 1;
-            self.state.select(Some(self.position));
-        }
-    }
-
     fn tab_left(&mut self) {
         if self.focused_tab > 0 {
             self.focused_tab -= 1;
@@ -173,10 +161,10 @@ impl Component for BranchComponent {
 
         match ev.code {
             KeyCode::Char('j') => {
-                self.scroll_down();
+                self.scroll_down(1);
             }
             KeyCode::Char('k') => {
-                self.scroll_up();
+                self.scroll_up(1);
             }
             KeyCode::Char('h') => {
                 self.tab_left();
@@ -280,3 +268,17 @@ impl Component for BranchComponent {
     }
 }
 
+impl ScrollableComponent for BranchComponent {
+    fn get_list_length(&self) -> usize {
+        self.branches.len()
+    }
+    fn get_position(&self) -> usize {
+        self.position
+    }
+    fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+    fn set_state(&mut self, position: usize) {
+        self.state.select(Some(position));
+    }
+}

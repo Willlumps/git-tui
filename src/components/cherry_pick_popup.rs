@@ -10,7 +10,7 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, Clear, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
-use crate::components::{centered_rect, Component, ComponentType};
+use crate::components::{centered_rect, Component, ComponentType, ScrollableComponent};
 use crate::error::Error;
 use crate::git::log::Commit;
 use crate::git::repo;
@@ -25,7 +25,6 @@ pub struct CherryPickPopup {
     state: ListState,
     visible: bool,
 }
-
 impl CherryPickPopup {
     pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
         let mut state = ListState::default();
@@ -82,20 +81,6 @@ impl CherryPickPopup {
         Ok(())
     }
 
-    fn scroll_up(&mut self, amount: usize) {
-        self.position = self.position.saturating_sub(amount);
-        self.state.select(Some(self.position));
-    }
-
-    fn scroll_down(&mut self, amount: usize) {
-        if self.position < self.commits.len() - amount - 1 {
-            self.position += amount;
-        } else {
-            self.position = self.commits.len() - 1;
-        }
-        self.state.select(Some(self.position));
-    }
-
     pub fn visible(&self) -> bool {
         self.visible
     }
@@ -113,7 +98,9 @@ impl CherryPickPopup {
     }
 
     fn cherry_pick(&mut self) -> Result<(), Error> {
-        // TODO: The thing
+        // TODO:
+        //   - Change collect_commits() to revwalk from a given commit instead of only HEAD
+        //   - The thing
 
         let repo = repo(&self.repo_path)?;
         self.selected_commits.clear();
@@ -169,5 +156,20 @@ impl Component for CherryPickPopup {
 
     fn focus(&mut self, focus: bool) {
         self.visible = focus;
+    }
+}
+
+impl ScrollableComponent for CherryPickPopup {
+    fn get_list_length(&self) -> usize {
+        self.commits.len()
+    }
+    fn get_position(&self) -> usize {
+        self.position
+    }
+    fn set_position(&mut self, position: usize) {
+        self.position = position;
+    }
+    fn set_state(&mut self, position: usize) {
+        self.state.select(Some(position));
     }
 }
