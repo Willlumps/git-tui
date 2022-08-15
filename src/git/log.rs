@@ -96,7 +96,7 @@ impl Commit {
     }
 }
 
-pub fn fetch_history(repo_path: &Path) -> Result<Vec<Commit>, Error> {
+pub fn collect_commits(repo_path: &Path) -> Result<Vec<Commit>, Error> {
     let repo = repo(repo_path)?;
 
     let mut history: Vec<Commit> = Vec::new();

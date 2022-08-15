@@ -4,7 +4,7 @@ use crate::components::Component;
 use crate::error::Error;
 use crate::git::branch::checkout_local_branch;
 use crate::git::commit::revert_commit;
-use crate::git::log::{fetch_history, Commit};
+use crate::git::log::{collect_commits, Commit};
 
 use std::path::PathBuf;
 
@@ -24,11 +24,11 @@ use super::ComponentType;
 
 pub struct LogComponent {
     event_sender: Sender<ProgramEvent>,
-    filtered_logs: Vec<Commit>,
+    filtered_commits: Vec<Commit>,
     focused: bool,
     input: String,
     is_searching: bool,
-    logs: Vec<Commit>,
+    commits: Vec<Commit>,
     position: usize,
     repo_path: PathBuf,
     state: ListState,
@@ -42,11 +42,11 @@ impl LogComponent {
 
         Self {
             event_sender,
-            filtered_logs: Vec::new(),
+            filtered_commits: Vec::new(),
             focused: false,
             input: String::new(),
             is_searching: false,
-            logs: Vec::new(),
+            commits: Vec::new(),
             position: 0,
             repo_path,
             state,
@@ -81,7 +81,7 @@ impl LogComponent {
             );
 
         let list_items: Vec<ListItem> = self
-            .filtered_logs
+            .filtered_commits
             .iter()
             .map(|item| {
                 let text = Spans::from(vec![
@@ -110,10 +110,10 @@ impl LogComponent {
     }
 
     fn scroll_down(&mut self, amount: usize) {
-        if self.position < self.filtered_logs.len() - amount - 1 {
+        if self.position < self.filtered_commits.len() - amount - 1 {
             self.position += amount;
         } else {
-            self.position = self.filtered_logs.len() - 1;
+            self.position = self.filtered_commits.len() - 1;
         }
         self.state.select(Some(self.position));
     }
@@ -126,12 +126,12 @@ impl LogComponent {
 
 impl Component for LogComponent {
     fn update(&mut self) -> Result<(), Error> {
-        self.logs = fetch_history(&self.repo_path)?;
+        self.commits = collect_commits(&self.repo_path)?;
 
-        if (self.logs.len() != self.filtered_logs.len()) && !self.is_searching
+        if (self.commits.len() != self.filtered_commits.len()) && !self.is_searching
             || self.input.len() <= 1
         {
-            self.filtered_logs = self.logs.clone();
+            self.filtered_commits = self.commits.clone();
         }
         Ok(())
     }
@@ -155,7 +155,7 @@ impl Component for LogComponent {
             }
             KeyCode::Char(c) if self.is_searching => {
                 self.input.push(c);
-                self.filtered_logs = fuzzy_find(&self.logs, &self.input[1..]);
+                self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
                 self.reset_state();
             }
             KeyCode::Backspace if self.is_searching => {
@@ -165,7 +165,7 @@ impl Component for LogComponent {
                 if self.input.is_empty() {
                     self.is_searching = false;
                 } else {
-                    self.filtered_logs = fuzzy_find(&self.logs, &self.input[1..]);
+                    self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
                 }
             }
 
@@ -189,17 +189,17 @@ impl Component for LogComponent {
 
             // Program events
             KeyCode::Char('c') => {
-                if let Some(commit) = self.filtered_logs.get(self.position) {
+                if let Some(commit) = self.filtered_commits.get(self.position) {
                     checkout_local_branch(&self.repo_path, commit.id())?;
                 }
             }
             KeyCode::Char('r') => {
-                if let Some(commit) = self.filtered_logs.get(self.position) {
+                if let Some(commit) = self.filtered_commits.get(self.position) {
                     revert_commit(&self.repo_path, commit)?;
                 }
             }
             KeyCode::Enter => {
-                if let Some(commit) = self.filtered_logs.get(self.position) {
+                if let Some(commit) = self.filtered_commits.get(self.position) {
                     self.event_sender
                         .send(ProgramEvent::Focus(ComponentType::FullLogComponent(
                             commit.clone(),

@@ -24,6 +24,7 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs};
 use tui::Frame;
 
+use crate::git::log::collect_commits;
 pub struct BranchComponent {
     branches: Vec<Branch>,
     event_sender: Sender<ProgramEvent>,
