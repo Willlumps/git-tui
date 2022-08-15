@@ -1,5 +1,6 @@
 pub mod branch_popup;
 pub mod branches;
+pub mod cherry_pick_popup;
 pub mod commit_popup;
 pub mod diff;
 pub mod diff_staged;
@@ -22,6 +23,7 @@ pub enum ComponentType {
     None,
     BranchComponent,
     BranchPopupComponent,
+    CherryPickPopup(Vec<Commit>),
     CommitComponent,
     DiffComponent,
     DiffStagedComponent,

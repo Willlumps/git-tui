@@ -1,4 +1,5 @@
 pub mod branch;
+pub mod cherry_pick;
 pub mod commit;
 pub mod diff;
 pub mod fetch;

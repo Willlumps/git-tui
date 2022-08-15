@@ -1,5 +1,6 @@
 use crate::components::branch_popup::BranchPopup;
 use crate::components::branches::BranchComponent;
+use crate::components::cherry_pick_popup::CherryPickPopup;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
 use crate::components::diff_staged::DiffStagedComponent;
@@ -45,6 +46,7 @@ pub struct App {
     pub diff: DiffComponent,
     pub diff_staged: DiffStagedComponent,
     pub status: StatusComponent,
+    pub cherry_pick_popup: CherryPickPopup,
     pub commit_popup: CommitPopup,
     pub branch_popup: BranchPopup,
     pub message_popup: MessagePopup,
@@ -63,6 +65,7 @@ impl App {
             diff: DiffComponent::new(repo_path.clone()),
             diff_staged: DiffStagedComponent::new(repo_path.clone()),
             status: StatusComponent::new(repo_path.clone()),
+            cherry_pick_popup: CherryPickPopup::new(repo_path.clone(), event_sender.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
             message_popup: MessagePopup::new(),
@@ -75,6 +78,7 @@ impl App {
 
     pub fn is_popup_visible(&self) -> bool {
         self.commit_popup.visible()
+            || self.cherry_pick_popup.visible()
             || self.error_popup.visible()
             || self.branch_popup.visible()
             || self.message_popup.visible()
@@ -83,8 +87,9 @@ impl App {
 
     pub fn draw_popup<B: Backend>(&mut self, f: &mut Frame<B>, size: Rect) -> Result<()> {
         match self.focused_component {
-            ComponentType::CommitComponent => self.commit_popup.draw(f, size)?,
             ComponentType::BranchPopupComponent => self.branch_popup.draw(f, size)?,
+            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.draw(f, size)?,
+            ComponentType::CommitComponent => self.commit_popup.draw(f, size)?,
             ComponentType::ErrorComponent => self.error_popup.draw(f, size)?,
             ComponentType::FullLogComponent(_) => self.log_popup.draw(f, size)?,
             ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
@@ -120,6 +125,7 @@ impl App {
     fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
         match self.focused_component {
             ComponentType::BranchPopupComponent => self.branch_popup.handle_event(ev)?,
+            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.handle_event(ev)?,
             ComponentType::CommitComponent => self.commit_popup.handle_event(ev)?,
             ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
             ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
@@ -206,6 +212,10 @@ impl App {
             }
             ComponentType::FilesComponent => {
                 self.files.focus(focus);
+            }
+            ComponentType::CherryPickPopup(logs) => {
+                self.cherry_pick_popup.set_logs(logs);
+                self.cherry_pick_popup.focus(focus);
             }
             ComponentType::CommitComponent => {
                 self.commit_popup.focus(focus);

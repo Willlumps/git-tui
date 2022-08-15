@@ -1,3 +1,17 @@
+use std::path::PathBuf;
+use std::thread;
+use std::time::Duration;
+
+use anyhow::Result;
+use crossbeam::channel::{unbounded, Sender};
+use crossterm::event::{KeyCode, KeyEvent};
+use tui::backend::Backend;
+use tui::layout::{Constraint, Direction, Layout, Rect};
+use tui::style::{Color, Modifier, Style};
+use tui::text::{Span, Spans};
+use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs};
+use tui::Frame;
+
 use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
@@ -6,25 +20,9 @@ use crate::git::branch::{
     checkout_local_branch, checkout_remote_branch, delete_branch, get_branches, Branch,
 };
 use crate::git::fetch::{fetch, pull_head, pull_selected};
+use crate::git::log::collect_commits;
 use crate::ComponentType;
 
-use std::path::PathBuf;
-use std::thread;
-use std::time::Duration;
-
-use anyhow::Result;
-use crossbeam::channel::{unbounded, Sender};
-use crossterm::event::{KeyCode, KeyEvent};
-use fuzzy_matcher::skim::SkimMatcherV2;
-use fuzzy_matcher::FuzzyMatcher;
-use tui::backend::Backend;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-use tui::style::{Color, Modifier, Style};
-use tui::text::{Span, Spans};
-use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Tabs};
-use tui::Frame;
-
-use crate::git::log::collect_commits;
 pub struct BranchComponent {
     branches: Vec<Branch>,
     event_sender: Sender<ProgramEvent>,
@@ -197,6 +195,13 @@ impl Component for BranchComponent {
                     }
                 }
             }
+            KeyCode::Char('C') => {
+                // cherry-pick from selected branch into currently checked out branch
+                let commits = collect_commits(&self.repo_path)?;
+                self.event_sender
+                    .send(ProgramEvent::Focus(ComponentType::CherryPickPopup(commits)))
+                    .expect("Send Failed");
+            }
             KeyCode::Char('d') => {
                 // TODO: Get this working for deleting a remote branch.
                 //       In testing (using push), the program seems to hang
@@ -275,12 +280,3 @@ impl Component for BranchComponent {
     }
 }
 
-#[allow(dead_code)]
-fn fuzzy_find(filtered_list: &[String], query: &str) -> Vec<String> {
-    let matcher = SkimMatcherV2::default();
-    filtered_list
-        .iter()
-        .filter(|&item| matcher.fuzzy_match(item, query).is_some())
-        .cloned()
-        .collect::<Vec<_>>()
-}
