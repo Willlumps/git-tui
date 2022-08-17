@@ -81,12 +81,93 @@ impl FileComponent {
         Ok(())
     }
 
+    fn commit(&self) {
+        if self.has_files_staged() {
+            self.event_sender
+                .send(ProgramEvent::Focus(ComponentType::CommitComponent))
+                .expect("Send Failed");
+        }
+    }
+
     fn has_files_staged(&self) -> bool {
         self.files.iter().any(|file| {
             file.status_type == StatusType::IndexModified
                 || file.status_type == StatusType::Added
                 || file.status_type == StatusType::Deleted
         })
+    }
+
+    fn push(&self) -> Result<(), Error> {
+        let (progress_sender, progress_receiver) = unbounded();
+        let repo_path = self.repo_path.clone();
+        let event_sender = self.event_sender.clone();
+
+        thread::spawn(move || {
+            event_sender
+                .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                    "Pushing - 0%".to_string(),
+                )))
+                .expect("Focus event send failed.");
+
+            if let Err(err) = push(&repo_path, progress_sender) {
+                event_sender
+                    .send(ProgramEvent::Error(err))
+                    .expect("Push failure event send failed.");
+                return;
+            }
+
+            loop {
+                let progress = progress_receiver.recv().expect("Receive failed");
+                event_sender
+                    .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                        format!("Pushing - {}%", progress),
+                    )))
+                    .expect("Focus event send failed.");
+                if progress < 0 {
+                    event_sender
+                        .send(ProgramEvent::Error(Error::from(
+                            "Bad Credentials".to_string(),
+                        )))
+                        .expect("Send Failed");
+                } else if progress >= 100 {
+                    break;
+                }
+            }
+
+            // Not sure if getting here will fully indicate success, I think we may need to
+            // use the `push_update_reference` callback.
+            // For now we will treat getting here as a success unless it hits the fan
+            thread::sleep(Duration::from_millis(1000));
+            event_sender
+                .send(ProgramEvent::Focus(ComponentType::FilesComponent))
+                .expect("Focus event send failed.");
+        });
+
+        Ok(())
+    }
+
+    fn stage_file(&self, all: bool) -> Result<(), Error> {
+        if all {
+            stage_all(&self.repo_path)?;
+        }
+
+        if let Some(file) = self.files.get(self.position) {
+            stage_file(&self.repo_path, &file.path)?;
+        }
+
+        Ok(())
+    }
+
+    fn unstage_file(&self, all: bool) -> Result<(), Error> {
+        if all {
+            unstage_all(&self.repo_path)?;
+        }
+
+        if let Some(file) = self.files.get(self.position) {
+            unstage_file(&self.repo_path, &file.path)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -109,82 +190,14 @@ impl Component for FileComponent {
         }
 
         match ev.code {
-            KeyCode::Char('j') => {
-                self.scroll_down(1);
-            }
-            KeyCode::Char('k') => {
-                self.scroll_up(1);
-            }
-            KeyCode::Char('a') => {
-                stage_all(&self.repo_path)?;
-            }
-            KeyCode::Char('A') => {
-                unstage_all(&self.repo_path)?;
-            }
-            KeyCode::Char('s') => {
-                if let Some(file) = self.files.get(self.position) {
-                    stage_file(&self.repo_path, &file.path)?;
-                }
-            }
-            KeyCode::Char('u') => {
-                if let Some(file) = self.files.get(self.position) {
-                    unstage_file(&self.repo_path, &file.path)?;
-                }
-            }
-            KeyCode::Char('c') => {
-                if self.has_files_staged() {
-                    self.event_sender
-                        .send(ProgramEvent::Focus(ComponentType::CommitComponent))
-                        .expect("Send Failed");
-                }
-            }
-            KeyCode::Char('p') => {
-                let (progress_sender, progress_receiver) = unbounded();
-                let repo_path = self.repo_path.clone();
-                let event_sender = self.event_sender.clone();
-
-                thread::spawn(move || {
-                    event_sender
-                        .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                            "Pushing - 0%".to_string(),
-                        )))
-                        .expect("Focus event send failed.");
-
-                    if let Err(err) = push(&repo_path, progress_sender) {
-                        event_sender
-                            .send(ProgramEvent::Error(err))
-                            .expect("Push failure event send failed.");
-                        return;
-                    }
-
-                    loop {
-                        let progress = progress_receiver.recv().expect("Receive failed");
-                        event_sender
-                            .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                                format!("Pushing - {}%", progress),
-                            )))
-                            .expect("Focus event send failed.");
-                        if progress < 0 {
-                            event_sender
-                                .send(ProgramEvent::Error(Error::from(
-                                    "Bad Credentials".to_string(),
-                                )))
-                                .expect("Send Failed");
-                        } else if progress >= 100 {
-                            break;
-                        }
-                    }
-
-                    // Not sure if getting here will fully indicate success, I think we may need to
-                    // use the `push_update_reference` callback.
-                    // For now we will treat getting here as a success unless it hits the fan
-                    thread::sleep(Duration::from_millis(1000));
-                    event_sender
-                        .send(ProgramEvent::Focus(ComponentType::FilesComponent))
-                        .expect("Focus event send failed.");
-                });
-            }
-
+            KeyCode::Char('j') => self.scroll_down(1),
+            KeyCode::Char('k') => self.scroll_up(1),
+            KeyCode::Char('a') => self.stage_file(true)?,
+            KeyCode::Char('A') => self.unstage_file(true)?,
+            KeyCode::Char('s') => self.stage_file(false)?,
+            KeyCode::Char('u') => self.unstage_file(false)?,
+            KeyCode::Char('c') => self.commit(),
+            KeyCode::Char('p') => self.push()?,
             _ => {}
         }
 
