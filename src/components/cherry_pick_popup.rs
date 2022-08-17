@@ -14,7 +14,6 @@ use crate::components::{centered_rect, Component, ComponentType, ScrollableCompo
 use crate::error::Error;
 use crate::git::commit::cherry_pick;
 use crate::git::log::Commit;
-use crate::git::repo;
 use crate::ProgramEvent;
 
 pub struct CherryPickPopup {
@@ -100,7 +99,9 @@ impl CherryPickPopup {
 
     fn cherry_pick(&mut self) -> Result<(), Error> {
         if let Err(err) = cherry_pick(&self.repo_path, &self.selected_commits) {
-            self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+            self.event_sender
+                .send(ProgramEvent::Error(err))
+                .expect("Send Failed");
         }
         self.selected_commits.clear();
         Ok(())
@@ -135,18 +136,10 @@ impl Component for CherryPickPopup {
         }
 
         match ev.code {
-            KeyCode::Char('j') => {
-                self.scroll_down(1);
-            }
-            KeyCode::Char('k') => {
-                self.scroll_up(1);
-            }
-            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_down(10);
-            }
-            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_up(10);
-            }
+            KeyCode::Char('j') => self.scroll_down(1),
+            KeyCode::Char('k') => self.scroll_up(1),
+            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_down(10),
+            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_up(10),
             KeyCode::Char('s') => self.select_commit(),
             KeyCode::Esc => self.reset(),
             KeyCode::Enter => self.cherry_pick()?,

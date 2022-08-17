@@ -104,6 +104,49 @@ impl LogComponent {
 
         Ok(())
     }
+
+    fn checkout_local_branch(&self) -> Result<(), Error> {
+        if let Some(commit) = self.filtered_commits.get(self.position) {
+            checkout_local_branch(&self.repo_path, commit.id())?;
+        }
+
+        Ok(())
+    }
+
+    fn expand_log(&self) {
+        if let Some(commit) = self.filtered_commits.get(self.position) {
+            self.event_sender
+                .send(ProgramEvent::Focus(ComponentType::FullLogComponent(
+                    commit.clone(),
+                )))
+                .expect("Send Failed");
+        }
+    }
+
+    fn pop_char(&mut self) {
+        self.input.pop();
+        self.reset_state();
+
+        if self.input.is_empty() {
+            self.is_searching = false;
+        } else {
+            self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
+        }
+    }
+
+    fn push_char(&mut self, c: char) {
+        self.input.push(c);
+        self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
+        self.reset_state();
+    }
+
+    fn revert_commit(&self) -> Result<(), Error> {
+        if let Some(commit) = self.filtered_commits.get(self.position) {
+            revert_commit(&self.repo_path, commit)?;
+        }
+
+        Ok(())
+    }
 }
 
 impl Component for LogComponent {
@@ -127,71 +170,30 @@ impl Component for LogComponent {
         }
         match ev.code {
             // Searching
-            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_down(1);
-            }
-            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_up(1);
-            }
+            KeyCode::Char('j') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_down(1),
+            KeyCode::Char('k') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_up(1),
+            KeyCode::Char(c) if self.is_searching => self.push_char(c),
+            KeyCode::Backspace if self.is_searching => self.pop_char(),
             KeyCode::Esc => {
                 self.input.clear();
                 self.reset_state();
                 self.is_searching = false;
             }
-            KeyCode::Char(c) if self.is_searching => {
-                self.input.push(c);
-                self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
-                self.reset_state();
-            }
-            KeyCode::Backspace if self.is_searching => {
-                self.input.pop();
-                self.reset_state();
-
-                if self.input.is_empty() {
-                    self.is_searching = false;
-                } else {
-                    self.filtered_commits = fuzzy_find(&self.commits, &self.input[1..]);
-                }
-            }
 
             // Movement
-            KeyCode::Char('j') => {
-                self.scroll_down(1);
-            }
-            KeyCode::Char('k') => {
-                self.scroll_up(1);
-            }
+            KeyCode::Char('j') => self.scroll_down(1),
+            KeyCode::Char('k') => self.scroll_up(1),
+            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_down(10),
+            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => self.scroll_up(10),
             KeyCode::Char('/') => {
                 self.is_searching = true;
                 self.input.push('/');
             }
-            KeyCode::Char('d') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_down(10);
-            }
-            KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
-                self.scroll_up(10);
-            }
 
             // Program events
-            KeyCode::Char('c') => {
-                if let Some(commit) = self.filtered_commits.get(self.position) {
-                    checkout_local_branch(&self.repo_path, commit.id())?;
-                }
-            }
-            KeyCode::Char('r') => {
-                if let Some(commit) = self.filtered_commits.get(self.position) {
-                    revert_commit(&self.repo_path, commit)?;
-                }
-            }
-            KeyCode::Enter => {
-                if let Some(commit) = self.filtered_commits.get(self.position) {
-                    self.event_sender
-                        .send(ProgramEvent::Focus(ComponentType::FullLogComponent(
-                            commit.clone(),
-                        )))
-                        .expect("Send Failed");
-                }
-            }
+            KeyCode::Char('c') => self.checkout_local_branch()?,
+            KeyCode::Char('r') => self.revert_commit()?,
+            KeyCode::Enter => self.expand_log(),
             _ => {}
         }
         Ok(())

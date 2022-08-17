@@ -129,15 +129,9 @@ fn run_app<B: Backend>(
             0 => {
                 let event = operation.recv(&event_rx).expect("Receive failed");
                 match event {
-                    ProgramEvent::Error(error) => {
-                        app.display_error(error);
-                    }
-                    ProgramEvent::Focus(component) => {
-                        app.focus(component);
-                    }
-                    ProgramEvent::Git(git_event) => {
-                        app.handle_git_event(git_event)?;
-                    }
+                    ProgramEvent::Error(error) => app.display_error(error),
+                    ProgramEvent::Focus(component) => app.focus(component),
+                    ProgramEvent::Git(git_event) => app.handle_git_event(git_event)?,
                 }
             }
             1 => {
@@ -147,27 +141,13 @@ fn run_app<B: Backend>(
                 } else {
                     match input_event {
                         Event::Input(input) => match input.code {
-                            KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => {
-                                return Ok(());
-                            }
-                            KeyCode::Char('1') => {
-                                app.focus(ComponentType::FilesComponent);
-                            }
-                            KeyCode::Char('2') => {
-                                app.focus(ComponentType::BranchComponent);
-                            }
-                            KeyCode::Char('3') => {
-                                app.focus(ComponentType::LogComponent);
-                            }
-                            KeyCode::Char('4') => {
-                                app.focus(ComponentType::DiffComponent);
-                            }
-                            KeyCode::Char('5') => {
-                                app.focus(ComponentType::DiffStagedComponent);
-                            }
-                            _ => {
-                                app.handle_input(input);
-                            }
+                            KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => return Ok(()),
+                            KeyCode::Char('1') => app.focus(ComponentType::FilesComponent),
+                            KeyCode::Char('2') => app.focus(ComponentType::BranchComponent),
+                            KeyCode::Char('3') => app.focus(ComponentType::LogComponent),
+                            KeyCode::Char('4') => app.focus(ComponentType::DiffComponent),
+                            KeyCode::Char('5') => app.focus(ComponentType::DiffStagedComponent),
+                            _ => app.handle_input(input),
                         },
                         Event::Tick => {}
                     }

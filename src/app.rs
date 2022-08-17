@@ -88,9 +88,9 @@ impl App {
     pub fn draw_popup<B: Backend>(&mut self, f: &mut Frame<B>, size: Rect) -> Result<()> {
         match self.focused_component {
             ComponentType::BranchPopupComponent => self.branch_popup.draw(f, size)?,
-            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.draw(f, size)?,
             ComponentType::CommitComponent => self.commit_popup.draw(f, size)?,
             ComponentType::ErrorComponent => self.error_popup.draw(f, size)?,
+            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.draw(f, size)?,
             ComponentType::FullLogComponent(_) => self.log_popup.draw(f, size)?,
             ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
             _ => unreachable!(),
@@ -154,18 +154,10 @@ impl App {
 
     pub fn handle_git_event(&mut self, ev: GitEvent) -> Result<(), Error> {
         match ev {
-            GitEvent::PushSuccess => {
-                self.message_popup.set_message("Push Successfull!");
-            }
-            GitEvent::FetchSuccess => {
-                self.message_popup.set_message("Fetch Successfull!");
-            }
-            GitEvent::RefreshCommitLog => {
-                self.logs.update()?;
-            }
-            GitEvent::RefreshBranchList => {
-                self.branches.update()?;
-            }
+            GitEvent::PushSuccess => self.message_popup.set_message("Push Successfull!"),
+            GitEvent::FetchSuccess => self.message_popup.set_message("Fetch Successfull!"),
+            GitEvent::RefreshCommitLog => self.logs.update()?,
+            GitEvent::RefreshBranchList => self.branches.update()?,
         }
         Ok(())
     }
@@ -191,41 +183,25 @@ impl App {
 
     fn _focus(&mut self, component: ComponentType, focus: bool) {
         match component.clone() {
-            ComponentType::LogComponent => {
-                self.logs.focus(focus);
-            }
-            ComponentType::FullLogComponent(commit) => {
-                self.log_popup.set_commit(commit);
-                self.log_popup.focus(focus);
-            }
-            ComponentType::DiffComponent => {
-                self.diff.focus(focus);
-            }
-            ComponentType::DiffStagedComponent => {
-                self.diff_staged.focus(focus);
-            }
-            ComponentType::ErrorComponent => {
-                self.error_popup.focus(focus);
-            }
-            ComponentType::BranchComponent => {
-                self.branches.focus(focus);
-            }
-            ComponentType::FilesComponent => {
-                self.files.focus(focus);
-            }
+            ComponentType::LogComponent => self.logs.focus(focus),
+            ComponentType::DiffComponent => self.diff.focus(focus),
+            ComponentType::DiffStagedComponent => self.diff_staged.focus(focus),
+            ComponentType::ErrorComponent => self.error_popup.focus(focus),
+            ComponentType::BranchComponent => self.branches.focus(focus),
+            ComponentType::FilesComponent => self.files.focus(focus),
+            ComponentType::CommitComponent => self.commit_popup.focus(focus),
+            ComponentType::BranchPopupComponent => self.branch_popup.focus(focus),
             ComponentType::CherryPickPopup(logs) => {
                 self.cherry_pick_popup.set_logs(logs);
                 self.cherry_pick_popup.focus(focus);
             }
-            ComponentType::CommitComponent => {
-                self.commit_popup.focus(focus);
-            }
-            ComponentType::BranchPopupComponent => {
-                self.branch_popup.focus(focus);
-            }
             ComponentType::MessageComponent(message) => {
                 self.message_popup.set_message(&message);
                 self.message_popup.focus(focus);
+            }
+            ComponentType::FullLogComponent(commit) => {
+                self.log_popup.set_commit(commit);
+                self.log_popup.focus(focus);
             }
             ComponentType::None => {}
         }
