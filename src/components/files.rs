@@ -149,9 +149,7 @@ impl FileComponent {
     fn stage_file(&self, all: bool) -> Result<(), Error> {
         if all {
             stage_all(&self.repo_path)?;
-        }
-
-        if let Some(file) = self.files.get(self.position) {
+        } else if let Some(file) = self.files.get(self.position) {
             stage_file(&self.repo_path, &file.path)?;
         }
 
@@ -161,9 +159,7 @@ impl FileComponent {
     fn unstage_file(&self, all: bool) -> Result<(), Error> {
         if all {
             unstage_all(&self.repo_path)?;
-        }
-
-        if let Some(file) = self.files.get(self.position) {
+        } else if let Some(file) = self.files.get(self.position) {
             unstage_file(&self.repo_path, &file.path)?;
         }
 
