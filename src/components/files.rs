@@ -82,9 +82,11 @@ impl FileComponent {
     }
 
     fn has_files_staged(&self) -> bool {
-        self.files
-            .iter()
-            .any(|file| file.status_type == StatusType::IndexModified)
+        self.files.iter().any(|file| {
+            file.status_type == StatusType::IndexModified
+                || file.status_type == StatusType::Added
+                || file.status_type == StatusType::Deleted
+        })
     }
 }
 

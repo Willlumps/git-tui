@@ -12,6 +12,7 @@ use tui::Frame;
 
 use crate::components::{centered_rect, Component, ComponentType, ScrollableComponent};
 use crate::error::Error;
+use crate::git::commit::cherry_pick;
 use crate::git::log::Commit;
 use crate::git::repo;
 use crate::ProgramEvent;
@@ -98,13 +99,28 @@ impl CherryPickPopup {
     }
 
     fn cherry_pick(&mut self) -> Result<(), Error> {
-        // TODO:
-        //   - Change collect_commits() to revwalk from a given commit instead of only HEAD
-        //   - The thing
-
-        let repo = repo(&self.repo_path)?;
+        if let Err(err) = cherry_pick(&self.repo_path, &self.selected_commits) {
+            self.event_sender.send(ProgramEvent::Error(err)).expect("Send Failed");
+        }
         self.selected_commits.clear();
         Ok(())
+    }
+
+    fn select_commit(&mut self) {
+        if let Some(commit) = self.commits.get(self.position) {
+            let id = commit.id();
+
+            if self.selected_commits.contains(id) {
+                let index = self
+                    .selected_commits
+                    .iter()
+                    .position(|c| c == id)
+                    .expect("Commit SHA should exist");
+                self.selected_commits.remove(index);
+            } else {
+                self.selected_commits.push(id.to_string());
+            }
+        }
     }
 }
 
@@ -131,22 +147,7 @@ impl Component for CherryPickPopup {
             KeyCode::Char('u') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.scroll_up(10);
             }
-            KeyCode::Char('s') => {
-                if let Some(commit) = self.commits.get(self.position) {
-                    let id = commit.id();
-
-                    if self.selected_commits.contains(id) {
-                        let index = self
-                            .selected_commits
-                            .iter()
-                            .position(|c| c == id)
-                            .expect("Commit SHA should exist");
-                        self.selected_commits.remove(index);
-                    } else {
-                        self.selected_commits.push(id.to_string());
-                    }
-                }
-            }
+            KeyCode::Char('s') => self.select_commit(),
             KeyCode::Esc => self.reset(),
             KeyCode::Enter => self.cherry_pick()?,
             _ => {}

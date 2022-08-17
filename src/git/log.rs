@@ -96,14 +96,14 @@ impl Commit {
     }
 }
 
-pub fn collect_commits(repo_path: &Path) -> Result<Vec<Commit>, Error> {
+pub fn collect_commits(repo_path: &Path, oid: Oid) -> Result<Vec<Commit>, Error> {
     let repo = repo(repo_path)?;
 
     let mut history: Vec<Commit> = Vec::new();
     let mut revwalk = repo.revwalk()?;
 
     revwalk.reset()?;
-    revwalk.push_head()?;
+    revwalk.push(oid)?;
 
     let oids: Vec<Result<Oid, git2::Error>> = revwalk.collect();
     for oid in oids {

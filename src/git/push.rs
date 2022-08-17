@@ -11,17 +11,13 @@ use git2::{Cred, PushOptions, RemoteCallbacks};
 pub fn push(repo_path: &Path, progress_sender: Sender<i8>) -> Result<(), Error> {
     let repo = repo(repo_path)?;
 
-    let mut first_credentials_cb = true;
     let mut callbacks = RemoteCallbacks::new();
     let mut remote = repo.find_remote("origin")?;
 
+    // TODO: This sometimes fails credential check and loop indefinitely
     callbacks.credentials(|_url, username_from_url, allowed_types| {
-        let cred: Result<Cred, git2::Error>;
-        if !first_credentials_cb {
-            progress_sender.send(-1).expect("Send failed");
-        }
         if allowed_types.is_ssh_key() {
-            cred = match username_from_url {
+            match username_from_url {
                 Some(username) => Cred::ssh_key_from_agent(username),
                 None => Err(git2::Error::from_str("Where da username??")),
             }
@@ -29,10 +25,8 @@ pub fn push(repo_path: &Path, progress_sender: Sender<i8>) -> Result<(), Error> 
             // Do people actually use plaintext user/pass ??
             unimplemented!();
         } else {
-            cred = Cred::default();
+            Cred::default()
         }
-        first_credentials_cb = false;
-        cred
     });
 
     callbacks.push_transfer_progress(|current, total, _bytes| {

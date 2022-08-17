@@ -5,6 +5,7 @@ use crate::error::Error;
 use crate::git::branch::checkout_local_branch;
 use crate::git::commit::revert_commit;
 use crate::git::log::{collect_commits, Commit};
+use crate::git::repo;
 
 use std::path::PathBuf;
 
@@ -107,7 +108,10 @@ impl LogComponent {
 
 impl Component for LogComponent {
     fn update(&mut self) -> Result<(), Error> {
-        self.commits = collect_commits(&self.repo_path)?;
+        let repo = repo(&self.repo_path)?;
+        let head = repo.head()?.peel_to_commit()?.id();
+
+        self.commits = collect_commits(&self.repo_path, head)?;
 
         if (self.commits.len() != self.filtered_commits.len()) && !self.is_searching
             || self.input.len() <= 1

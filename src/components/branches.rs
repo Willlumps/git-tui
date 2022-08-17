@@ -130,6 +130,103 @@ impl BranchComponent {
         self.position = 0;
         self.state.select(Some(0));
     }
+
+    fn checkout_branch(&self) -> Result<(), Error> {
+        if let Some(branch) = self.branches.get(self.position) {
+            if branch.branch_type == git2::BranchType::Local {
+                checkout_local_branch(&self.repo_path, &branch.name)?;
+            } else {
+                checkout_remote_branch(&self.repo_path, &branch.name)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn cherry_pick(&self) -> Result<(), Error> {
+        if let Some(branch) = self.branches.get(self.position) {
+            let commit = &branch.last_commit;
+            let oid = git2::Oid::from_str(commit.id())?;
+            let commits = collect_commits(&self.repo_path, oid)?;
+
+            self.event_sender
+                .send(ProgramEvent::Focus(ComponentType::CherryPickPopup(commits)))
+                .expect("Send Failed");
+        }
+        Ok(())
+    }
+
+    fn create_branch(&self) {
+        self.event_sender
+            .send(ProgramEvent::Focus(ComponentType::BranchPopupComponent))
+            .expect("Send failed.");
+    }
+
+    fn delete_branch(&self) -> Result<(), Error> {
+        // TODO: Get this working for deleting a remote branch.
+        //       In testing (using push), the program seems to hang
+        //       for a reason unknown to me currently
+        if let Some(branch) = self.branches.get(self.position) {
+            delete_branch(&self.repo_path, &branch.name)?;
+        }
+
+        Ok(())
+    }
+
+    fn fetch(&self) -> Result<(), Error> {
+        let (progress_sender, _progress_receiver) = unbounded();
+        let repo_path = self.repo_path.clone();
+        let event_sender = self.event_sender.clone();
+
+        thread::spawn(move || {
+            // TODO: This is a fugly mess, come up with a better way to handle transfer
+            //       progress other than sleeping like a dummy
+            event_sender
+                .send(ProgramEvent::Focus(ComponentType::MessageComponent(
+                    "Fetching...".to_string(),
+                )))
+                .expect("Focus event send failed.");
+
+            if let Err(err) = fetch(&repo_path, progress_sender) {
+                event_sender
+                    .send(ProgramEvent::Error(err))
+                    .expect("Push failure event send failed.");
+                return;
+            }
+
+            thread::sleep(Duration::from_millis(500));
+            event_sender
+                .send(ProgramEvent::Git(GitEvent::FetchSuccess))
+                .expect("Push success event send failed.");
+            thread::sleep(Duration::from_millis(1000));
+            event_sender
+                .send(ProgramEvent::Focus(ComponentType::BranchComponent))
+                .expect("Focus event send failed.");
+        });
+
+        Ok(())
+    }
+
+    fn pull_selected_branch(&self) {
+        let (progress_sender, _progress_receiver) = unbounded();
+        if let Some(branch) = self.branches.get(self.position) {
+            if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender)
+            {
+                self.event_sender
+                    .send(ProgramEvent::Error(err))
+                    .expect("Push failure event send failed.");
+            }
+        }
+    }
+
+    fn pull_head(&self) {
+        let (progress_sender, _progress_receiver) = unbounded();
+        if let Err(err) = pull_head(&self.repo_path, progress_sender) {
+            self.event_sender
+                .send(ProgramEvent::Error(err))
+                .expect("Push failure event send failed.");
+        }
+    }
 }
 
 impl Component for BranchComponent {
@@ -174,85 +271,13 @@ impl Component for BranchComponent {
                 self.tab_right();
                 self.update()?;
             }
-            KeyCode::Char('c') => {
-                if let Some(branch) = self.branches.get(self.position) {
-                    if branch.branch_type == git2::BranchType::Local {
-                        checkout_local_branch(&self.repo_path, &branch.name)?;
-                    } else {
-                        checkout_remote_branch(&self.repo_path, &branch.name)?;
-                    }
-                }
-            }
-            KeyCode::Char('C') => {
-                // cherry-pick from selected branch into currently checked out branch
-                let commits = collect_commits(&self.repo_path)?;
-                self.event_sender
-                    .send(ProgramEvent::Focus(ComponentType::CherryPickPopup(commits)))
-                    .expect("Send Failed");
-            }
-            KeyCode::Char('d') => {
-                // TODO: Get this working for deleting a remote branch.
-                //       In testing (using push), the program seems to hang
-                //       for a reason unknown to me currently
-                if let Some(branch) = self.branches.get(self.position) {
-                    delete_branch(&self.repo_path, &branch.name)?;
-                }
-            }
-            KeyCode::Char('n') => {
-                self.event_sender
-                    .send(ProgramEvent::Focus(ComponentType::BranchPopupComponent))
-                    .expect("Send failed.");
-            }
-            KeyCode::Char('f') => {
-                let (progress_sender, _progress_receiver) = unbounded();
-                let repo_path = self.repo_path.clone();
-                let event_sender = self.event_sender.clone();
-
-                thread::spawn(move || {
-                    // TODO: This is a fugly mess, come up with a better way to handle transfer
-                    //       progress other than sleeping like a dummy
-                    event_sender
-                        .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                            "Fetching...".to_string(),
-                        )))
-                        .expect("Focus event send failed.");
-
-                    if let Err(err) = fetch(&repo_path, progress_sender) {
-                        event_sender
-                            .send(ProgramEvent::Error(err))
-                            .expect("Push failure event send failed.");
-                        return;
-                    }
-
-                    thread::sleep(Duration::from_millis(500));
-                    event_sender
-                        .send(ProgramEvent::Git(GitEvent::FetchSuccess))
-                        .expect("Push success event send failed.");
-                    thread::sleep(Duration::from_millis(1000));
-                    event_sender
-                        .send(ProgramEvent::Focus(ComponentType::BranchComponent))
-                        .expect("Focus event send failed.");
-                });
-            }
-            KeyCode::Char('P') => {
-                let (progress_sender, _progress_receiver) = unbounded();
-                if let Some(branch) = self.branches.get(self.position) {
-                    if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender)
-                    {
-                        self.event_sender
-                            .send(ProgramEvent::Error(err))
-                            .expect("Push failure event send failed.");
-                    }
-                }
-            }
-            KeyCode::Char('p') => {
-                let (progress_sender, _progress_receiver) = unbounded();
-                if let Err(err) = pull_head(&self.repo_path, progress_sender) {
-                    self.event_sender
-                        .send(ProgramEvent::Error(err))
-                        .expect("Push failure event send failed.");
-                }
-            }
+            KeyCode::Char('c') => self.checkout_branch()?,
+            KeyCode::Char('C') => self.cherry_pick()?,
+            KeyCode::Char('d') => self.delete_branch()?,
+            KeyCode::Char('n') => self.create_branch(),
+            KeyCode::Char('f') => self.fetch()?,
+            KeyCode::Char('P') => self.pull_selected_branch(),
+            KeyCode::Char('p') => self.pull_head(),
             _ => {}
         }
         Ok(())

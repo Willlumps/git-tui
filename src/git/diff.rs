@@ -17,9 +17,9 @@ pub struct DiffWindow {
 
 #[derive(Debug, PartialEq)]
 pub struct DiffLine {
-    pub content: String,
-    pub origin: char,
-    pub style: Style,
+    content: String,
+    origin: char,
+    style: Style,
 }
 
 impl DiffLine {

@@ -66,8 +66,8 @@ fn main() -> Result<()> {
     // replaced with a passed argument or the current dir where the program
     // is executed from.
     let repo_path = current_dir()?;
-    //let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
-    //let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
+    // let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
+    // let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
 
     #[allow(clippy::collapsible_if)]
     if !is_repo(&repo_path) {

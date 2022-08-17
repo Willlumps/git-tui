@@ -59,6 +59,34 @@ pub fn revert_commit(repo_path: &Path, commit: &Commit) -> Result<(), Error> {
     Ok(())
 }
 
+pub fn cherry_pick(repo_path: &Path, oids: &Vec<String>) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    let head = repo.head()?.peel_to_commit()?;
+    let opts = git2::MergeOptions::new();
+    let commiter = signature()?;
+
+    // Don't ask
+    for oid in oids {
+        let commit = repo.find_commit(Oid::from_str(oid)?)?;
+        let mut index = repo.cherrypick_commit(&commit, &head, 0, Some(&opts))?;
+        let tree_oid = index.write_tree_to(&repo)?;
+        let tree = repo.find_tree(tree_oid)?;
+        let author = commit.author();
+        let message = commit.message().unwrap_or("");
+
+        repo.commit(
+            Some("HEAD"),
+            &author,
+            &commiter,
+            message,
+            &tree,
+            &[&head]
+        )?;
+    }
+
+    Ok(())
+}
+
 fn signature() -> Result<Signature<'static>, Error> {
     // Is there a better way to do this?
     let config = Config::open_default()?;
