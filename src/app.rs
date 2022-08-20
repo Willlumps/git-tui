@@ -1,3 +1,12 @@
+use std::path::PathBuf;
+
+use anyhow::Result;
+use crossbeam::channel::Sender;
+use crossterm::event::{KeyCode, KeyEvent};
+use tui::backend::Backend;
+use tui::layout::Rect;
+use tui::Frame;
+
 use crate::components::branch_popup::BranchPopup;
 use crate::components::branches::BranchComponent;
 use crate::components::cherry_pick_popup::CherryPickPopup;
@@ -8,23 +17,15 @@ use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
 use crate::components::log_popup::LogPopup;
 use crate::components::message_popup::MessagePopup;
-use crate::components::status::StatusComponent;
 use crate::components::remote_popup::RemotePopupComponent;
+use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
-use crate::Event;
 use crate::git::diff::DiffComponentType;
-
-use std::path::PathBuf;
-
-use anyhow::Result;
-use crossbeam::channel::Sender;
-use crossterm::event::KeyEvent;
-use tui::backend::Backend;
-use tui::layout::Rect;
-use tui::Frame;
+use crate::Event;
 
 pub enum ProgramEvent {
+    Exit,
     Error(Error),
     Focus(ComponentType),
     Git(GitEvent),
@@ -113,48 +114,49 @@ impl App {
         Ok(())
     }
 
-    // TODO: I don't like how I did this, clean it up later
-    pub fn handle_popup_input(&mut self, ev: Event<KeyEvent>) {
+    pub fn handle_input_event(&mut self, ev: Event<KeyEvent>) -> Result<(), Error> {
         match ev {
-            Event::Input(input) => {
-                if let Err(err) = self._handle_popup_input(input) {
-                    self.event_sender
-                        .send(ProgramEvent::Error(err))
-                        .expect("Send Failed");
+            Event::Input(input) => match input.code {
+                KeyCode::Char('1') => self.focus(ComponentType::FilesComponent),
+                KeyCode::Char('2') => self.focus(ComponentType::BranchComponent),
+                KeyCode::Char('3') => self.focus(ComponentType::LogComponent),
+                KeyCode::Char('4') => {
+                    self.focus(ComponentType::DiffComponent(DiffComponentType::Diff))
                 }
-            }
+                KeyCode::Char('5') => {
+                    self.focus(ComponentType::DiffComponent(DiffComponentType::Staged))
+                }
+                KeyCode::Esc => self
+                    .event_sender
+                    .send(ProgramEvent::Exit)
+                    .expect("Send failed"),
+                _ => self.handle_input(input)?,
+            },
             Event::Tick => {}
         }
-    }
 
-    fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
-        match self.focused_component {
-            ComponentType::BranchPopupComponent => self.branch_popup.handle_event(ev)?,
-            ComponentType::CommitComponent => self.commit_popup.handle_event(ev)?,
-            ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
-            ComponentType::RemotePopupComponent => self.remote_popup.handle_event(ev)?,
-            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.handle_event(ev)?,
-            ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
-            ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
-            _ => unreachable!(),
-        }
         Ok(())
     }
 
-    pub fn handle_input(&mut self, ev: KeyEvent) {
-        if let Err(err) = self._handle_input(ev) {
-            self.event_sender
-                .send(ProgramEvent::Error(err))
-                .expect("Send Failed");
+    pub fn handle_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
+        match &mut self.focused_component {
+            ComponentType::LogComponent => self.logs.handle_event(ev)?,
+            ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
+            ComponentType::BranchComponent => self.branches.handle_event(ev)?,
+            ComponentType::FilesComponent => self.files.handle_event(ev)?,
+            ComponentType::CommitComponent => self.commit_popup.handle_event(ev)?,
+            ComponentType::BranchPopupComponent => self.branch_popup.handle_event(ev)?,
+            ComponentType::RemotePopupComponent => self.remote_popup.handle_event(ev)?,
+            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.handle_event(ev)?,
+            ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
+            ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
+            ComponentType::DiffComponent(diff_type) => match diff_type {
+                DiffComponentType::Diff => self.diff.handle_event(ev)?,
+                DiffComponentType::Staged => self.diff_staged.handle_event(ev)?,
+            },
+            ComponentType::None => {}
         }
-    }
 
-    fn _handle_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
-        self.branches.handle_event(ev)?;
-        self.logs.handle_event(ev)?;
-        self.diff.handle_event(ev)?;
-        self.diff_staged.handle_event(ev)?;
-        self.files.handle_event(ev)?;
         Ok(())
     }
 
@@ -196,12 +198,10 @@ impl App {
             ComponentType::CommitComponent => self.commit_popup.focus(focus),
             ComponentType::BranchPopupComponent => self.branch_popup.focus(focus),
             ComponentType::RemotePopupComponent => self.remote_popup.focus(focus),
-            ComponentType::DiffComponent(diff_type) => {
-                match diff_type {
-                    DiffComponentType::Diff => self.diff.focus(focus),
-                    DiffComponentType::Staged => self.diff_staged.focus(focus),
-                }
-            }
+            ComponentType::DiffComponent(diff_type) => match diff_type {
+                DiffComponentType::Diff => self.diff.focus(focus),
+                DiffComponentType::Staged => self.diff_staged.focus(focus),
+            },
             ComponentType::CherryPickPopup(logs) => {
                 self.cherry_pick_popup.set_logs(logs);
                 self.cherry_pick_popup.focus(focus);

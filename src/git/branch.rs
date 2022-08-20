@@ -22,6 +22,7 @@ pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), 
     let (object, reference) = repo.revparse_ext(branch_name).expect("Object not found");
 
     repo.checkout_tree(&object, None)?;
+
     match reference {
         // gref is an actual reference like branches or tags
         Some(gref) => repo.set_head(gref.name().unwrap()),
@@ -54,13 +55,12 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
 
     repo.branch(&name, commit, false)?;
 
-    // Need to change the files in the working directory as well as set the HEAD
     let (object, reference) = repo.revparse_ext(&name).expect("Object not found");
+
     repo.checkout_tree(&object, None)?;
+
     match reference {
-        // gref is an actual reference like branches or tags
         Some(gref) => repo.set_head(gref.name().unwrap()),
-        // this is a commit, not a reference
         None => repo.set_head_detached(object.id()),
     }
     .expect("Failed to set HEAD");
@@ -94,6 +94,7 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     for git_branch in local_branches {
         let (branch, branch_type) = git_branch?;
         let reference = branch.get();
+
         let name = reference
             .shorthand()
             .expect("Branch name is not valid UTF-8");
@@ -125,7 +126,11 @@ pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), E
     Ok(())
 }
 
-pub fn set_upstream_branch(repo_path: &Path, remote_name: &str, branch_name: &str) -> Result<(), Error> {
+pub fn set_upstream_branch(
+    repo_path: &Path,
+    remote_name: &str,
+    branch_name: &str,
+) -> Result<(), Error> {
     let repo = repo(repo_path)?;
     let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
 

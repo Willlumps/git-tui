@@ -1,7 +1,7 @@
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::diff::{get_diff, DiffLine, DiffComponentType};
+use crate::git::diff::{get_diff, DiffComponentType, DiffLine};
 use crate::list_window::{ListWindow, ScrollDirection};
 
 use std::path::PathBuf;

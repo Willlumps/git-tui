@@ -210,8 +210,7 @@ impl BranchComponent {
     fn pull_selected_branch(&self) {
         let (progress_sender, _progress_receiver) = unbounded();
         if let Some(branch) = self.branches.get(self.position) {
-            if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender)
-            {
+            if let Err(err) = pull_selected(&self.repo_path, &branch.name, progress_sender) {
                 self.event_sender
                     .send(ProgramEvent::Error(err))
                     .expect("Push failure event send failed.");

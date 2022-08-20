@@ -74,14 +74,7 @@ pub fn cherry_pick(repo_path: &Path, oids: &Vec<String>) -> Result<(), Error> {
         let author = commit.author();
         let message = commit.message().unwrap_or("");
 
-        repo.commit(
-            Some("HEAD"),
-            &author,
-            &commiter,
-            message,
-            &tree,
-            &[&head]
-        )?;
+        repo.commit(Some("HEAD"), &author, &commiter, message, &tree, &[&head])?;
     }
 
     Ok(())

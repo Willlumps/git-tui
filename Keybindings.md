@@ -1,9 +1,8 @@
 ## Universal Keymaps
-* `C-q`:  Quit the application
-* `1-5`:  Navigate the four main component panes
+* `Esc`:  Quit the application/Close popu
+* `1-5`:  Navigate the five main component panes
 * `j`: Scroll down through a list or window
 * `k`: Scroll up through a list or window
-* `ESC`: Close popup
 
 ## Branch Component
 * `c`: Checkout selected branch
@@ -32,4 +31,8 @@
 * `c`: Checkout selected commit
 * `r`: Revert selected commit (with `--no-commit`)
 * `/`: Fuzzy find commits by summary
-* `ESC`: Close search
+* `Esc`: Close search
+
+## Add Remote Component
+* `Tab`: Switch input boxes
+* `Enter`: Confirm iniput

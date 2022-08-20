@@ -19,13 +19,10 @@ use std::time::{Duration, Instant};
 
 use anyhow::Result;
 use crossbeam::channel::{unbounded, Receiver, Select};
-use crossterm::event::{
-    poll, read, DisableMouseCapture, Event as CEvent, KeyCode, KeyEvent, KeyModifiers,
-};
+use crossterm::event::{poll, read, DisableMouseCapture, Event as CEvent, KeyEvent};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
 use crossterm::ExecutableCommand;
 use git::commit::create_initial_commit;
-use git::diff::DiffComponentType;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 
@@ -130,6 +127,7 @@ fn run_app<B: Backend>(
             0 => {
                 let event = operation.recv(&event_rx).expect("Receive failed");
                 match event {
+                    ProgramEvent::Exit => return Ok(()),
                     ProgramEvent::Error(error) => app.display_error(error),
                     ProgramEvent::Focus(component) => app.focus(component),
                     ProgramEvent::Git(git_event) => app.handle_git_event(git_event)?,
@@ -137,22 +135,7 @@ fn run_app<B: Backend>(
             }
             1 => {
                 let input_event = operation.recv(&rx).expect("Receive failed");
-                if app.is_popup_visible() {
-                    app.handle_popup_input(input_event);
-                } else {
-                    match input_event {
-                        Event::Input(input) => match input.code {
-                            KeyCode::Char('q') if input.modifiers == KeyModifiers::CONTROL => return Ok(()),
-                            KeyCode::Char('1') => app.focus(ComponentType::FilesComponent),
-                            KeyCode::Char('2') => app.focus(ComponentType::BranchComponent),
-                            KeyCode::Char('3') => app.focus(ComponentType::LogComponent),
-                            KeyCode::Char('4') => app.focus(ComponentType::DiffComponent(DiffComponentType::Diff)),
-                            KeyCode::Char('5') => app.focus(ComponentType::DiffComponent(DiffComponentType::Staged)),
-                            _ => app.handle_input(input),
-                        },
-                        Event::Tick => {}
-                    }
-                }
+                app.handle_input_event(input_event)?;
             }
             _ => {
                 unreachable!();
