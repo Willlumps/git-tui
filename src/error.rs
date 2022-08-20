@@ -6,6 +6,16 @@ pub enum Error {
     Unknown(String),
 }
 
+impl Error {
+    pub fn message(&self) -> String {
+        match self {
+            Self::Git(err) => err.message().to_string(),
+            Self::Io(err) => err.kind().to_string(),
+            Self::Unknown(message) => message.clone(),
+        }
+    }
+}
+
 impl From<git2::Error> for Error {
     fn from(err: git2::Error) -> Self {
         Self::Git(err)

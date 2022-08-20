@@ -29,6 +29,16 @@ pub enum DiffComponentType {
 }
 
 impl DiffLine {
+    pub fn err(error: Error) -> Self {
+        let content = format!("Failed to get diff: {}", error.message());
+
+        Self {
+            content,
+            origin: 'H',
+            style: Style::default(),
+        }
+    }
+
     pub fn origin(&self) -> char {
         self.origin
     }

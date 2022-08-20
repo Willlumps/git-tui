@@ -27,7 +27,10 @@ pub struct DiffComponent {
 
 impl DiffComponent {
     pub fn new(repo_path: PathBuf, diff_type: DiffComponentType) -> Self {
-        let diffs = get_diff(&repo_path, false).unwrap();
+        let diffs = match get_diff(&repo_path, false) {
+            Ok(diffs) => diffs,
+            Err(err) => vec![DiffLine::err(err)],
+        };
         let len = diffs.len();
 
         Self {
