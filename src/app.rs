@@ -126,7 +126,7 @@ impl App {
                 KeyCode::Char('5') => {
                     self.focus(ComponentType::DiffComponent(DiffComponentType::Staged))
                 }
-                KeyCode::Esc => self
+                KeyCode::Esc if !self.is_popup_visible() => self
                     .event_sender
                     .send(ProgramEvent::Exit)
                     .expect("Send failed"),

@@ -67,12 +67,9 @@ fn main() -> Result<()> {
     // let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
     // let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
 
-    #[allow(clippy::collapsible_if)]
-    if !is_repo(&repo_path) {
-        if prompt_new_repo(&repo_path, &mut terminal, rx.clone()).is_err() {
-            restore_terminal(&mut terminal)?;
-            return Ok(());
-        }
+    if !is_repo(&repo_path) && prompt_new_repo(&repo_path, &mut terminal, rx.clone()).is_err() {
+        restore_terminal(&mut terminal)?;
+        return Ok(());
     }
 
     if is_empty_repo(&repo_path)? {

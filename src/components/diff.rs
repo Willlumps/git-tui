@@ -62,9 +62,14 @@ impl DiffComponent {
             })
             .collect();
 
+        let title = match self.diff_type {
+            DiffComponentType::Diff => " Diff ",
+            DiffComponentType::Staged => " Staged ",
+        };
+
         let list = TuiList::new(list_items).block(
             Block::default()
-                .title(" Diff ")
+                .title(title)
                 .style(self.style.style())
                 .borders(Borders::ALL)
                 .border_style(self.style.border_style())
