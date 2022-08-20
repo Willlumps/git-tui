@@ -3,7 +3,6 @@ pub mod branches;
 pub mod cherry_pick_popup;
 pub mod commit_popup;
 pub mod diff;
-pub mod diff_staged;
 pub mod error_popup;
 pub mod files;
 pub mod log;
@@ -13,6 +12,7 @@ pub mod remote_popup;
 pub mod status;
 
 use crate::error::Error;
+use crate::git::diff::DiffComponentType;
 use crate::git::log::Commit;
 
 use anyhow::Result;
@@ -24,13 +24,12 @@ pub enum ComponentType {
     BranchComponent,
     BranchPopupComponent,
     CommitComponent,
-    DiffComponent,
-    DiffStagedComponent,
     ErrorComponent,
     FilesComponent,
     LogComponent,
     RemotePopupComponent,
     CherryPickPopup(Vec<Commit>),
+    DiffComponent(DiffComponentType),
     FullLogComponent(Commit),
     MessageComponent(String),
     None,

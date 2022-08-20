@@ -1,7 +1,7 @@
 use crate::component_style::ComponentTheme;
 use crate::components::Component;
 use crate::error::Error;
-use crate::git::diff::{get_diff, DiffLine};
+use crate::git::diff::{get_diff, DiffLine, DiffComponentType};
 use crate::list_window::{ListWindow, ScrollDirection};
 
 use std::path::PathBuf;
@@ -16,6 +16,7 @@ use tui::Frame;
 
 pub struct DiffComponent {
     diffs: Vec<DiffLine>,
+    diff_type: DiffComponentType,
     first_update: bool,
     focused: bool,
     repo_path: PathBuf,
@@ -25,12 +26,13 @@ pub struct DiffComponent {
 }
 
 impl DiffComponent {
-    pub fn new(repo_path: PathBuf) -> Self {
-        let diffs = get_diff(&repo_path).unwrap();
+    pub fn new(repo_path: PathBuf, diff_type: DiffComponentType) -> Self {
+        let diffs = get_diff(&repo_path, false).unwrap();
         let len = diffs.len();
 
         Self {
             diffs,
+            diff_type,
             first_update: true,
             focused: false,
             repo_path,
@@ -95,7 +97,13 @@ impl Component for DiffComponent {
         }
 
         let path = &self.repo_path;
-        let diff = get_diff(path)?;
+
+        let diff = if self.diff_type == DiffComponentType::Staged {
+            get_diff(path, true)?
+        } else {
+            get_diff(path, false)?
+        };
+
         if diff.len() != self.diffs.len() {
             self.render_diff();
             self.diffs = diff;

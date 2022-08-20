@@ -3,7 +3,6 @@ use crate::components::branches::BranchComponent;
 use crate::components::cherry_pick_popup::CherryPickPopup;
 use crate::components::commit_popup::CommitPopup;
 use crate::components::diff::DiffComponent;
-use crate::components::diff_staged::DiffStagedComponent;
 use crate::components::error_popup::ErrorComponent;
 use crate::components::files::FileComponent;
 use crate::components::log::LogComponent;
@@ -14,6 +13,7 @@ use crate::components::remote_popup::RemotePopupComponent;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
 use crate::Event;
+use crate::git::diff::DiffComponentType;
 
 use std::path::PathBuf;
 
@@ -44,7 +44,7 @@ pub struct App {
     pub cherry_pick_popup: CherryPickPopup,
     pub commit_popup: CommitPopup,
     pub diff: DiffComponent,
-    pub diff_staged: DiffStagedComponent,
+    pub diff_staged: DiffComponent,
     pub error_popup: ErrorComponent,
     pub event_sender: Sender<ProgramEvent>,
     pub files: FileComponent,
@@ -64,8 +64,8 @@ impl App {
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
             cherry_pick_popup: CherryPickPopup::new(repo_path.clone(), event_sender.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
-            diff: DiffComponent::new(repo_path.clone()),
-            diff_staged: DiffStagedComponent::new(repo_path.clone()),
+            diff: DiffComponent::new(repo_path.clone(), DiffComponentType::Diff),
+            diff_staged: DiffComponent::new(repo_path.clone(), DiffComponentType::Staged),
             error_popup: ErrorComponent::new(event_sender.clone()),
             event_sender: event_sender.clone(),
             files: FileComponent::new(repo_path.clone(), event_sender.clone()),
@@ -190,14 +190,18 @@ impl App {
     fn _focus(&mut self, component: ComponentType, focus: bool) {
         match component.clone() {
             ComponentType::LogComponent => self.logs.focus(focus),
-            ComponentType::DiffComponent => self.diff.focus(focus),
-            ComponentType::DiffStagedComponent => self.diff_staged.focus(focus),
             ComponentType::ErrorComponent => self.error_popup.focus(focus),
             ComponentType::BranchComponent => self.branches.focus(focus),
             ComponentType::FilesComponent => self.files.focus(focus),
             ComponentType::CommitComponent => self.commit_popup.focus(focus),
             ComponentType::BranchPopupComponent => self.branch_popup.focus(focus),
             ComponentType::RemotePopupComponent => self.remote_popup.focus(focus),
+            ComponentType::DiffComponent(diff_type) => {
+                match diff_type {
+                    DiffComponentType::Diff => self.diff.focus(focus),
+                    DiffComponentType::Staged => self.diff_staged.focus(focus),
+                }
+            }
             ComponentType::CherryPickPopup(logs) => {
                 self.cherry_pick_popup.set_logs(logs);
                 self.cherry_pick_popup.focus(focus);

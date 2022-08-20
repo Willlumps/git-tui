@@ -25,6 +25,7 @@ use crossterm::event::{
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
 use crossterm::ExecutableCommand;
 use git::commit::create_initial_commit;
+use git::diff::DiffComponentType;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
 
@@ -145,8 +146,8 @@ fn run_app<B: Backend>(
                             KeyCode::Char('1') => app.focus(ComponentType::FilesComponent),
                             KeyCode::Char('2') => app.focus(ComponentType::BranchComponent),
                             KeyCode::Char('3') => app.focus(ComponentType::LogComponent),
-                            KeyCode::Char('4') => app.focus(ComponentType::DiffComponent),
-                            KeyCode::Char('5') => app.focus(ComponentType::DiffStagedComponent),
+                            KeyCode::Char('4') => app.focus(ComponentType::DiffComponent(DiffComponentType::Diff)),
+                            KeyCode::Char('5') => app.focus(ComponentType::DiffComponent(DiffComponentType::Staged)),
                             _ => app.handle_input(input),
                         },
                         Event::Tick => {}
