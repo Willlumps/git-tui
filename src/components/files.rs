@@ -1,11 +1,3 @@
-use crate::app::ProgramEvent;
-use crate::component_style::ComponentTheme;
-use crate::components::{Component, ComponentType, ScrollableComponent};
-use crate::error::Error;
-use crate::git::push::push;
-use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
-use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
-
 use std::path::PathBuf;
 use std::thread;
 
@@ -20,6 +12,14 @@ use tui::text::Span;
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState};
 use tui::Frame;
 
+use crate::app::ProgramEvent;
+use crate::component_style::ComponentTheme;
+use crate::components::{Component, ComponentType, ScrollableComponent};
+use crate::error::Error;
+use crate::git::remote::{get_remotes, push};
+use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
+use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
+
 pub struct FileComponent {
     event_sender: Sender<ProgramEvent>,
     files: Vec<FileStatus>,
@@ -33,7 +33,6 @@ pub struct FileComponent {
 // TODO:
 //  - Show file diff in window if desired
 //  - Files that have some hunks staged while others aren't
-//    - Show both staged and unstaged?
 
 impl FileComponent {
     pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
@@ -51,7 +50,7 @@ impl FileComponent {
         }
     }
 
-    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) -> Result<()> {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, rect: Rect) {
         let list_items: Vec<ListItem> = self
             .files
             .iter()
@@ -77,8 +76,6 @@ impl FileComponent {
             .highlight_symbol("> ");
 
         f.render_stateful_widget(list, rect, &mut self.state);
-
-        Ok(())
     }
 
     fn commit(&self) {
@@ -98,6 +95,15 @@ impl FileComponent {
     }
 
     fn push(&self) -> Result<(), Error> {
+        let remotes = get_remotes(&self.repo_path)?;
+
+        if remotes.is_empty() {
+            self.event_sender
+                .send(ProgramEvent::Focus(ComponentType::RemotePopupComponent))
+                .expect("Send Failed");
+            return Ok(());
+        }
+
         let (progress_sender, progress_receiver) = unbounded();
         let repo_path = self.repo_path.clone();
         let event_sender = self.event_sender.clone();
@@ -109,7 +115,8 @@ impl FileComponent {
                 )))
                 .expect("Focus event send failed.");
 
-            if let Err(err) = push(&repo_path, progress_sender) {
+            // TODO: Don't hardcode remote
+            if let Err(err) = push(&repo_path, progress_sender, "origin") {
                 event_sender
                     .send(ProgramEvent::Error(err))
                     .expect("Push failure event send failed.");

@@ -9,6 +9,7 @@ pub mod files;
 pub mod log;
 pub mod log_popup;
 pub mod message_popup;
+pub mod remote_popup;
 pub mod status;
 
 use crate::error::Error;
@@ -20,18 +21,19 @@ use tui::layout::{Constraint, Direction, Layout, Rect};
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {
-    None,
     BranchComponent,
     BranchPopupComponent,
-    CherryPickPopup(Vec<Commit>),
     CommitComponent,
     DiffComponent,
     DiffStagedComponent,
     ErrorComponent,
     FilesComponent,
     LogComponent,
+    RemotePopupComponent,
+    CherryPickPopup(Vec<Commit>),
     FullLogComponent(Commit),
     MessageComponent(String),
+    None,
 }
 
 pub trait Component {

@@ -65,7 +65,7 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
     }
     .expect("Failed to set HEAD");
 
-    set_upstream_branch(&repo, &name)?;
+    set_upstream_branch(repo_path, "origin", &name)?;
 
     Ok(())
 }
@@ -81,7 +81,7 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     let repo = repo(repo_path)?;
     let mut branch_list = Vec::new();
 
-    let mut git_branches = repo
+    let mut local_branches = repo
         .branches(Some(git2::BranchType::Local))?
         .collect::<Vec<_>>();
 
@@ -89,9 +89,9 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
         .branches(Some(git2::BranchType::Remote))?
         .collect::<Vec<_>>();
 
-    git_branches.append(&mut remote_branches);
+    local_branches.append(&mut remote_branches);
 
-    for git_branch in git_branches {
+    for git_branch in local_branches {
         let (branch, branch_type) = git_branch?;
         let reference = branch.get();
         let name = reference
@@ -125,10 +125,12 @@ pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), E
     Ok(())
 }
 
-fn set_upstream_branch(repo: &Repository, branch_name: &str) -> Result<(), Error> {
+pub fn set_upstream_branch(repo_path: &Path, remote_name: &str, branch_name: &str) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
     let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
+
     if branch.upstream().is_err() {
-        branch.set_upstream(Some(format!("origin/{}", branch_name).as_str()))?;
+        branch.set_upstream(Some(format!("{}/{}", remote_name, branch_name).as_str()))?;
     }
     Ok(())
 }

@@ -10,6 +10,7 @@ use crate::components::log::LogComponent;
 use crate::components::log_popup::LogPopup;
 use crate::components::message_popup::MessagePopup;
 use crate::components::status::StatusComponent;
+use crate::components::remote_popup::RemotePopupComponent;
 use crate::components::{Component, ComponentType};
 use crate::error::Error;
 use crate::Event;
@@ -38,40 +39,42 @@ pub enum GitEvent {
 }
 
 pub struct App {
-    pub repo_path: PathBuf,
     pub branches: BranchComponent,
-    pub logs: LogComponent,
-    pub files: FileComponent,
-    pub error_popup: ErrorComponent,
-    pub diff: DiffComponent,
-    pub diff_staged: DiffStagedComponent,
-    pub status: StatusComponent,
+    pub branch_popup: BranchPopup,
     pub cherry_pick_popup: CherryPickPopup,
     pub commit_popup: CommitPopup,
-    pub branch_popup: BranchPopup,
-    pub message_popup: MessagePopup,
-    pub log_popup: LogPopup,
-    pub focused_component: ComponentType,
+    pub diff: DiffComponent,
+    pub diff_staged: DiffStagedComponent,
+    pub error_popup: ErrorComponent,
     pub event_sender: Sender<ProgramEvent>,
+    pub files: FileComponent,
+    pub focused_component: ComponentType,
+    pub logs: LogComponent,
+    pub log_popup: LogPopup,
+    pub message_popup: MessagePopup,
+    pub remote_popup: RemotePopupComponent,
+    pub status: StatusComponent,
+    pub repo_path: PathBuf,
 }
 
 impl App {
-    pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> App {
+    pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> Self {
         Self {
             branches: BranchComponent::new(repo_path.clone(), event_sender.clone()),
-            logs: LogComponent::new(repo_path.clone(), event_sender.clone()),
-            files: FileComponent::new(repo_path.clone(), event_sender.clone()),
-            error_popup: ErrorComponent::new(event_sender.clone()),
-            diff: DiffComponent::new(repo_path.clone()),
-            diff_staged: DiffStagedComponent::new(repo_path.clone()),
-            status: StatusComponent::new(repo_path.clone()),
+            branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
             cherry_pick_popup: CherryPickPopup::new(repo_path.clone(), event_sender.clone()),
             commit_popup: CommitPopup::new(repo_path.clone(), event_sender.clone()),
-            branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
-            message_popup: MessagePopup::new(),
-            log_popup: LogPopup::new(event_sender.clone()),
-            focused_component: ComponentType::None,
+            diff: DiffComponent::new(repo_path.clone()),
+            diff_staged: DiffStagedComponent::new(repo_path.clone()),
+            error_popup: ErrorComponent::new(event_sender.clone()),
             event_sender: event_sender.clone(),
+            files: FileComponent::new(repo_path.clone(), event_sender.clone()),
+            focused_component: ComponentType::None,
+            logs: LogComponent::new(repo_path.clone(), event_sender.clone()),
+            log_popup: LogPopup::new(event_sender.clone()),
+            message_popup: MessagePopup::new(),
+            remote_popup: RemotePopupComponent::new(repo_path.clone(), event_sender.clone()),
+            status: StatusComponent::new(repo_path.clone()),
             repo_path,
         }
     }
@@ -83,6 +86,7 @@ impl App {
             || self.branch_popup.visible()
             || self.message_popup.visible()
             || self.log_popup.visible()
+            || self.remote_popup.visible()
     }
 
     pub fn draw_popup<B: Backend>(&mut self, f: &mut Frame<B>, size: Rect) -> Result<()> {
@@ -90,6 +94,7 @@ impl App {
             ComponentType::BranchPopupComponent => self.branch_popup.draw(f, size)?,
             ComponentType::CommitComponent => self.commit_popup.draw(f, size)?,
             ComponentType::ErrorComponent => self.error_popup.draw(f, size)?,
+            ComponentType::RemotePopupComponent => self.remote_popup.draw(f, size),
             ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.draw(f, size)?,
             ComponentType::FullLogComponent(_) => self.log_popup.draw(f, size)?,
             ComponentType::MessageComponent(_) => self.message_popup.draw(f, size)?,
@@ -125,9 +130,10 @@ impl App {
     fn _handle_popup_input(&mut self, ev: KeyEvent) -> Result<(), Error> {
         match self.focused_component {
             ComponentType::BranchPopupComponent => self.branch_popup.handle_event(ev)?,
-            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.handle_event(ev)?,
             ComponentType::CommitComponent => self.commit_popup.handle_event(ev)?,
             ComponentType::ErrorComponent => self.error_popup.handle_event(ev)?,
+            ComponentType::RemotePopupComponent => self.remote_popup.handle_event(ev)?,
+            ComponentType::CherryPickPopup(_) => self.cherry_pick_popup.handle_event(ev)?,
             ComponentType::FullLogComponent(_) => self.log_popup.handle_event(ev)?,
             ComponentType::MessageComponent(_) => self.message_popup.handle_event(ev)?,
             _ => unreachable!(),
@@ -191,6 +197,7 @@ impl App {
             ComponentType::FilesComponent => self.files.focus(focus),
             ComponentType::CommitComponent => self.commit_popup.focus(focus),
             ComponentType::BranchPopupComponent => self.branch_popup.focus(focus),
+            ComponentType::RemotePopupComponent => self.remote_popup.focus(focus),
             ComponentType::CherryPickPopup(logs) => {
                 self.cherry_pick_popup.set_logs(logs);
                 self.cherry_pick_popup.focus(focus);

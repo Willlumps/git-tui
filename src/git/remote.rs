@@ -1,18 +1,33 @@
+use std::path::Path;
+
+use crossbeam::channel::Sender;
+use git2::string_array::StringArray;
+use git2::{Cred, PushOptions, RemoteCallbacks};
+
 use crate::error::Error;
 use crate::git::diff::head;
 use crate::git::repo;
 
-use std::path::Path;
+use super::branch::set_upstream_branch;
 
-use anyhow::Result;
-use crossbeam::channel::Sender;
-use git2::{Cred, PushOptions, RemoteCallbacks};
+pub fn add_remote(repo_path: &Path, name: &str, url: &str) -> Result<(), Error> {
+    let repo = repo(repo_path)?;
+    repo.remote(name, url)?;
 
-pub fn push(repo_path: &Path, progress_sender: Sender<i8>) -> Result<(), Error> {
+    Ok(())
+}
+
+pub fn get_remotes(repo_path: &Path) -> Result<StringArray, Error> {
+    let repo = repo(repo_path)?;
+    let remotes = repo.remotes()?;
+    Ok(remotes)
+}
+
+pub fn push(repo_path: &Path, progress_sender: Sender<i8>, remote: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
 
     let mut callbacks = RemoteCallbacks::new();
-    let mut remote = repo.find_remote("origin")?;
+    let mut remote = repo.find_remote(remote)?;
 
     // TODO: This sometimes fails credential check and loop indefinitely
     callbacks.credentials(|_url, username_from_url, allowed_types| {
@@ -53,6 +68,8 @@ pub fn push(repo_path: &Path, progress_sender: Sender<i8>) -> Result<(), Error> 
 
     options.remote_callbacks(callbacks);
     remote.push(&[refspec], Some(&mut options))?;
+
+    set_upstream_branch(repo_path, "origin", "master")?;
 
     Ok(())
 }

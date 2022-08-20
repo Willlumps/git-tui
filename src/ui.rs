@@ -40,7 +40,7 @@ pub fn main_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
         .split(container[1]);
 
     app.status.draw(f, left_container[0])?;
-    app.files.draw(f, left_container[1])?;
+    app.files.draw(f, left_container[1]);
     app.branches.draw(f, left_container[2])?;
     app.logs.draw(f, left_container[3])?;
     app.diff.draw(f, right_container[0])?;
@@ -80,7 +80,8 @@ pub fn prompt_new_repo<B: Backend>(
                 .constraints([Constraint::Length(4), Constraint::Length(4)].as_ref())
                 .split(area);
 
-            let mut prompt = Text::raw("Initialize new repo at\n");
+            let mut prompt = Text::raw("\nInitialize new repo at\n");
+
             prompt.extend(Text::styled(
                 format!("{:?}?", repo_path),
                 Style::default().fg(Color::Yellow),

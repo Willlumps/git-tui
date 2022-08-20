@@ -4,7 +4,7 @@ pub mod commit;
 pub mod diff;
 pub mod fetch;
 pub mod log;
-pub mod push;
+pub mod remote;
 pub mod stage;
 pub mod status;
 pub mod time;
