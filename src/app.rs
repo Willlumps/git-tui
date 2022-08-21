@@ -117,6 +117,7 @@ impl App {
     pub fn handle_input_event(&mut self, ev: Event<KeyEvent>) -> Result<(), Error> {
         match ev {
             Event::Input(input) => match input.code {
+                KeyCode::Char(_) if self.is_popup_visible() => self.handle_input(input)?,
                 KeyCode::Char('1') => self.focus(ComponentType::FilesComponent),
                 KeyCode::Char('2') => self.focus(ComponentType::BranchComponent),
                 KeyCode::Char('3') => self.focus(ComponentType::LogComponent),

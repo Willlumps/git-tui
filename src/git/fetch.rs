@@ -30,7 +30,7 @@ pub fn fetch(repo_path: &Path, _progress_sender: Sender<usize>) -> Result<(), Er
     // TODO: Fetch from all/multiple remotes if available
     let repo = repo(repo_path)?;
 
-    let callbacks = create_remote_callbacks(_progress_sender);
+    let callbacks = create_remote_callbacks(_progress_sender, None);
 
     let mut options = FetchOptions::new();
     options.download_tags(git2::AutotagOption::All);

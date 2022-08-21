@@ -186,9 +186,10 @@ impl RemotePopupComponent {
     }
 
     fn validate_input(&mut self) -> bool {
+        // Wizardry regex source: https://stackoverflow.com/a/63283134
+        let valid_url = Regex::new(r"^(([A-Za-z0-9]+@|http(|s)://)|(http(|s)://[A-Za-z0-9]+@))([A-Za-z0-9.]+(:\d+)?)(?::|/)([\d/\w.-]+?)(\.git){1}$")
+            .expect("I totally wrote this");
         let invalid_remote_chars = Regex::new(r"[^\w\s\d -]").expect("trust me");
-        let valid_url = Regex::new(r"git@github.com:[a-zA-Z0-9-]+/[a-zA-Z0-9-_.]+\.git$")
-            .expect("I can first try regex ever time");
 
         if !valid_url.is_match(&self.url_input) {
             self.error_message = String::from("Invalid URL");
@@ -238,7 +239,11 @@ impl Component for RemotePopupComponent {
             }
             KeyCode::Enter if !self.prompt_user => {
                 if self.validate_input() {
-                    add_remote(&self.repo_path, &self.remote_input, &self.url_input)?;
+                    add_remote(
+                        &self.repo_path,
+                        self.remote_input.trim(),
+                        self.url_input.trim(),
+                    )?;
                     self.reset();
                 }
             }

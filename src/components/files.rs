@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 use anyhow::Result;
@@ -109,41 +110,58 @@ impl FileComponent {
         let event_sender = self.event_sender.clone();
 
         thread::spawn(move || {
+            let retry_count = Arc::new(Mutex::new(0));
+
             event_sender
                 .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                    "Pushing - 0%".to_string(),
+                    "Pushing".to_string(),
                 )))
                 .expect("Focus event send failed.");
 
             // TODO: Don't hardcode remote
-            if let Err(err) = push(&repo_path, progress_sender, "origin") {
+            if let Err(err) = push(
+                &repo_path,
+                progress_sender,
+                "origin",
+                Arc::clone(&retry_count),
+            ) {
                 event_sender
                     .send(ProgramEvent::Error(err))
                     .expect("Push failure event send failed.");
                 return;
             }
 
+            let progress_animations = vec![".", "..", "...", "...."];
+            let mut progress_animation = progress_animations.iter().cycle();
+
             loop {
+                let count = retry_count.lock().unwrap();
+                if *count >= 4 {
+                    event_sender
+                        .send(ProgramEvent::Error(Error::Git(git2::Error::from_str(
+                            "Bad Credentials",
+                        ))))
+                        .expect("Focus event send failed.");
+
+                    break;
+                }
+                thread::sleep(Duration::from_millis(200));
+
                 let progress = progress_receiver.recv().expect("Receive failed");
 
                 event_sender
                     .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                        format!("Pushing - {}%", progress),
+                        format!("Pushing{}", progress_animation.next().unwrap()),
                     )))
                     .expect("Focus event send failed.");
 
                 if progress >= 100 {
+                    event_sender
+                        .send(ProgramEvent::Focus(ComponentType::FilesComponent))
+                        .expect("Focus event send failed.");
                     break;
                 }
             }
-
-            // Not sure if getting here will fully indicate success, I think we may need to
-            // use the `push_update_reference` callback.
-            // For now we will treat getting here as a success unless it hits the fan
-            thread::sleep(Duration::from_millis(1000));
-            event_sender
-                .send(ProgramEvent::Focus(ComponentType::FilesComponent))
-                .expect("Focus event send failed.");
         });
 
         Ok(())
