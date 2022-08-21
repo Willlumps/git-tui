@@ -60,8 +60,8 @@ impl LogComponent {
 
         let log_block = Block::default()
             .title(" Log ")
-            .borders(Borders::ALL)
             .style(self.style.style())
+            .borders(Borders::ALL)
             .border_style(self.style.border_style())
             .border_type(BorderType::Rounded);
         f.render_widget(log_block, rect);

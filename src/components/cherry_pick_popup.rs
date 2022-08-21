@@ -68,7 +68,6 @@ impl CherryPickPopup {
             .block(
                 Block::default()
                     .title(" Cherry-Pick ")
-                    .borders(Borders::ALL)
                     .style(Style::default())
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),

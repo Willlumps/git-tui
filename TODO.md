@@ -1,4 +1,3 @@
-
 - [ ] Handle conflicts
 - [ ] Full commit window (`git commit`)
 - [ ] Fix the mess that is pushing and fetching
@@ -9,3 +8,4 @@
 - [ ] Merge capabilities
 - [ ] Improved Error handling
 - [ ] DRY up a lot of UI related code
+- [~] Organization

@@ -5,9 +5,11 @@ use crate::git::repo;
 use std::path::Path;
 
 use crossbeam::channel::Sender;
-use git2::{Cred, FetchOptions, RemoteCallbacks, Repository};
+use git2::{FetchOptions, Repository};
 
-pub fn pull_head(repo_path: &Path, _progress_sender: Sender<bool>) -> Result<(), Error> {
+use super::callbacks::create_remote_callbacks;
+
+pub fn pull_head(repo_path: &Path, _progress_sender: Sender<usize>) -> Result<(), Error> {
     let head = head(repo_path)?;
     fetch(repo_path, _progress_sender)?;
     merge(repo_path, &head)?;
@@ -17,35 +19,23 @@ pub fn pull_head(repo_path: &Path, _progress_sender: Sender<bool>) -> Result<(),
 pub fn pull_selected(
     repo_path: &Path,
     branch_name: &str,
-    _progress_sender: Sender<bool>,
+    _progress_sender: Sender<usize>,
 ) -> Result<(), Error> {
     fetch(repo_path, _progress_sender)?;
     merge(repo_path, branch_name)?;
     Ok(())
 }
 
-pub fn fetch(repo_path: &Path, _progress_sender: Sender<bool>) -> Result<(), Error> {
+pub fn fetch(repo_path: &Path, _progress_sender: Sender<usize>) -> Result<(), Error> {
     // TODO: Fetch from all/multiple remotes if available
     let repo = repo(repo_path)?;
 
-    let mut callbacks = RemoteCallbacks::new();
-    callbacks.credentials(|_url, username_from_url, allowed_types| {
-        if allowed_types.is_ssh_key() {
-            match username_from_url {
-                Some(username) => Cred::ssh_key_from_agent(username),
-                None => Err(git2::Error::from_str("Where da username??")),
-            }
-        } else if allowed_types.is_user_pass_plaintext() {
-            // Do people actually use plaintext user/pass ??
-            unimplemented!();
-        } else {
-            Cred::default()
-        }
-    });
+    let callbacks = create_remote_callbacks(_progress_sender);
 
     let mut options = FetchOptions::new();
     options.download_tags(git2::AutotagOption::All);
     options.remote_callbacks(callbacks);
+
     repo.find_remote("origin")?
         .fetch(&[] as &[&str], Some(&mut options), None)?;
 

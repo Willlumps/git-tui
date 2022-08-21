@@ -125,18 +125,14 @@ impl FileComponent {
 
             loop {
                 let progress = progress_receiver.recv().expect("Receive failed");
+
                 event_sender
                     .send(ProgramEvent::Focus(ComponentType::MessageComponent(
                         format!("Pushing - {}%", progress),
                     )))
                     .expect("Focus event send failed.");
-                if progress < 0 {
-                    event_sender
-                        .send(ProgramEvent::Error(Error::from(
-                            "Bad Credentials".to_string(),
-                        )))
-                        .expect("Send Failed");
-                } else if progress >= 100 {
+
+                if progress >= 100 {
                     break;
                 }
             }
