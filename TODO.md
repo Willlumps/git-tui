@@ -4,7 +4,7 @@
   - [x] Credential issues (Possibly)
   - [ ] Fetch multiple remotes
 - [ ] Tags
-- [ ] Smooth out work with remotes (only fetch remains hardcoded)
+- [x] Smooth out work with remotes
 - [ ] Merge capabilities
 - [ ] Improved Error handling
 - [ ] DRY up a lot of UI related code

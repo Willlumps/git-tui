@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use crossbeam::channel::{unbounded, Sender};
-use git2::string_array::StringArray;
 use git2::PushOptions;
 
 use crate::ComponentType;
@@ -20,14 +19,9 @@ pub fn add_remote(repo_path: &Path, name: &str, url: &str) -> Result<(), Error> 
     Ok(())
 }
 
-pub fn get_remotes(repo_path: &Path) -> Result<StringArray, Error> {
+pub fn get_remote(repo_path: &Path) -> Result<Option<String>, Error> {
     let repo = repo(repo_path)?;
     let remotes = repo.remotes()?;
-    Ok(remotes)
-}
-
-pub fn get_remote(repo_path: &Path) -> Result<Option<String>, Error> {
-    let remotes = get_remotes(repo_path)?;
 
     let remote = match remotes.len() {
         0 => None,

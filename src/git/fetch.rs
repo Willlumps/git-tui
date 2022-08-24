@@ -7,7 +7,7 @@ use std::path::Path;
 use crossbeam::channel::Sender;
 use git2::{FetchOptions, Repository};
 
-use super::callbacks::create_remote_callbacks;
+use super::{callbacks::create_remote_callbacks, remote::get_remote};
 
 pub fn pull_head(repo_path: &Path, _progress_sender: Sender<usize>) -> Result<(), Error> {
     let head = head(repo_path)?;
@@ -30,13 +30,20 @@ pub fn fetch(repo_path: &Path, _progress_sender: Sender<usize>) -> Result<(), Er
     // TODO: Fetch from all/multiple remotes if available
     let repo = repo(repo_path)?;
 
+    let remote = match get_remote(repo_path)? {
+            Some(remote_name) => remote_name,
+            None => {
+                return Err(Error::Git(git2::Error::from_str("Fetch: no remotes found")));
+            }
+    };
+
     let callbacks = create_remote_callbacks(_progress_sender, None);
 
     let mut options = FetchOptions::new();
     options.download_tags(git2::AutotagOption::All);
     options.remote_callbacks(callbacks);
 
-    repo.find_remote("origin")?
+    repo.find_remote(&remote)?
         .fetch(&[] as &[&str], Some(&mut options), None)?;
 
     Ok(())
