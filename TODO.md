@@ -1,11 +1,11 @@
 - [ ] Handle conflicts
 - [ ] Full commit window (`git commit`)
 - [ ] Fix the mess that is pushing and fetching
-  - [ ] Credential issues
+  - [x] Credential issues (Possibly)
   - [ ] Fetch multiple remotes
 - [ ] Tags
-- [ ] Smooth out work with remotes (currently hardcoding 'origin', etc)
+- [ ] Smooth out work with remotes (only fetch remains hardcoded)
 - [ ] Merge capabilities
 - [ ] Improved Error handling
 - [ ] DRY up a lot of UI related code
-- [~] Organization
+- [ ] Organization (in progress, always)

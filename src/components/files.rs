@@ -1,10 +1,7 @@
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use std::thread;
 
 use anyhow::Result;
-use core::time::Duration;
-use crossbeam::channel::{unbounded, Sender};
+use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
 use tui::backend::Backend;
 use tui::layout::Rect;
@@ -17,7 +14,7 @@ use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ComponentType, ScrollableComponent};
 use crate::error::Error;
-use crate::git::remote::{get_remotes, push};
+use crate::git::remote::{get_remote, push};
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
 
@@ -96,73 +93,20 @@ impl FileComponent {
     }
 
     fn push(&self) -> Result<(), Error> {
-        let remotes = get_remotes(&self.repo_path)?;
-
-        if remotes.is_empty() {
-            self.event_sender
-                .send(ProgramEvent::Focus(ComponentType::RemotePopupComponent))
-                .expect("Send Failed");
-            return Ok(());
+        match get_remote(&self.repo_path)? {
+            Some(remote_name) => {
+                push(
+                    self.event_sender.clone(),
+                    self.repo_path.clone(),
+                    remote_name,
+                )?;
+            }
+            None => {
+                self.event_sender
+                    .send(ProgramEvent::Focus(ComponentType::RemotePopupComponent))
+                    .expect("Send Failed");
+            }
         }
-
-        let (progress_sender, progress_receiver) = unbounded();
-        let repo_path = self.repo_path.clone();
-        let event_sender = self.event_sender.clone();
-
-        thread::spawn(move || {
-            let retry_count = Arc::new(Mutex::new(0));
-
-            event_sender
-                .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                    "Pushing".to_string(),
-                )))
-                .expect("Focus event send failed.");
-
-            // TODO: Don't hardcode remote
-            if let Err(err) = push(
-                &repo_path,
-                progress_sender,
-                "origin",
-                Arc::clone(&retry_count),
-            ) {
-                event_sender
-                    .send(ProgramEvent::Error(err))
-                    .expect("Push failure event send failed.");
-                return;
-            }
-
-            let progress_animations = vec![".", "..", "...", "...."];
-            let mut progress_animation = progress_animations.iter().cycle();
-
-            loop {
-                let count = retry_count.lock().unwrap();
-                if *count >= 4 {
-                    event_sender
-                        .send(ProgramEvent::Error(Error::Git(git2::Error::from_str(
-                            "Bad Credentials",
-                        ))))
-                        .expect("Focus event send failed.");
-
-                    break;
-                }
-                thread::sleep(Duration::from_millis(200));
-
-                let progress = progress_receiver.recv().expect("Receive failed");
-
-                event_sender
-                    .send(ProgramEvent::Focus(ComponentType::MessageComponent(
-                        format!("Pushing{}", progress_animation.next().unwrap()),
-                    )))
-                    .expect("Focus event send failed.");
-
-                if progress >= 100 {
-                    event_sender
-                        .send(ProgramEvent::Focus(ComponentType::FilesComponent))
-                        .expect("Focus event send failed.");
-                    break;
-                }
-            }
-        });
 
         Ok(())
     }

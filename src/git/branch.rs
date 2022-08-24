@@ -36,9 +36,9 @@ pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), 
 
 pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Result<(), Error> {
     let repo = repo(repo_path)?;
-    let name = remote_branch_name
-        .split('/')
-        .skip(1)
+    let mut remote = remote_branch_name.split('/');
+    let remote_name = remote.next().expect("Remote should exist");
+    let name = remote
         .collect::<Vec<&str>>()
         .join("");
 
@@ -65,7 +65,7 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
     }
     .expect("Failed to set HEAD");
 
-    set_upstream_branch(repo_path, "origin", &name)?;
+    set_upstream_branch(repo_path, remote_name, &name)?;
 
     Ok(())
 }
