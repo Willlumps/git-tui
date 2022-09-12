@@ -1,6 +1,5 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::error::Error;
 use crate::git::commit::commit;
 
 use std::path::PathBuf;
@@ -73,7 +72,7 @@ impl CommitPopup {
         self.input.clear();
     }
 
-    fn commit(&mut self) -> Result<(), Error> {
+    fn commit(&mut self) -> Result<()> {
         if self.input.is_empty() {
             return Ok(());
         }
@@ -84,7 +83,7 @@ impl CommitPopup {
 }
 
 impl Component for CommitPopup {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.visible {
             return Ok(());
         }
@@ -138,7 +137,7 @@ impl Component for CommitPopup {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }

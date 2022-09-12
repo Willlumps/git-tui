@@ -11,7 +11,6 @@ pub mod message_popup;
 pub mod remote_popup;
 pub mod status;
 
-use crate::error::Error;
 use crate::git::diff::DiffComponentType;
 use crate::git::log::Commit;
 
@@ -36,9 +35,9 @@ pub enum ComponentType {
 }
 
 pub trait Component {
-    fn update(&mut self) -> Result<(), Error>;
+    fn update(&mut self) -> Result<()>;
     fn focus(&mut self, focus: bool);
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error>;
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()>;
 }
 
 pub trait ScrollableComponent {

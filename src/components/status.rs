@@ -1,5 +1,4 @@
 use crate::components::Component;
-use crate::error::Error;
 use crate::git::diff::{get_diff_stats, DiffWindow};
 
 use std::path::PathBuf;
@@ -70,13 +69,13 @@ impl StatusComponent {
 }
 
 impl Component for StatusComponent {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         self.status = get_diff_stats(&self.repo_path)?;
         Ok(())
     }
 
     // no-op
-    fn handle_event(&mut self, _ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, _ev: KeyEvent) -> Result<()> {
         Ok(())
     }
     fn focus(&mut self, _focus: bool) {}

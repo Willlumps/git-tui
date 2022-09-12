@@ -13,7 +13,6 @@ use tui::Frame;
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ComponentType, ScrollableComponent};
-use crate::error::Error;
 use crate::git::remote::{get_remote, push};
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
@@ -84,6 +83,11 @@ impl FileComponent {
         }
     }
 
+    fn commit_full(&self) {
+        // TODO
+        // WHY NO WORK
+    }
+
     fn has_files_staged(&self) -> bool {
         self.files.iter().any(|file| {
             file.status_type == StatusType::IndexModified
@@ -92,7 +96,7 @@ impl FileComponent {
         })
     }
 
-    fn push(&self) -> Result<(), Error> {
+    fn push(&self) -> Result<()> {
         match get_remote(&self.repo_path)? {
             Some(remote_name) => {
                 push(
@@ -111,7 +115,7 @@ impl FileComponent {
         Ok(())
     }
 
-    fn stage_file(&self, all: bool) -> Result<(), Error> {
+    fn stage_file(&self, all: bool) -> Result<()> {
         if all {
             stage_all(&self.repo_path)?;
         } else if let Some(file) = self.files.get(self.position) {
@@ -121,7 +125,7 @@ impl FileComponent {
         Ok(())
     }
 
-    fn unstage_file(&self, all: bool) -> Result<(), Error> {
+    fn unstage_file(&self, all: bool) -> Result<()> {
         if all {
             unstage_all(&self.repo_path)?;
         } else if let Some(file) = self.files.get(self.position) {
@@ -133,7 +137,7 @@ impl FileComponent {
 }
 
 impl Component for FileComponent {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         self.files = get_file_status(&self.repo_path)?;
         if self.files.is_empty() {
             self.files.push(FileStatus {
@@ -145,7 +149,7 @@ impl Component for FileComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.focused {
             return Ok(());
         }
@@ -158,6 +162,7 @@ impl Component for FileComponent {
             KeyCode::Char('s') => self.stage_file(false)?,
             KeyCode::Char('u') => self.unstage_file(false)?,
             KeyCode::Char('c') => self.commit(),
+            KeyCode::Char('C') => self.commit_full(),
             KeyCode::Char('p') => self.push()?,
             _ => {}
         }

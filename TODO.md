@@ -2,9 +2,9 @@
 - [ ] Full commit window (`git commit`)
 - [ ] Fix the mess that is pushing and fetching
   - [x] Credential issues (Possibly)
+  - [x] Fix hardcoded remotes
   - [ ] Fetch multiple remotes
 - [ ] Tags
-- [x] Smooth out work with remotes
 - [ ] Merge capabilities
 - [ ] Improved Error handling
 - [ ] DRY up a lot of UI related code

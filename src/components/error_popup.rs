@@ -1,6 +1,5 @@
 use crate::app::ProgramEvent;
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::error::Error;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -89,12 +88,6 @@ impl ErrorComponent {
         self.message = message;
     }
 
-    pub fn set_git_error(&mut self, error: git2::Error) {
-        self.code = error.code();
-        self.class = error.class();
-        self.message = error.message().to_string();
-    }
-
     fn reset(&mut self) {
         self.event_sender
             .send(ProgramEvent::Focus(ComponentType::FilesComponent))
@@ -107,7 +100,7 @@ impl ErrorComponent {
 }
 
 impl Component for ErrorComponent {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if ev.code == KeyCode::Esc {
             self.reset();
         }
@@ -118,7 +111,7 @@ impl Component for ErrorComponent {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }

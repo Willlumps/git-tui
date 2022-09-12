@@ -1,4 +1,3 @@
-use crate::error::Error;
 use crate::git::repo;
 use crate::git::time::CommitDate;
 
@@ -96,7 +95,7 @@ impl Commit {
     }
 }
 
-pub fn collect_commits(repo_path: &Path, oid: Oid) -> Result<Vec<Commit>, Error> {
+pub fn collect_commits(repo_path: &Path, oid: Oid) -> Result<Vec<Commit>> {
     let repo = repo(repo_path)?;
 
     let mut history: Vec<Commit> = Vec::new();

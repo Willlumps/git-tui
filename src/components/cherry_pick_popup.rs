@@ -11,7 +11,6 @@ use tui::widgets::{Block, BorderType, Borders, Clear, List as TuiList, ListItem,
 use tui::Frame;
 
 use crate::components::{centered_rect, Component, ComponentType, ScrollableComponent};
-use crate::error::Error;
 use crate::git::commit::cherry_pick;
 use crate::git::log::Commit;
 use crate::ProgramEvent;
@@ -96,7 +95,7 @@ impl CherryPickPopup {
         self.visible = false;
     }
 
-    fn cherry_pick(&mut self) -> Result<(), Error> {
+    fn cherry_pick(&mut self) -> Result<()> {
         if let Err(err) = cherry_pick(&self.repo_path, &self.selected_commits) {
             self.event_sender
                 .send(ProgramEvent::Error(err))
@@ -125,11 +124,11 @@ impl CherryPickPopup {
 }
 
 impl Component for CherryPickPopup {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.visible {
             return Ok(());
         }

@@ -1,5 +1,4 @@
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::error::Error;
 use crate::git::log::Commit;
 use crate::ProgramEvent;
 
@@ -87,7 +86,7 @@ impl LogPopup {
 }
 
 impl Component for LogPopup {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if ev.code == KeyCode::Esc {
             self.reset()
         }
@@ -98,7 +97,7 @@ impl Component for LogPopup {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }

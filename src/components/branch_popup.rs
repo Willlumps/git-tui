@@ -1,6 +1,5 @@
 use crate::app::{GitEvent, ProgramEvent};
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::error::Error;
 use crate::git::branch::{branch_from_head, checkout_local_branch};
 
 use std::path::PathBuf;
@@ -74,7 +73,7 @@ impl BranchPopup {
     }
 
     #[allow(clippy::single_char_pattern)]
-    fn create_branch(&mut self, input: &str) -> Result<(), Error> {
+    fn create_branch(&mut self, input: &str) -> Result<()> {
         if input.is_empty() {
             return Ok(());
         }
@@ -85,7 +84,7 @@ impl BranchPopup {
 }
 
 impl Component for BranchPopup {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.visible {
             return Ok(());
         }
@@ -140,7 +139,7 @@ impl Component for BranchPopup {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }

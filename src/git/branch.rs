@@ -1,4 +1,3 @@
-use crate::error::Error;
 use crate::git::diff::head;
 use crate::git::log::Commit;
 use crate::git::repo;
@@ -15,7 +14,7 @@ pub struct Branch {
     pub last_commit: Commit,
 }
 
-pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
+pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
     let repo = repo(repo_path)?;
 
     // Need to change the files in the working directory as well as set the HEAD
@@ -34,18 +33,14 @@ pub fn checkout_local_branch(repo_path: &Path, branch_name: &str) -> Result<(), 
     Ok(())
 }
 
-pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Result<(), Error> {
+pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Result<()> {
     let repo = repo(repo_path)?;
     let mut remote = remote_branch_name.split('/');
     let remote_name = remote.next().expect("Remote should exist");
-    let name = remote
-        .collect::<Vec<&str>>()
-        .join("");
+    let name = remote.collect::<Vec<&str>>().join("");
 
     if does_local_branch_exist(&repo, &name) {
-        return Err(Error::Git(git2::Error::from_str(
-            "Local branch already exists",
-        )));
+        return Err(anyhow::Error::msg("Local branch already exists"));
     }
 
     let (object, _reference) = repo
@@ -70,14 +65,14 @@ pub fn checkout_remote_branch(repo_path: &Path, remote_branch_name: &str) -> Res
     Ok(())
 }
 
-pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<(), Error> {
+pub fn delete_branch(repo_path: &Path, branch_name: &str) -> Result<()> {
     let repo = repo(repo_path)?;
     let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
     branch.delete()?;
     Ok(())
 }
 
-pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
+pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>> {
     let repo = repo(repo_path)?;
     let mut branch_list = Vec::new();
 
@@ -109,18 +104,18 @@ pub fn get_branches(repo_path: &Path) -> Result<Vec<Branch>, Error> {
     Ok(branch_list)
 }
 
-pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<(), Error> {
+pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<()> {
     let repo = repo(repo_path)?;
     let head = head(repo_path)?;
     let (object, _reference) = repo.revparse_ext(&head).expect("Revspec not found");
     match object.as_commit() {
         Some(commit) => {
             if let Err(err) = repo.branch(new_branch_name, commit, false) {
-                return Err(Error::Git(err));
+                return Err(anyhow::Error::from(err));
             }
         }
         None => {
-            return Err(Error::Unknown("Object is not a commit".to_string()));
+            return Err(anyhow::Error::msg("Object is not a commit"));
         }
     }
     Ok(())
@@ -130,7 +125,7 @@ pub fn set_upstream_branch(
     repo_path: &Path,
     remote_name: &str,
     branch_name: &str,
-) -> Result<(), Error> {
+) -> Result<()> {
     let repo = repo(repo_path)?;
     let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
 

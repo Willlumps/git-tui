@@ -1,5 +1,4 @@
 use crate::components::{centered_rect, Component};
-use crate::error::Error;
 
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -49,7 +48,7 @@ impl MessagePopup {
 }
 
 impl Component for MessagePopup {
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         match ev.code {
             KeyCode::Char('q') if ev.modifiers == KeyModifiers::CONTROL => {
                 self.focus(false);
@@ -64,7 +63,7 @@ impl Component for MessagePopup {
         self.visible = focus;
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 }

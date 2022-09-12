@@ -1,7 +1,6 @@
 use crate::app::ProgramEvent;
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ScrollableComponent};
-use crate::error::Error;
 use crate::git::branch::checkout_local_branch;
 use crate::git::commit::revert_commit;
 use crate::git::log::{collect_commits, Commit};
@@ -105,7 +104,7 @@ impl LogComponent {
         Ok(())
     }
 
-    fn checkout_local_branch(&self) -> Result<(), Error> {
+    fn checkout_local_branch(&self) -> Result<()> {
         if let Some(commit) = self.filtered_commits.get(self.position) {
             checkout_local_branch(&self.repo_path, commit.id())?;
         }
@@ -140,7 +139,7 @@ impl LogComponent {
         self.reset_state();
     }
 
-    fn revert_commit(&self) -> Result<(), Error> {
+    fn revert_commit(&self) -> Result<()> {
         if let Some(commit) = self.filtered_commits.get(self.position) {
             revert_commit(&self.repo_path, commit)?;
         }
@@ -150,7 +149,7 @@ impl LogComponent {
 }
 
 impl Component for LogComponent {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         let repo = repo(&self.repo_path)?;
         let head = repo.head()?.peel_to_commit()?.id();
 
@@ -164,7 +163,7 @@ impl Component for LogComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.focused {
             return Ok(());
         }

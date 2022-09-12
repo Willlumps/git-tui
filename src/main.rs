@@ -1,16 +1,9 @@
 mod app;
 mod component_style;
 mod components;
-mod error;
 mod git;
 mod list_window;
 mod ui;
-
-use crate::app::{App, ProgramEvent};
-use crate::components::{centered_rect, ComponentType};
-use crate::error::Error;
-use crate::git::{init_new_repo, is_empty_repo, is_repo};
-use crate::ui::{main_ui, prompt_new_repo};
 
 use std::env::current_dir;
 use std::io;
@@ -25,6 +18,11 @@ use crossterm::ExecutableCommand;
 use git::commit::create_initial_commit;
 use tui::backend::{Backend, CrosstermBackend};
 use tui::Terminal;
+
+use crate::app::{App, ProgramEvent};
+use crate::components::{centered_rect, ComponentType};
+use crate::git::{init_new_repo, is_empty_repo, is_repo};
+use crate::ui::{main_ui, prompt_new_repo};
 
 pub enum Event<I> {
     Input(I),
@@ -105,7 +103,7 @@ fn run_app<B: Backend>(
     app: &mut App,
     rx: Receiver<Event<KeyEvent>>,
     event_rx: Receiver<ProgramEvent>,
-) -> Result<(), Error> {
+) -> Result<()> {
     loop {
         app.update()?;
 

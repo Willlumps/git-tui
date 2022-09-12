@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::{centered_rect, init_new_repo};
-use crate::{Error, Event};
+use crate::Event;
 
 use std::path::Path;
 
@@ -57,7 +57,7 @@ pub fn prompt_new_repo<B: Backend>(
     repo_path: &Path,
     terminal: &mut Terminal<B>,
     rx: Receiver<Event<KeyEvent>>,
-) -> Result<(), Error> {
+) -> Result<()> {
     let mut state = ListState::default();
     state.select(Some(0));
 
@@ -128,7 +128,7 @@ pub fn prompt_new_repo<B: Backend>(
                                 init_new_repo(repo_path)?;
                                 break;
                             } else {
-                                return Err(Error::Unknown("NO".to_string()));
+                                return Err(anyhow::Error::msg("NO"));
                             }
                         }
                     }

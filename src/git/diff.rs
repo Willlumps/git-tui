@@ -1,4 +1,3 @@
-use crate::error::Error;
 use crate::git::repo;
 
 use std::path::Path;
@@ -29,8 +28,8 @@ pub enum DiffComponentType {
 }
 
 impl DiffLine {
-    pub fn err(error: Error) -> Self {
-        let content = format!("Failed to get diff: {}", error.message());
+    pub fn err(error: anyhow::Error) -> Self {
+    let content = format!("Failed to get diff: {}", error);
 
         Self {
             content,
@@ -52,7 +51,7 @@ impl DiffLine {
     }
 }
 
-pub fn get_diff(repo_path: &Path, staged: bool) -> Result<Vec<DiffLine>, Error> {
+pub fn get_diff(repo_path: &Path, staged: bool) -> Result<Vec<DiffLine>> {
     let repo = repo(repo_path)?;
 
     let mut diff_lines: Vec<DiffLine> = Vec::new();
@@ -88,7 +87,7 @@ pub fn get_diff(repo_path: &Path, staged: bool) -> Result<Vec<DiffLine>, Error> 
     Ok(diff_lines)
 }
 
-pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow, Error> {
+pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow> {
     let repo = repo(repo_path)?;
 
     let mut opt = git2::DiffOptions::new();
@@ -113,7 +112,7 @@ pub fn get_diff_stats(repo_path: &Path) -> Result<DiffWindow, Error> {
     Ok(status)
 }
 
-pub fn head(repo_path: &Path) -> Result<String, Error> {
+pub fn head(repo_path: &Path) -> Result<String> {
     let repo = repo(repo_path)?;
     let head_ref = repo.head()?;
     if let Some(branch_name) = head_ref.shorthand() {

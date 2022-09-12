@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
 use regex::Regex;
@@ -12,7 +13,6 @@ use tui::Frame;
 
 use crate::app::ProgramEvent;
 use crate::components::{centered_rect, Component, ComponentType};
-use crate::error::Error;
 use crate::git::remote::add_remote;
 
 pub struct RemotePopupComponent {
@@ -221,11 +221,11 @@ impl RemotePopupComponent {
 }
 
 impl Component for RemotePopupComponent {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         match ev.code {
             KeyCode::Char('j') => {
                 if self.state.selected() == Some(0) {

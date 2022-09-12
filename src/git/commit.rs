@@ -1,4 +1,3 @@
-use crate::error::Error;
 use crate::git::log::Commit;
 use crate::git::repo;
 
@@ -7,7 +6,7 @@ use std::path::Path;
 use anyhow::Result;
 use git2::{Config, Oid, Signature};
 
-pub fn create_initial_commit(repo_path: &Path) -> Result<(), Error> {
+pub fn create_initial_commit(repo_path: &Path) -> Result<()> {
     let repo = repo(repo_path)?;
     let signature = signature()?;
 
@@ -26,7 +25,7 @@ pub fn create_initial_commit(repo_path: &Path) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn commit(repo_path: &Path, message: &str) -> Result<(), Error> {
+pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
     let repo = repo(repo_path)?;
     let signature = signature()?;
 
@@ -49,7 +48,7 @@ pub fn commit(repo_path: &Path, message: &str) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn revert_commit(repo_path: &Path, commit: &Commit) -> Result<(), Error> {
+pub fn revert_commit(repo_path: &Path, commit: &Commit) -> Result<()> {
     let repo = repo(repo_path)?;
     let oid = Oid::from_str(commit.id())?;
     let commit = repo.find_commit(oid)?;
@@ -59,7 +58,7 @@ pub fn revert_commit(repo_path: &Path, commit: &Commit) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn cherry_pick(repo_path: &Path, oids: &Vec<String>) -> Result<(), Error> {
+pub fn cherry_pick(repo_path: &Path, oids: &Vec<String>) -> Result<()> {
     let repo = repo(repo_path)?;
     let head = repo.head()?.peel_to_commit()?;
     let opts = git2::MergeOptions::new();
@@ -80,7 +79,7 @@ pub fn cherry_pick(repo_path: &Path, oids: &Vec<String>) -> Result<(), Error> {
     Ok(())
 }
 
-fn signature() -> Result<Signature<'static>, Error> {
+fn signature() -> Result<Signature<'static>> {
     // Is there a better way to do this?
     let config = Config::open_default()?;
 

@@ -15,7 +15,6 @@ use tui::Frame;
 use crate::app::{GitEvent, ProgramEvent};
 use crate::component_style::ComponentTheme;
 use crate::components::{Component, ScrollableComponent};
-use crate::error::Error;
 use crate::git::branch::{
     checkout_local_branch, checkout_remote_branch, delete_branch, get_branches, Branch,
 };
@@ -131,7 +130,7 @@ impl BranchComponent {
         self.state.select(Some(0));
     }
 
-    fn checkout_branch(&self) -> Result<(), Error> {
+    fn checkout_branch(&self) -> Result<()> {
         if let Some(branch) = self.branches.get(self.position) {
             if branch.branch_type == git2::BranchType::Local {
                 checkout_local_branch(&self.repo_path, &branch.name)?;
@@ -143,7 +142,7 @@ impl BranchComponent {
         Ok(())
     }
 
-    fn cherry_pick(&self) -> Result<(), Error> {
+    fn cherry_pick(&self) -> Result<()> {
         if let Some(branch) = self.branches.get(self.position) {
             let commit = &branch.last_commit;
             let oid = git2::Oid::from_str(commit.id())?;
@@ -162,7 +161,7 @@ impl BranchComponent {
             .expect("Send failed.");
     }
 
-    fn delete_branch(&self) -> Result<(), Error> {
+    fn delete_branch(&self) -> Result<()> {
         // TODO: Get this working for deleting a remote branch.
         //       In testing (using push), the program seems to hang
         //       for a reason unknown to me currently
@@ -173,7 +172,7 @@ impl BranchComponent {
         Ok(())
     }
 
-    fn fetch(&self) -> Result<(), Error> {
+    fn fetch(&self) -> Result<()> {
         let (progress_sender, _progress_receiver) = unbounded();
         let repo_path = self.repo_path.clone();
         let event_sender = self.event_sender.clone();
@@ -229,7 +228,7 @@ impl BranchComponent {
 }
 
 impl Component for BranchComponent {
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self) -> Result<()> {
         self.branches = get_branches(&self.repo_path)?
             .into_iter()
             .filter(|branch| match self.focused_tab {
@@ -250,7 +249,7 @@ impl Component for BranchComponent {
         Ok(())
     }
 
-    fn handle_event(&mut self, ev: KeyEvent) -> Result<(), Error> {
+    fn handle_event(&mut self, ev: KeyEvent) -> Result<()> {
         if !self.focused {
             return Ok(());
         }
