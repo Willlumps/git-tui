@@ -121,11 +121,7 @@ pub fn branch_from_head(repo_path: &Path, new_branch_name: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn set_upstream_branch(
-    repo_path: &Path,
-    remote_name: &str,
-    branch_name: &str,
-) -> Result<()> {
+pub fn set_upstream_branch(repo_path: &Path, remote_name: &str, branch_name: &str) -> Result<()> {
     let repo = repo(repo_path)?;
     let mut branch = repo.find_branch(branch_name, BranchType::Local)?;
 

@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, RwLock};
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -25,6 +27,7 @@ pub struct FileComponent {
     repo_path: PathBuf,
     state: ListState,
     style: ComponentTheme,
+    lock: Arc<RwLock<AtomicBool>>,
 }
 
 // TODO:
@@ -32,7 +35,11 @@ pub struct FileComponent {
 //  - Files that have some hunks staged while others aren't
 
 impl FileComponent {
-    pub fn new(repo_path: PathBuf, event_sender: Sender<ProgramEvent>) -> Self {
+    pub fn new(
+        repo_path: PathBuf,
+        event_sender: Sender<ProgramEvent>,
+        input_lock: Arc<RwLock<AtomicBool>>,
+    ) -> Self {
         let mut state = ListState::default();
         state.select(Some(0));
 
@@ -44,6 +51,7 @@ impl FileComponent {
             repo_path,
             state,
             style: ComponentTheme::default(),
+            lock: input_lock,
         }
     }
 
@@ -83,9 +91,25 @@ impl FileComponent {
         }
     }
 
-    fn commit_full(&self) {
-        // TODO
-        // WHY NO WORK
+    fn commit_full(&self) -> Result<()> {
+        {
+            let handle = self.lock.write().unwrap();
+            handle.store(true, Ordering::Relaxed);
+        }
+
+        let mut commit_msg = std::process::Command::new("git")
+            .arg("commit")
+            .spawn()
+            .expect("");
+
+        commit_msg.wait()?;
+
+        {
+            let handle = self.lock.write().unwrap();
+            handle.store(false, std::sync::atomic::Ordering::Relaxed);
+        }
+
+        Ok(())
     }
 
     fn has_files_staged(&self) -> bool {
@@ -162,7 +186,7 @@ impl Component for FileComponent {
             KeyCode::Char('s') => self.stage_file(false)?,
             KeyCode::Char('u') => self.unstage_file(false)?,
             KeyCode::Char('c') => self.commit(),
-            KeyCode::Char('C') => self.commit_full(),
+            KeyCode::Char('C') => self.commit_full()?,
             KeyCode::Char('p') => self.push()?,
             _ => {}
         }

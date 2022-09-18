@@ -1,6 +1,6 @@
 use crate::app::App;
-use crate::{centered_rect, init_new_repo};
 use crate::Event;
+use crate::{centered_rect, init_new_repo};
 
 use std::path::Path;
 

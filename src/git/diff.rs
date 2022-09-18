@@ -29,7 +29,7 @@ pub enum DiffComponentType {
 
 impl DiffLine {
     pub fn err(error: anyhow::Error) -> Self {
-    let content = format!("Failed to get diff: {}", error);
+        let content = format!("Failed to get diff: {}", error);
 
         Self {
             content,

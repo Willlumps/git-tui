@@ -9,3 +9,4 @@
 - [ ] Improved Error handling
 - [ ] DRY up a lot of UI related code
 - [ ] Organization (in progress, always)
+- [ ] test

@@ -40,11 +40,7 @@ pub fn get_remote(repo_path: &Path) -> Result<Option<String>> {
     Ok(remote)
 }
 
-pub fn push(
-    event_sender: Sender<ProgramEvent>,
-    repo_path: PathBuf,
-    remote: String,
-) -> Result<()> {
+pub fn push(event_sender: Sender<ProgramEvent>, repo_path: PathBuf, remote: String) -> Result<()> {
     let (progress_sender, progress_receiver) = unbounded();
 
     std::thread::spawn(move || {

@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+use std::sync::atomic::AtomicBool;
+use std::sync::{Arc, RwLock};
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -58,7 +60,11 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(repo_path: PathBuf, event_sender: &Sender<ProgramEvent>) -> Self {
+    pub fn new(
+        repo_path: PathBuf,
+        event_sender: &Sender<ProgramEvent>,
+        input_lock: Arc<RwLock<AtomicBool>>,
+    ) -> Self {
         Self {
             branches: BranchComponent::new(repo_path.clone(), event_sender.clone()),
             branch_popup: BranchPopup::new(repo_path.clone(), event_sender.clone()),
@@ -68,7 +74,7 @@ impl App {
             diff_staged: DiffComponent::new(repo_path.clone(), DiffComponentType::Staged),
             error_popup: ErrorComponent::new(event_sender.clone()),
             event_sender: event_sender.clone(),
-            files: FileComponent::new(repo_path.clone(), event_sender.clone()),
+            files: FileComponent::new(repo_path.clone(), event_sender.clone(), input_lock),
             focused_component: ComponentType::None,
             logs: LogComponent::new(repo_path.clone(), event_sender.clone()),
             log_popup: LogPopup::new(event_sender.clone()),
