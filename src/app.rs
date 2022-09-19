@@ -27,6 +27,7 @@ use crate::Event;
 
 pub enum ProgramEvent {
     Exit,
+    ClearTerminal,
     Error(anyhow::Error),
     Focus(ComponentType),
     Git(GitEvent),

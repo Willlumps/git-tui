@@ -99,10 +99,11 @@ impl FileComponent {
 
         let mut commit_msg = std::process::Command::new("git")
             .arg("commit")
-            .spawn()
-            .expect("");
+            .spawn()?;
 
         commit_msg.wait()?;
+        // hackity hack hack
+        self.event_sender.send(ProgramEvent::ClearTerminal).expect("Send failed");
 
         {
             let handle = self.lock.write().unwrap();

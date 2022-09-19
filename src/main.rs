@@ -10,11 +10,11 @@ use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::Result;
 use crossbeam::channel::{unbounded, Receiver, Select};
-use crossterm::event::{read, DisableMouseCapture, Event as CEvent, KeyEvent};
+use crossterm::event::{poll, read, DisableMouseCapture, Event as CEvent, KeyEvent};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
 use crossterm::ExecutableCommand;
 use git::commit::create_initial_commit;
@@ -34,19 +34,33 @@ pub enum Event<I> {
 fn main() -> Result<()> {
     let (tx, rx) = unbounded();
     let (ev_tx, ev_rx) = unbounded();
-    let pause_input = Arc::new(RwLock::new(AtomicBool::new(false)));
-    let test = Arc::clone(&pause_input);
+    let tick_rate = Duration::from_millis(1200);
+    let input_lock = Arc::new(RwLock::new(AtomicBool::new(false)));
+    let input_thread_lock = Arc::clone(&input_lock);
 
-    thread::spawn(move || loop {
-        if test
-            .read()
-            .expect("Handle me better :D")
-            .load(Ordering::Relaxed)
-        {
-            thread::sleep(Duration::from_millis(500));
-            continue;
-        } else if let CEvent::Key(key) = read().expect("Should read event") {
-            tx.send(Event::Input(key)).expect("Should send event");
+    thread::spawn(move || {
+        let mut last_tick = Instant::now();
+
+        loop {
+            if input_thread_lock
+                .read()
+                .expect("Handle me better :D")
+                .load(Ordering::Relaxed)
+            {
+                continue;
+            }
+
+            let timeout = tick_rate.saturating_sub(last_tick.elapsed());
+
+            if let Ok(poll) = poll(timeout) {
+                if poll {
+                    if let CEvent::Key(key) = read().expect("Should read event") {
+                        tx.send(Event::Input(key)).expect("Should send event");
+                    }
+                } else if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
+                    last_tick = Instant::now();
+                }
+            }
         }
     });
 
@@ -77,7 +91,7 @@ fn main() -> Result<()> {
     }
 
     // Initialize and run
-    let mut app = App::new(repo_path, &ev_tx, Arc::clone(&pause_input));
+    let mut app = App::new(repo_path, &ev_tx, Arc::clone(&input_lock));
     let res = run_app(&mut terminal, &mut app, rx, ev_rx);
 
     restore_terminal(&mut terminal)?;
@@ -125,6 +139,7 @@ fn run_app<B: Backend>(
                     ProgramEvent::Error(error) => app.display_error(error),
                     ProgramEvent::Focus(component) => app.focus(component),
                     ProgramEvent::Git(git_event) => app.handle_git_event(git_event)?,
+                    ProgramEvent::ClearTerminal => terminal.clear()?,
                 }
             }
             1 => {
