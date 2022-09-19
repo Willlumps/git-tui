@@ -1,11 +1,11 @@
-use crate::git::diff::head;
-use crate::git::repo;
-
 use std::path::Path;
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use git2::{FetchOptions, Repository};
+
+use crate::git::diff::head;
+use crate::git::repo;
 
 use super::{callbacks::create_remote_callbacks, remote::get_remote};
 

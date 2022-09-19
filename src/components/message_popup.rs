@@ -1,5 +1,3 @@
-use crate::components::{centered_rect, Component};
-
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use tui::backend::Backend;
@@ -7,6 +5,8 @@ use tui::layout::Rect;
 use tui::style::{Color, Style};
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
+
+use crate::components::{centered_rect, Component};
 
 pub struct MessagePopup {
     message: String,

@@ -1,11 +1,11 @@
-use crate::git::diff::head;
-use crate::git::log::Commit;
-use crate::git::repo;
-
 use std::path::Path;
 
 use anyhow::Result;
 use git2::{BranchType, Repository};
+
+use crate::git::diff::head;
+use crate::git::log::Commit;
+use crate::git::repo;
 
 #[derive(Clone, Debug)]
 pub struct Branch {

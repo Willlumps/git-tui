@@ -135,11 +135,11 @@ fn run_app<B: Backend>(
             0 => {
                 let event = operation.recv(&event_rx).expect("Receive failed");
                 match event {
+                    ProgramEvent::ClearTerminal => terminal.clear()?,
                     ProgramEvent::Exit => return Ok(()),
                     ProgramEvent::Error(error) => app.display_error(error),
                     ProgramEvent::Focus(component) => app.focus(component),
                     ProgramEvent::Git(git_event) => app.handle_git_event(git_event)?,
-                    ProgramEvent::ClearTerminal => terminal.clear()?,
                 }
             }
             1 => {

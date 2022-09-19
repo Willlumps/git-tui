@@ -11,12 +11,12 @@ pub mod message_popup;
 pub mod remote_popup;
 pub mod status;
 
-use crate::git::diff::DiffComponentType;
-use crate::git::log::Commit;
-
 use anyhow::Result;
 use crossterm::event::KeyEvent;
 use tui::layout::{Constraint, Direction, Layout, Rect};
+
+use crate::git::diff::DiffComponentType;
+use crate::git::log::Commit;
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {

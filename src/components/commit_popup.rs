@@ -1,7 +1,3 @@
-use crate::app::{GitEvent, ProgramEvent};
-use crate::components::{centered_rect, Component, ComponentType};
-use crate::git::commit::commit;
-
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -12,6 +8,10 @@ use tui::layout::{Alignment, Rect};
 use tui::style::Style;
 use tui::widgets::{Block, Borders, Clear, Paragraph};
 use tui::Frame;
+
+use crate::app::{GitEvent, ProgramEvent};
+use crate::components::{centered_rect, Component, ComponentType};
+use crate::git::commit::commit;
 
 pub struct CommitPopup {
     cursor_position: (u16, u16),

@@ -1,5 +1,5 @@
 ## Universal Keymaps
-* `Esc`:  Quit the application/Close popu
+* `Esc`:  Quit the application/Close popup
 * `1-5`:  Navigate the five main component panes
 * `j`: Scroll down through a list or window
 * `k`: Scroll up through a list or window
@@ -20,6 +20,7 @@
 
 ## Files Component
 * `c`: Commit
+* `C`: Opens an editor, similar to `git commit`
 * `s`: Stage file under cursor
 * `u`: Unstage file under cursor
 * `a`: Stage all files

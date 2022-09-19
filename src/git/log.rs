@@ -1,10 +1,10 @@
-use crate::git::repo;
-use crate::git::time::CommitDate;
-
 use std::path::Path;
 
 use anyhow::Result;
 use git2::Oid;
+
+use crate::git::repo;
+use crate::git::time::CommitDate;
 
 #[derive(Clone, Debug)]
 pub struct Commit {

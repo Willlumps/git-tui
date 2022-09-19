@@ -1,6 +1,3 @@
-use crate::app::ProgramEvent;
-use crate::components::{centered_rect, Component, ComponentType};
-
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -11,6 +8,9 @@ use tui::style::{Color, Style};
 use tui::text::{Span, Text};
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
+
+use crate::app::ProgramEvent;
+use crate::components::{centered_rect, Component, ComponentType};
 
 // TODO: Expand this to make the errors more reader friendly to better
 //       convey what went wrong.

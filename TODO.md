@@ -1,5 +1,5 @@
 - [ ] Handle conflicts
-- [ ] Full commit window (`git commit`)
+- [x] Full commit window (`git commit`)
 - [ ] Fix the mess that is pushing and fetching
   - [x] Credential issues (Possibly)
   - [x] Fix hardcoded remotes

@@ -1,10 +1,10 @@
-use crate::git::repo;
-
 use std::path::Path;
 
 use anyhow::Result;
 use git2::{Diff, DiffFormat};
 use tui::style::{Color, Style};
+
+use crate::git::repo;
 
 #[derive(Default)]
 pub struct DiffWindow {

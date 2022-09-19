@@ -27,7 +27,7 @@ pub struct FileComponent {
     repo_path: PathBuf,
     state: ListState,
     style: ComponentTheme,
-    lock: Arc<RwLock<AtomicBool>>,
+    input_lock: Arc<RwLock<AtomicBool>>,
 }
 
 // TODO:
@@ -51,7 +51,7 @@ impl FileComponent {
             repo_path,
             state,
             style: ComponentTheme::default(),
-            lock: input_lock,
+            input_lock,
         }
     }
 
@@ -93,7 +93,7 @@ impl FileComponent {
 
     fn commit_full(&self) -> Result<()> {
         {
-            let handle = self.lock.write().unwrap();
+            let handle = self.input_lock.write().unwrap();
             handle.store(true, Ordering::Relaxed);
         }
 
@@ -106,7 +106,7 @@ impl FileComponent {
         self.event_sender.send(ProgramEvent::ClearTerminal).expect("Send failed");
 
         {
-            let handle = self.lock.write().unwrap();
+            let handle = self.input_lock.write().unwrap();
             handle.store(false, std::sync::atomic::Ordering::Relaxed);
         }
 

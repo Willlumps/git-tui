@@ -1,8 +1,8 @@
-use crate::git::repo;
-
 use std::path::Path;
 
 use anyhow::Result;
+
+use crate::git::repo;
 
 pub fn stage_file(repo_path: &Path, file_path: &str) -> Result<()> {
     let repo = repo(repo_path)?;

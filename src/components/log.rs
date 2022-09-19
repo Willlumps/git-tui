@@ -1,11 +1,3 @@
-use crate::app::ProgramEvent;
-use crate::component_style::ComponentTheme;
-use crate::components::{Component, ScrollableComponent};
-use crate::git::branch::checkout_local_branch;
-use crate::git::commit::revert_commit;
-use crate::git::log::{collect_commits, Commit};
-use crate::git::repo;
-
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -20,7 +12,13 @@ use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, List as TuiList, ListItem, ListState, Paragraph};
 use tui::Frame;
 
-use super::ComponentType;
+use crate::app::ProgramEvent;
+use crate::component_style::ComponentTheme;
+use crate::components::{Component, ComponentType, ScrollableComponent};
+use crate::git::branch::checkout_local_branch;
+use crate::git::commit::revert_commit;
+use crate::git::log::{collect_commits, Commit};
+use crate::git::repo;
 
 pub struct LogComponent {
     event_sender: Sender<ProgramEvent>,

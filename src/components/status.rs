@@ -1,6 +1,3 @@
-use crate::components::Component;
-use crate::git::diff::{get_diff_stats, DiffWindow};
-
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -11,6 +8,9 @@ use tui::style::{Color, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, Paragraph};
 use tui::Frame;
+
+use crate::components::Component;
+use crate::git::diff::{get_diff_stats, DiffWindow};
 
 #[allow(unused)]
 pub struct StatusComponent {

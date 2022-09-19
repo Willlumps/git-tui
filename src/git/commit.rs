@@ -1,10 +1,10 @@
-use crate::git::log::Commit;
-use crate::git::repo;
-
 use std::path::Path;
 
 use anyhow::Result;
 use git2::{Config, Oid, Signature};
+
+use crate::git::log::Commit;
+use crate::git::repo;
 
 pub fn create_initial_commit(repo_path: &Path) -> Result<()> {
     let repo = repo(repo_path)?;

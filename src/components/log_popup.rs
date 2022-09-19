@@ -1,7 +1,3 @@
-use crate::components::{centered_rect, Component, ComponentType};
-use crate::git::log::Commit;
-use crate::ProgramEvent;
-
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -11,6 +7,10 @@ use tui::style::{Color, Style};
 use tui::text::Text;
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph};
 use tui::Frame;
+
+use crate::components::{centered_rect, Component, ComponentType};
+use crate::git::log::Commit;
+use crate::ProgramEvent;
 
 pub struct LogPopup {
     commit: Commit,

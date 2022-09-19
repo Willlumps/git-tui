@@ -1,7 +1,3 @@
-use crate::app::App;
-use crate::Event;
-use crate::{centered_rect, init_new_repo};
-
 use std::path::Path;
 
 use anyhow::Result;
@@ -13,6 +9,10 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Text};
 use tui::widgets::{Block, BorderType, Borders, Clear, List, ListItem, ListState, Paragraph};
 use tui::{Frame, Terminal};
+
+use crate::app::App;
+use crate::Event;
+use crate::{centered_rect, init_new_repo};
 
 pub fn main_ui<B: Backend>(f: &mut Frame<B>, app: &mut App) -> Result<()> {
     let size = f.size();
