@@ -23,11 +23,11 @@ pub struct FileComponent {
     event_sender: Sender<ProgramEvent>,
     files: Vec<FileStatus>,
     focused: bool,
+    input_lock: Arc<RwLock<AtomicBool>>,
     position: usize,
     repo_path: PathBuf,
     state: ListState,
     style: ComponentTheme,
-    input_lock: Arc<RwLock<AtomicBool>>,
 }
 
 // TODO:
@@ -47,11 +47,11 @@ impl FileComponent {
             event_sender,
             files: Vec::new(),
             focused: false,
+            input_lock,
             position: 0,
             repo_path,
             state,
             style: ComponentTheme::default(),
-            input_lock,
         }
     }
 

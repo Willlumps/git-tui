@@ -1,10 +1,3 @@
-mod app;
-mod component_style;
-mod components;
-mod git;
-mod list_window;
-mod ui;
-
 use std::env::current_dir;
 use std::io;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -25,6 +18,13 @@ use crate::app::{App, ProgramEvent};
 use crate::components::{centered_rect, ComponentType};
 use crate::git::{init_new_repo, is_empty_repo, is_repo};
 use crate::ui::{main_ui, prompt_new_repo};
+
+mod app;
+mod component_style;
+mod components;
+mod git;
+mod list_window;
+mod ui;
 
 pub enum Event<I> {
     Input(I),

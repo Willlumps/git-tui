@@ -1,3 +1,10 @@
+use anyhow::Result;
+use crossterm::event::KeyEvent;
+use tui::layout::{Constraint, Direction, Layout, Rect};
+
+use crate::git::diff::DiffComponentType;
+use crate::git::log::Commit;
+
 pub mod branch_popup;
 pub mod branches;
 pub mod cherry_pick_popup;
@@ -10,13 +17,6 @@ pub mod log_popup;
 pub mod message_popup;
 pub mod remote_popup;
 pub mod status;
-
-use anyhow::Result;
-use crossterm::event::KeyEvent;
-use tui::layout::{Constraint, Direction, Layout, Rect};
-
-use crate::git::diff::DiffComponentType;
-use crate::git::log::Commit;
 
 #[derive(Clone, Debug)]
 pub enum ComponentType {

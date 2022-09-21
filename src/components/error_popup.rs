@@ -1,7 +1,6 @@
 use anyhow::Result;
 use crossbeam::channel::Sender;
 use crossterm::event::{KeyCode, KeyEvent};
-use git2::{ErrorClass, ErrorCode};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Style};
@@ -15,8 +14,6 @@ use crate::components::{centered_rect, Component, ComponentType};
 // TODO: Expand this to make the errors more reader friendly to better
 //       convey what went wrong.
 pub struct ErrorComponent {
-    code: ErrorCode,
-    class: ErrorClass,
     event_sender: Sender<ProgramEvent>,
     message: String,
     visible: bool,
@@ -25,8 +22,6 @@ pub struct ErrorComponent {
 impl ErrorComponent {
     pub fn new(event_sender: Sender<ProgramEvent>) -> Self {
         Self {
-            code: ErrorCode::GenericError,
-            class: ErrorClass::None,
             event_sender,
             message: String::new(),
             visible: false,
@@ -57,15 +52,6 @@ impl ErrorComponent {
             )
             .split(area);
 
-        let code = Paragraph::new(Span::raw(format!(
-            "{:?} Error ({:?})",
-            &self.class, &self.code
-        )))
-        .alignment(tui::layout::Alignment::Center)
-        .style(Style::default().fg(Color::White))
-        .wrap(tui::widgets::Wrap { trim: true });
-        f.render_widget(code, message_box[0]);
-
         let message = Paragraph::new(Span::raw(&self.message))
             .alignment(tui::layout::Alignment::Center)
             .style(Style::default().fg(Color::White))
@@ -94,8 +80,6 @@ impl ErrorComponent {
             .expect("Focus event send failed.");
         self.visible = false;
         self.message.clear();
-        self.code = ErrorCode::GenericError;
-        self.class = ErrorClass::None;
     }
 }
 

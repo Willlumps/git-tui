@@ -1,3 +1,10 @@
+use std::path::Path;
+
+use anyhow::Result;
+use git2::{Repository, RepositoryOpenFlags};
+
+use crate::git::commit::create_initial_commit;
+
 pub mod branch;
 pub mod callbacks;
 pub mod commit;
@@ -8,13 +15,6 @@ pub mod remote;
 pub mod stage;
 pub mod status;
 pub mod time;
-
-use std::path::Path;
-
-use anyhow::Result;
-use git2::{Repository, RepositoryOpenFlags};
-
-use self::commit::create_initial_commit;
 
 pub fn repo(repo_path: &Path) -> Result<Repository> {
     let repo = Repository::open_ext(repo_path, RepositoryOpenFlags::empty(), Vec::<&Path>::new())?;
