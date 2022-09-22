@@ -5,6 +5,7 @@ use std::time::Duration;
 use anyhow::Result;
 use crossbeam::channel::{unbounded, Sender};
 use crossterm::event::{KeyCode, KeyEvent};
+use git2::{MergeOptions, BranchType};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -26,7 +27,7 @@ pub struct BranchComponent {
     branches: Vec<Branch>,
     event_sender: Sender<ProgramEvent>,
     focused: bool,
-    focused_tab: usize,
+    focused_tab: BranchType,
     position: usize,
     repo_path: PathBuf,
     state: ListState,
@@ -42,7 +43,7 @@ impl BranchComponent {
             branches: Vec::new(),
             event_sender,
             focused: false,
-            focused_tab: 0,
+            focused_tab: BranchType::Local,
             position: 0,
             repo_path,
             state,
@@ -74,7 +75,10 @@ impl BranchComponent {
         let tabs = Tabs::new(titles)
             .block(Block::default().borders(Borders::ALL))
             .style(Style::default().fg(Color::White))
-            .select(self.focused_tab)
+            .select(match self.focused_tab {
+                BranchType::Local => 0,
+                BranchType::Remote => 1,
+            })
             .highlight_style(Style::default().fg(Color::Yellow));
 
         let list_items: Vec<ListItem> = self
@@ -111,18 +115,11 @@ impl BranchComponent {
         Ok(())
     }
 
-    fn tab_left(&mut self) {
-        if self.focused_tab > 0 {
-            self.focused_tab -= 1;
-        }
+    fn tab(&mut self, tab_type: BranchType) -> Result<()> {
+        self.focused_tab = tab_type;
         self.reset_state();
-    }
-
-    fn tab_right(&mut self) {
-        if self.focused_tab < 1 {
-            self.focused_tab += 1;
-        }
-        self.reset_state();
+        self.update()?;
+        Ok(())
     }
 
     fn reset_state(&mut self) {
@@ -231,11 +228,7 @@ impl Component for BranchComponent {
     fn update(&mut self) -> Result<()> {
         self.branches = get_branches(&self.repo_path)?
             .into_iter()
-            .filter(|branch| match self.focused_tab {
-                0 => branch.branch_type == git2::BranchType::Local,
-                1 => branch.branch_type == git2::BranchType::Remote,
-                _ => unimplemented!(),
-            })
+            .filter(|branch| branch.branch_type == self.focused_tab)
             .collect::<Vec<_>>();
 
         // Ehh
@@ -255,20 +248,10 @@ impl Component for BranchComponent {
         }
 
         match ev.code {
-            KeyCode::Char('j') => {
-                self.scroll_down(1);
-            }
-            KeyCode::Char('k') => {
-                self.scroll_up(1);
-            }
-            KeyCode::Char('h') => {
-                self.tab_left();
-                self.update()?;
-            }
-            KeyCode::Char('l') => {
-                self.tab_right();
-                self.update()?;
-            }
+            KeyCode::Char('j') => self.scroll_down(1),
+            KeyCode::Char('k') => self.scroll_up(1),
+            KeyCode::Char('h') => self.tab(BranchType::Local)?,
+            KeyCode::Char('l') => self.tab(BranchType::Remote)?,
             KeyCode::Char('c') => self.checkout_branch()?,
             KeyCode::Char('C') => self.cherry_pick()?,
             KeyCode::Char('d') => self.delete_branch()?,
