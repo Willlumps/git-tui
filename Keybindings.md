@@ -10,6 +10,7 @@
 * `h`: Cycle tabs left
 * `l`: Cycle tabs right
 * `n`: Create new branch off of the current branch pointed at by `HEAD`
+* `m`: Merge the selected branch into the current branch pointed at by `HEAD`
 * `f`: Fetch (Currently only fetches from the remote `origin`)
 * `p`: Pull the currently checked out branch
 * `P`: Pull the selected branch under the cursor
