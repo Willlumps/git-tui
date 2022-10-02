@@ -165,7 +165,11 @@ impl BranchComponent {
         //       In testing (using push), the program seems to hang
         //       for a reason unknown to me currently
         if let Some(branch) = self.branches.get(self.position) {
-            delete_branch(&self.repo_path, &branch.name)?;
+            if let Err(err) = delete_branch(&self.repo_path, &branch.name) {
+                self.event_sender
+                    .send(ProgramEvent::Error(err))
+                    .expect("Send failed.");
+            }
         }
 
         Ok(())
