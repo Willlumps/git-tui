@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use git2::{Config, Oid, Signature};
+use git2::{AnnotatedCommit, Config, Oid, Signature};
 
 use crate::git::log::Commit;
 use crate::git::repo;
@@ -25,7 +25,7 @@ pub fn create_initial_commit(repo_path: &Path) -> Result<()> {
     Ok(())
 }
 
-pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
+pub fn commit(repo_path: &Path, message: &str, merge_commit: Option<git2::Oid>) -> Result<()> {
     let repo = repo(repo_path)?;
     let signature = signature()?;
 
@@ -33,8 +33,15 @@ pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
     let id = index.write_tree()?;
     let tree = repo.find_tree(id)?;
 
+    let mut merge_commit_id = match merge_commit {
+        Some(id) => vec![repo.find_commit(id)?],
+        None => Vec::new(),
+    };
+
     if let Some(head) = repo.head()?.target() {
-        let commit = vec![repo.find_commit(head)?];
+        let mut commit = vec![repo.find_commit(head)?];
+        commit.append(&mut merge_commit_id);
+
         let parents = commit.iter().collect::<Vec<_>>();
         repo.commit(
             Some("HEAD"),
@@ -44,7 +51,29 @@ pub fn commit(repo_path: &Path, message: &str) -> Result<()> {
             &tree,
             parents.as_slice(),
         )?;
+    } else {
+        return Err(anyhow::Error::msg("Make me a meaninful error message"));
     }
+
+    Ok(())
+}
+
+pub fn merge_commit(repo_path: &Path, annotated_commit: AnnotatedCommit) -> Result<()> {
+    // I'm not certain the 'merge' will fail if there is a conflict since
+    // we have to manually commit anyways. I don't want to test it so I'll assume
+    // I have to check it here before attempting to commit :D
+    let repo = repo(repo_path)?;
+    let index = repo.index()?;
+
+    if index.has_conflicts() {
+        return Err(anyhow::anyhow!(
+            "Conflicts or something, you should fix them and then commit."
+        ));
+    } else {
+        let msg = repo.message()?;
+        commit(repo_path, &msg, Some(annotated_commit.id()))?;
+    }
+
     Ok(())
 }
 

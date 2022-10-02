@@ -77,7 +77,7 @@ impl CommitPopup {
             return Ok(());
         }
 
-        commit(&self.repo_path, &self.input)?;
+        commit(&self.repo_path, &self.input, None)?;
         Ok(())
     }
 }

@@ -1,12 +1,11 @@
-- [ ] Handle conflicts
 - [x] Full commit window (`git commit`)
 - [ ] Fix the mess that is pushing and fetching
   - [x] Credential issues (Possibly)
   - [x] Fix hardcoded remotes
   - [ ] Fetch multiple remotes
 - [ ] Tags
-- [ ] Merge capabilities
+- [x] Merge capabilities (I think)
 - [ ] Improved Error handling
+  - [x] Anyhow
+  - [ ] Display error when needed, only crash/exit if unable to recover
 - [ ] DRY up a lot of UI related code
-- [ ] Organization (in progress, always)
-- [ ] test

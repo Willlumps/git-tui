@@ -97,7 +97,7 @@ fn main() -> Result<()> {
     restore_terminal(&mut terminal)?;
 
     if let Err(err) = res {
-        println!("{:?}", err)
+        eprintln!("{:?}", err)
     }
 
     Ok(())

@@ -5,7 +5,7 @@ use std::time::Duration;
 use anyhow::Result;
 use crossbeam::channel::{unbounded, Sender};
 use crossterm::event::{KeyCode, KeyEvent};
-use git2::{MergeOptions, BranchType};
+use git2::{BranchType, MergeOptions};
 use tui::backend::Backend;
 use tui::layout::{Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
@@ -19,8 +19,10 @@ use crate::components::{Component, ScrollableComponent};
 use crate::git::branch::{
     checkout_local_branch, checkout_remote_branch, delete_branch, get_branches, Branch,
 };
+use crate::git::commit::merge_commit;
 use crate::git::fetch::{fetch, pull_head, pull_selected};
 use crate::git::log::collect_commits;
+use crate::git::repo;
 use crate::ComponentType;
 
 pub struct BranchComponent {
@@ -203,6 +205,40 @@ impl BranchComponent {
         Ok(())
     }
 
+    fn merge(&self) -> Result<()> {
+        let repo = repo(&self.repo_path)?;
+        if let Some(branch) = self.branches.get(self.position) {
+            let refname = format!("refs/heads/{}", branch.name);
+            match repo.find_reference(&refname) {
+                Ok(reference) => {
+                    let mut opts = MergeOptions::new();
+                    let annotated_commit = repo.reference_to_annotated_commit(&reference)?;
+
+                    repo.merge(
+                        &[&annotated_commit],
+                        Some(&mut opts),
+                        Some(git2::build::CheckoutBuilder::default().force()),
+                    )?;
+
+                    if let Err(err) = merge_commit(&self.repo_path, annotated_commit) {
+                        self.event_sender
+                            .send(ProgramEvent::Error(err))
+                            .expect("Send failed");
+                    }
+                }
+                Err(err) => {
+                    self.event_sender
+                        .send(ProgramEvent::Error(anyhow::Error::from(err)))
+                        .expect("Send failed");
+                }
+            }
+        }
+
+        repo.cleanup_state()?;
+
+        Ok(())
+    }
+
     fn pull_selected_branch(&self) {
         let (progress_sender, _progress_receiver) = unbounded();
         if let Some(branch) = self.branches.get(self.position) {
@@ -255,8 +291,9 @@ impl Component for BranchComponent {
             KeyCode::Char('c') => self.checkout_branch()?,
             KeyCode::Char('C') => self.cherry_pick()?,
             KeyCode::Char('d') => self.delete_branch()?,
-            KeyCode::Char('n') => self.create_branch(),
             KeyCode::Char('f') => self.fetch()?,
+            KeyCode::Char('m') => self.merge()?,
+            KeyCode::Char('n') => self.create_branch(),
             KeyCode::Char('P') => self.pull_selected_branch(),
             KeyCode::Char('p') => self.pull_head(),
             _ => {}
