@@ -98,8 +98,6 @@ impl FileComponent {
         }
 
         let mut commit_msg = std::process::Command::new("git")
-            .arg("--git-dir")
-            .arg("/Users/reina/rust/programming-rust/.git")
             .arg("commit")
             .spawn()?;
 
