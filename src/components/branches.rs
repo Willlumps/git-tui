@@ -181,8 +181,7 @@ impl BranchComponent {
         let event_sender = self.event_sender.clone();
 
         thread::spawn(move || {
-            // TODO: This is a fugly mess, come up with a better way to handle transfer
-            //       progress other than sleeping like a dummy
+            // TODO: Come up with a better way to handle progress updates
             event_sender
                 .send(ProgramEvent::Focus(ComponentType::MessageComponent(
                     "Fetching...".to_string(),
