@@ -97,13 +97,12 @@ impl FileComponent {
             handle.store(true, Ordering::Relaxed);
         }
 
-        let mut commit_msg = std::process::Command::new("git")
-            .arg("commit")
-            .spawn()?;
+        let mut commit_msg = std::process::Command::new("git").arg("commit").spawn()?;
 
         commit_msg.wait()?;
-        // hackity hack hack
-        self.event_sender.send(ProgramEvent::ClearTerminal).expect("Send failed");
+        self.event_sender
+            .send(ProgramEvent::ClearTerminal)
+            .expect("Send failed");
 
         {
             let handle = self.input_lock.write().unwrap();

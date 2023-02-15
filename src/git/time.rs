@@ -22,7 +22,10 @@ pub struct CommitDate {
 impl CommitDate {
     pub fn new(git_time: GitTime) -> Self {
         let unix_time = git_time.seconds();
-        let date = NaiveDateTime::from_timestamp(unix_time, 0);
+        let date = match NaiveDateTime::from_timestamp_opt(unix_time, 0) {
+            Some(nd) => nd,
+            None => NaiveDateTime::default(),
+        };
         let time_since_commit = time_since_commit(unix_time as u64);
 
         Self {

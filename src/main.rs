@@ -42,7 +42,13 @@ fn main() -> Result<()> {
         let mut last_tick = Instant::now();
 
         loop {
-            let _unused = input_thread_lock.read().unwrap();
+            if input_thread_lock
+                .read()
+                .expect("Handle me better :D")
+                .load(Ordering::Relaxed)
+            {
+                continue;
+            }
 
             let timeout = tick_rate.saturating_sub(last_tick.elapsed());
 
