@@ -1,12 +1,11 @@
 use std::env::current_dir;
 use std::io;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use crossbeam::channel::{unbounded, Receiver, Select};
+use crossbeam::channel::{unbounded, Receiver, Select, Sender};
+use crossbeam::sync::{Parker, Unparker};
 use crossterm::event::{poll, read, DisableMouseCapture, Event as CEvent, KeyEvent};
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, LeaveAlternateScreen};
 use crossterm::ExecutableCommand;
@@ -31,23 +30,31 @@ pub enum Event<I> {
     Tick,
 }
 
+pub struct InputLock {
+    unparker: Unparker,
+    lock: Sender<()>,
+}
+
 fn main() -> Result<()> {
-    let (tx, rx) = unbounded();
-    let (ev_tx, ev_rx) = unbounded();
+    let (input_tx, input_rx) = unbounded();
+    let (program_event_tx, program_event_rx) = unbounded();
+    let (input_lock_tx, input_lock_rx) = unbounded();
+
+    let parker = Parker::new();
+    let unparker = parker.unparker().clone();
+    let input_lock = InputLock {
+        unparker,
+        lock: input_lock_tx,
+    };
+
     let tick_rate = Duration::from_millis(1200);
-    let input_lock = Arc::new(RwLock::new(AtomicBool::new(false)));
-    let input_thread_lock = Arc::clone(&input_lock);
 
     thread::spawn(move || {
         let mut last_tick = Instant::now();
 
         loop {
-            if input_thread_lock
-                .read()
-                .expect("Handle me better :D")
-                .load(Ordering::Relaxed)
-            {
-                continue;
+            if input_lock_rx.try_recv().is_ok() {
+                parker.park();
             }
 
             let timeout = tick_rate.saturating_sub(last_tick.elapsed());
@@ -55,9 +62,9 @@ fn main() -> Result<()> {
             if let Ok(poll) = poll(timeout) {
                 if poll {
                     if let CEvent::Key(key) = read().expect("Should read event") {
-                        tx.send(Event::Input(key)).expect("Should send event");
+                        input_tx.send(Event::Input(key)).expect("Should send event");
                     }
-                } else if last_tick.elapsed() >= tick_rate && tx.send(Event::Tick).is_ok() {
+                } else if last_tick.elapsed() >= tick_rate && input_tx.send(Event::Tick).is_ok() {
                     last_tick = Instant::now();
                 }
             }
@@ -71,14 +78,12 @@ fn main() -> Result<()> {
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
 
-    // Grab the project root for dev purposes, this will eventually want to be
-    // replaced with a passed argument or the current dir where the program
-    // is executed from.
     let repo_path = current_dir()?;
     // let repo_path = std::path::PathBuf::from("/Users/reina/rust/programming-rust");
     // let repo_path = std::path::PathBuf::from("/Users/reina/projects/rust/test");
 
-    if !is_repo(&repo_path) && prompt_new_repo(&repo_path, &mut terminal, rx.clone()).is_err() {
+    if !is_repo(&repo_path) && prompt_new_repo(&repo_path, &mut terminal, input_rx.clone()).is_err()
+    {
         restore_terminal(&mut terminal)?;
         return Ok(());
     }
@@ -91,8 +96,8 @@ fn main() -> Result<()> {
     }
 
     // Initialize and run
-    let mut app = App::new(repo_path, &ev_tx, Arc::clone(&input_lock));
-    let res = run_app(&mut terminal, &mut app, rx, ev_rx);
+    let mut app = App::new(repo_path, &program_event_tx, input_lock);
+    let res = run_app(&mut terminal, &mut app, input_rx, program_event_rx);
 
     restore_terminal(&mut terminal)?;
 
@@ -114,7 +119,7 @@ fn restore_terminal<B: Backend>(terminal: &mut Terminal<B>) -> Result<()> {
 fn run_app<B: Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
-    rx: Receiver<Event<KeyEvent>>,
+    input_rx: Receiver<Event<KeyEvent>>,
     event_rx: Receiver<ProgramEvent>,
 ) -> Result<()> {
     loop {
@@ -128,7 +133,7 @@ fn run_app<B: Backend>(
 
         let mut select = Select::new();
         select.recv(&event_rx);
-        select.recv(&rx);
+        select.recv(&input_rx);
 
         let operation = select.select();
         match operation.index() {
@@ -143,7 +148,7 @@ fn run_app<B: Backend>(
                 }
             }
             1 => {
-                let input_event = operation.recv(&rx).expect("Receive failed");
+                let input_event = operation.recv(&input_rx).expect("Receive failed");
                 app.handle_input_event(input_event)?;
             }
             _ => {

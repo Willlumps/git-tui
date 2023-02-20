@@ -1,6 +1,4 @@
 use std::path::PathBuf;
-use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, RwLock};
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -23,7 +21,7 @@ use crate::components::remote_popup::RemotePopupComponent;
 use crate::components::status::StatusComponent;
 use crate::components::{Component, ComponentType};
 use crate::git::diff::DiffComponentType;
-use crate::Event;
+use crate::{Event, InputLock};
 
 pub enum ProgramEvent {
     Exit,
@@ -64,7 +62,7 @@ impl App {
     pub fn new(
         repo_path: PathBuf,
         event_sender: &Sender<ProgramEvent>,
-        input_lock: Arc<RwLock<AtomicBool>>,
+        input_lock: InputLock,
     ) -> Self {
         Self {
             branches: BranchComponent::new(repo_path.clone(), event_sender.clone()),

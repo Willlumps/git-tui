@@ -1,6 +1,4 @@
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, RwLock};
 
 use anyhow::Result;
 use crossbeam::channel::Sender;
@@ -18,27 +16,24 @@ use crate::components::{Component, ComponentType, ScrollableComponent};
 use crate::git::remote::{get_remote, push};
 use crate::git::stage::{stage_all, stage_file, unstage_all, unstage_file};
 use crate::git::status::{get_file_status, FileStatus, StatusLoc, StatusType};
+use crate::InputLock;
 
 pub struct FileComponent {
     event_sender: Sender<ProgramEvent>,
     files: Vec<FileStatus>,
     focused: bool,
-    input_lock: Arc<RwLock<AtomicBool>>,
+    input_lock: InputLock,
     position: usize,
     repo_path: PathBuf,
     state: ListState,
     style: ComponentTheme,
 }
 
-// TODO:
-//  - Show file diff in window if desired
-//  - Files that have some hunks staged while others aren't
-
 impl FileComponent {
     pub fn new(
         repo_path: PathBuf,
         event_sender: Sender<ProgramEvent>,
-        input_lock: Arc<RwLock<AtomicBool>>,
+        input_lock: InputLock,
     ) -> Self {
         let mut state = ListState::default();
         state.select(Some(0));
@@ -91,25 +86,44 @@ impl FileComponent {
         }
     }
 
-    fn commit_full(&self) -> Result<()> {
+    fn commit_full(&self) {
+        self.input_lock.lock.send(()).expect("Failed to send.");
+
+        // TODO: See if there is a way to get this working by piping stdin.
+        match std::process::Command::new("git")
+            .arg("commit")
+            .stderr(std::process::Stdio::piped())
+            .spawn()
         {
-            let handle = self.input_lock.write().unwrap();
-            handle.store(true, Ordering::Relaxed);
-        }
+            Ok(commit) => match commit.wait_with_output() {
+                Ok(output) => {
+                    if !output.stderr.is_empty() {
+                        self.event_sender
+                            .send(ProgramEvent::Error(anyhow::anyhow!(String::from_utf8(
+                                output.stderr
+                            )
+                            .expect("Stderr is not valid UTF-8"))))
+                            .expect("Failed to send error");
+                    }
+                }
+                Err(err) => {
+                    self.event_sender
+                        .send(ProgramEvent::Error(anyhow::Error::from(err)))
+                        .expect("Failed to send error");
+                }
+            },
+            Err(err) => {
+                self.event_sender
+                    .send(ProgramEvent::Error(anyhow::Error::from(err)))
+                    .expect("Failed to send error");
+            }
+        };
 
-        let mut commit_msg = std::process::Command::new("git").arg("commit").spawn()?;
-
-        commit_msg.wait()?;
         self.event_sender
             .send(ProgramEvent::ClearTerminal)
             .expect("Send failed");
 
-        {
-            let handle = self.input_lock.write().unwrap();
-            handle.store(false, std::sync::atomic::Ordering::Relaxed);
-        }
-
-        Ok(())
+        self.input_lock.unparker.unpark();
     }
 
     fn has_files_staged(&self) -> bool {
@@ -186,7 +200,7 @@ impl Component for FileComponent {
             KeyCode::Char('s') => self.stage_file(false)?,
             KeyCode::Char('u') => self.unstage_file(false)?,
             KeyCode::Char('c') => self.commit(),
-            KeyCode::Char('C') => self.commit_full()?,
+            KeyCode::Char('C') => self.commit_full(),
             KeyCode::Char('p') => self.push()?,
             _ => {}
         }
